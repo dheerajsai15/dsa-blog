@@ -1,0 +1,2250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tree algorithms, step by step</title>
+<link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+<script src="../shared/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ECF0ED; --panel:#F8FAF8; --panel2:#E1E8E3; --stagebg:#E6ECE8; --ink:#16241D; --muted:#55665C; --rule:#C5D0C8; --edge:#97AB9F; --dot:#C3CEC6;
+  --cur:#E8622E; --done:#2C8660; --wait:#3767CC; --wait-bg:#D9E4FA; --path:#8248C2; --found:#E6AE07; --found-ink:#2A2000; --target:#D23E87; --bad:#C43232;
+  --hl:rgba(232,98,46,.13); --code-bg:#F4F7F5; --on:#FFFFFF;
+  --t-kw:#8248C2; --t-ty:#2D63B8; --t-fn:#1F7A57; --t-num:#B5531F; --t-str:#B5531F; --t-com:#7C8B82;
+  --font:'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme:light;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1713; --panel:#13201B; --panel2:#1A2A23; --stagebg:#101C17; --ink:#DCE8E1; --muted:#8DA195; --rule:#25362E; --edge:#4A5F54; --dot:#22332B;
+    --cur:#FF7444; --done:#36A574; --wait:#729BF2; --wait-bg:#1A2A48; --path:#AC7BEA; --found:#F3C232; --found-ink:#251C00; --target:#F06AAD; --bad:#E85A50;
+    --hl:rgba(255,116,68,.15); --code-bg:#0F1A16; --on:#FFFFFF;
+    --t-kw:#C49AF5; --t-ty:#7FB0F5; --t-fn:#6DD3A6; --t-num:#F2A272; --t-str:#F2A272; --t-com:#6F8378;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1713; --panel:#13201B; --panel2:#1A2A23; --stagebg:#101C17; --ink:#DCE8E1; --muted:#8DA195; --rule:#25362E; --edge:#4A5F54; --dot:#22332B;
+  --cur:#FF7444; --done:#36A574; --wait:#729BF2; --wait-bg:#1A2A48; --path:#AC7BEA; --found:#F3C232; --found-ink:#251C00; --target:#F06AAD; --bad:#E85A50;
+  --hl:rgba(255,116,68,.15); --code-bg:#0F1A16; --on:#FFFFFF;
+  --t-kw:#C49AF5; --t-ty:#7FB0F5; --t-fn:#6DD3A6; --t-num:#F2A272; --t-str:#F2A272; --t-com:#6F8378;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--wait);outline-offset:2px;border-radius:4px}
+[hidden]{display:none !important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.app{max-width:1520px;margin:0 auto;padding:18px clamp(12px,2.4vw,30px) 48px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding-bottom:16px;border-bottom:1px solid var(--rule)}
+.brand{display:flex;gap:14px;align-items:center}
+.brand svg{flex:none}
+h1{font-size:clamp(1.4rem,2.4vw,1.9rem);line-height:1.1;font-weight:800;letter-spacing:-.025em;margin:0;font-variation-settings:"opsz" 96}
+.top p{margin:4px 0 0;color:var(--muted);max-width:62ch;font-size:.95rem}
+kbd{font-family:var(--mono);font-size:.78em;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 .35em;background:var(--panel)}
+.mobile-pick{display:none}
+.mobile-pick select{width:100%;padding:9px 10px;border:1px solid var(--rule);border-radius:8px;background:var(--panel)}
+
+.layout{display:grid;grid-template-columns:232px minmax(0,1fr);gap:30px;margin-top:20px}
+.side{position:sticky;top:12px;align-self:start;max-height:calc(100vh - 24px);overflow:auto;padding:2px 6px 20px 2px;scrollbar-width:thin}
+.side input{width:100%;padding:8px 10px;border:1px solid var(--rule);border-radius:8px;background:var(--panel);margin-bottom:4px}
+.group h4{font-size:.8rem;font-weight:600;color:var(--muted);margin:16px 0 3px 10px}
+.item{display:block;width:100%;text-align:left;background:none;border:0;padding:4px 10px;border-radius:6px;font-size:.93rem;cursor:pointer;line-height:1.35}
+.item:hover{background:var(--panel2)}
+.item[aria-current="true"]{background:var(--ink);color:var(--bg)}
+
+.head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px;margin-bottom:14px}
+.head .cat{width:100%;color:var(--muted);font-size:.85rem;font-weight:500}
+.head h2{margin:0;font-size:clamp(1.7rem,3.2vw,2.5rem);line-height:1.05;font-weight:800;letter-spacing:-.03em;font-variation-settings:"opsz" 96}
+.head .blurb{width:100%;margin:6px 0 0;max-width:70ch;font-size:1.02rem}
+.sample{width:100%;color:var(--muted);font-size:.88rem;margin-top:2px}
+.sample code{font-family:var(--mono);font-size:.85em;color:var(--ink)}
+
+.work{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:20px;align-items:start}
+.stage{position:relative;background-color:var(--stagebg);background-image:radial-gradient(var(--dot) 1.2px,transparent 1.4px);background-size:20px 20px;border:1px solid var(--rule);border-radius:18px;padding:8px}
+#svg{display:block;width:100%;height:320px;transition:height .3s}
+.stage.no-tree #svg{display:none}
+#rows{padding:6px 6px 8px;overflow-x:auto}
+.stage.no-tree #rows{padding-top:18px;padding-bottom:18px}
+
+/* nodes */
+.nd{transition:opacity .3s}
+.nd .body{fill:var(--panel);stroke:var(--ink);stroke-width:1.6;transition:fill .25s,stroke .25s,stroke-width .25s}
+.nd .halo{fill:none;stroke:transparent;stroke-width:3;transition:stroke .25s}
+.nd .ring{fill:none;stroke:transparent;stroke-width:1.4}
+.nd .v{font:700 14px var(--font);fill:var(--ink);text-anchor:middle;transition:fill .25s}
+.nd .v.small{font-size:11.5px}
+.nd .bd{font:600 11px var(--font);fill:var(--muted);text-anchor:middle;paint-order:stroke;stroke:var(--stagebg);stroke-width:4px;stroke-linejoin:round}
+.nd .tg{font:700 11.5px var(--font);fill:var(--target);text-anchor:middle;paint-order:stroke;stroke:var(--stagebg);stroke-width:4px;stroke-linejoin:round}
+.nd.ringed .ring{stroke:var(--ink)}
+.s-cur .body{fill:var(--cur);stroke:var(--cur)} .s-cur .v{fill:var(--on)} .s-cur .halo{stroke:var(--cur);stroke-opacity:.35}
+.s-done .body{fill:var(--done);stroke:var(--done)} .s-done .v{fill:var(--on)}
+.s-stack .body{fill:var(--wait-bg);stroke:var(--wait);stroke-width:2.8}
+.s-path .body{fill:var(--path);stroke:var(--path)} .s-path .v{fill:var(--on)}
+.s-found .body{fill:var(--found);stroke:var(--found)} .s-found .v{fill:var(--found-ink)} .s-found .halo{stroke:var(--found);stroke-opacity:.4}
+.s-target .body{stroke:var(--target);stroke-width:3;stroke-dasharray:4 3}
+.s-bad .body{fill:var(--bad);stroke:var(--bad)} .s-bad .v{fill:var(--on)}
+.s-dim{opacity:.26}
+.ringed.s-cur .ring,.ringed.s-done .ring,.ringed.s-path .ring,.ringed.s-bad .ring{stroke:var(--on)}
+.ringed.s-found .ring{stroke:var(--found-ink)}
+.pop{animation:pop .36s cubic-bezier(.2,.9,.3,1.3);transform-box:fill-box;transform-origin:center}
+@keyframes pop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+.eg{stroke:var(--edge);stroke-width:2;transition:stroke .25s,stroke-width .25s}
+.e-path{stroke:var(--path);stroke-width:3.4}
+.e-best{stroke:var(--found);stroke-width:5}
+.thread{fill:none;stroke:var(--path);stroke-width:2;stroke-dasharray:5 4}
+.arrowhead{fill:var(--path)}
+
+/* array rows */
+.arow{display:grid;gap:3px 4px;margin:4px 0 12px;min-width:max-content;align-items:center}
+.rname{font-weight:600;font-size:.88rem;color:var(--muted);padding-right:6px;text-align:right}
+.ridx{font-size:.72rem;color:var(--muted);text-align:center}
+.cell{display:flex;align-items:center;justify-content:center;height:2.3rem;border:1.5px solid var(--edge);background:var(--panel);border-radius:7px;font-weight:700;font-variant-numeric:tabular-nums;transition:background .25s,border-color .25s,color .25s,opacity .25s}
+.c-cur{background:var(--cur);border-color:var(--cur);color:var(--on)}
+.c-done{background:var(--done);border-color:var(--done);color:var(--on)}
+.c-stack{background:var(--wait-bg);border-color:var(--wait)}
+.c-found{background:var(--found);border-color:var(--found);color:var(--found-ink)}
+.c-dim{opacity:.3}
+.span{height:15px;margin-top:2px;border-radius:4px;background:var(--panel2);border:1px solid var(--rule);font-size:.66rem;line-height:13px;text-align:right;padding-right:5px;color:var(--muted);transition:background .25s}
+.sp-cur{background:var(--cur);border-color:var(--cur);color:var(--on)}
+.sp-found{background:var(--found);border-color:var(--found);color:var(--found-ink)}
+
+/* legend + controls */
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;margin:10px 4px 0;font-size:.82rem;color:var(--muted)}
+.lg{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:50%;display:inline-block;border:1.5px solid var(--ink);background:var(--panel)}
+.sw-cur{background:var(--cur);border-color:var(--cur)} .sw-done{background:var(--done);border-color:var(--done)}
+.sw-stack{background:var(--wait-bg);border:2.5px solid var(--wait)} .sw-path{background:var(--path);border-color:var(--path)}
+.sw-found{background:var(--found);border-color:var(--found)} .sw-target{border:2px dashed var(--target)}
+.sw-bad{background:var(--bad);border-color:var(--bad)} .sw-dim{opacity:.35}
+.sw-ring{box-shadow:inset 0 0 0 2px var(--panel),inset 0 0 0 3.5px var(--ink)}
+.ln-best,.ln-thread{display:inline-block;width:18px;height:0;border-top:4px solid var(--found);border-radius:2px}
+.ln-thread{border-top:2px dashed var(--path)}
+
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:14px}
+.btns{display:flex;gap:4px;align-items:center}
+.ib{width:38px;height:38px;display:grid;place-items:center;border:1px solid var(--rule);background:var(--panel);border-radius:9px;cursor:pointer}
+.ib:hover:not(:disabled){border-color:var(--ink)}
+.ib:disabled{opacity:.4;cursor:default}
+.ib svg{width:16px;height:16px;fill:currentColor}
+#play{width:auto;padding:0 16px 0 13px;display:flex;gap:7px;background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:600}
+#play .i-pause{display:none} #play[data-state="pause"] .i-play{display:none} #play[data-state="pause"] .i-pause{display:block}
+.scrubwrap{flex:1 1 220px;display:flex;align-items:center;gap:10px;min-width:180px}
+input[type=range]{accent-color:var(--cur);width:100%}
+#counter{font-size:.84rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.speed{display:flex;align-items:center;gap:8px;font-size:.84rem;color:var(--muted)}
+.speed input{width:90px}
+#speedVal{min-width:2.6em;font-variant-numeric:tabular-nums}
+
+.narr{min-height:3.1em;margin:14px 0 0;padding:10px 14px;border-left:4px solid var(--cur);background:var(--panel);border-radius:0 10px 10px 0;font-size:1.02rem;font-weight:500}
+.aux{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.ax{display:grid;grid-template-columns:9.5rem minmax(0,1fr);gap:10px;align-items:start}
+.axn{font-size:.86rem;font-weight:600;padding-top:4px}
+.axhint{display:block;font-weight:400;font-size:.75rem;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{padding:3px 9px;border:1px solid var(--rule);background:var(--panel);border-radius:6px;font-weight:600;font-variant-numeric:tabular-nums;font-size:.92rem}
+.chip.edge-top,.chip.edge-front{border-color:var(--wait);background:var(--wait-bg)}
+.ax.out .chip{border-color:var(--done);color:var(--done)}
+.empty{color:var(--muted);font-size:.86rem;padding-top:4px;font-style:italic}
+
+.custom{margin-top:18px;padding-top:14px;border-top:1px dashed var(--rule)}
+.custom label{display:block;font-weight:600;font-size:.88rem;margin-bottom:6px}
+.custom label span{font-weight:400;color:var(--muted)}
+.crow{display:flex;gap:6px;flex-wrap:wrap}
+.crow input{flex:1 1 220px;padding:8px 10px;border:1px solid var(--rule);border-radius:8px;background:var(--panel);font-family:var(--mono);font-size:.85rem}
+.tb{padding:8px 14px;border:1px solid var(--ink);border-radius:8px;background:var(--panel);font-weight:600;cursor:pointer}
+.tb.ghost{border-color:var(--rule)}
+#treeErr{color:var(--bad);font-size:.85rem;margin:6px 0 0;min-height:1em}
+
+/* code */
+.codebox{position:sticky;top:12px;background:var(--code-bg);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+.codehead{display:flex;justify-content:space-between;align-items:center;padding:8px 10px 8px 14px;border-bottom:1px solid var(--rule);font-size:.85rem;color:var(--muted)}
+.codehead strong{color:var(--ink)}
+#copy{border:1px solid var(--rule);background:var(--panel);border-radius:6px;padding:3px 10px;font-size:.8rem;cursor:pointer}
+#code{margin:0;padding:10px 0;max-height:min(72vh,640px);overflow:auto;font-family:var(--mono);font-size:12.6px;line-height:1.7;position:relative;scroll-behavior:smooth}
+.cl{display:flex;padding-right:14px;transition:background .2s}
+.cl .no{flex:none;width:2.6em;text-align:right;padding-right:12px;color:var(--t-com);user-select:none}
+.cl .tx{white-space:pre}
+.cl.hl{background:var(--hl);box-shadow:inset 3px 0 var(--cur)}
+.cl.hl .no{color:var(--cur);font-weight:600}
+.t-kw{color:var(--t-kw)} .t-ty{color:var(--t-ty)} .t-fn{color:var(--t-fn)} .t-num,.t-str{color:var(--t-num)} .t-com{color:var(--t-com);font-style:italic}
+.nodedef{padding:10px 14px;border-top:1px solid var(--rule);font-size:.8rem;color:var(--muted)}
+.nodedef code{font-family:var(--mono);font-size:.95em;color:var(--ink)}
+
+/* notes */
+#notes{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr) minmax(0,1.2fr);gap:28px;margin-top:30px;padding-top:22px;border-top:1px solid var(--rule)}
+#notes h3{font-size:1.02rem;margin:0 0 6px;font-weight:700}
+#notes p{margin:0 0 16px;max-width:62ch}
+#notes dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+#notes dt{color:var(--muted);font-size:.88rem;padding-top:1px}
+#notes dd{margin:0;font-weight:600}
+#notes ul{margin:0;padding-left:1.1em}
+#notes li{margin-bottom:5px}
+#notes li::marker{color:var(--cur)}
+
+@media (max-width:1180px){ .work{grid-template-columns:1fr} .codebox{position:static} #code{max-height:none} #notes{grid-template-columns:1fr 1fr} .note-vars{grid-column:1 / -1} }
+@media (max-width:860px){
+  .layout{grid-template-columns:1fr;gap:12px}
+  .side{display:none}
+  .mobile-pick{display:block;margin-top:14px}
+  .top{align-items:flex-start}
+  #notes{grid-template-columns:1fr;gap:6px}
+  .ax{grid-template-columns:1fr;gap:4px}
+}
+@media (max-width:520px){ body{font-size:14.5px} .speed input{width:70px} .brand svg{display:none} }
+@media (prefers-reduced-motion: reduce){ *{transition:none !important;animation:none !important;scroll-behavior:auto !important} }
+.topnav{display:flex;align-items:center;gap:14px;flex:none;font-size:.9rem}
+.topnav a{color:var(--muted);text-decoration:none}
+.topnav a:hover{color:var(--ink)}
+.theme-btn{display:inline-grid;place-items:center;width:34px;height:34px;border:1px solid var(--rule);border-radius:9px;background:var(--panel);cursor:pointer}
+.theme-btn:hover{background:var(--panel2)}
+.theme-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.theme-btn .moon{display:none}
+:root[data-theme="dark"] .theme-btn .sun{display:none}
+:root[data-theme="dark"] .theme-btn .moon{display:block}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true"><g stroke="var(--edge)" stroke-width="2"><line x1="23" y1="10" x2="11" y2="30"/><line x1="23" y1="10" x2="35" y2="30"/></g><circle cx="23" cy="10" r="7" fill="var(--cur)"/><circle cx="11" cy="32" r="7" fill="var(--done)"/><circle cx="35" cy="32" r="7" fill="var(--panel)" stroke="var(--wait)" stroke-width="2.5"/></svg>
+      <div>
+        <h1>Tree algorithms, step by step</h1>
+        <p>37 interview patterns, each animated next to its C++ code. Press <kbd>Space</kbd> to play or pause, and <kbd>←</kbd> <kbd>→</kbd> to step.</p>
+      </div>
+    </div>
+    <nav class="topnav">
+      <a href="../index.html">← All topics</a>
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="Toggle dark mode">
+        <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+    </nav>
+  </header>
+  <div class="mobile-pick"><label for="algoSelect" class="sr">Algorithm</label><select id="algoSelect"></select></div>
+
+  <div class="layout">
+    <nav class="side" aria-label="Algorithms">
+      <input id="filter" type="search" placeholder="Filter, e.g. BST or BFS" aria-label="Filter algorithms">
+      <div id="list"></div>
+    </nav>
+
+    <main id="main">
+      <section class="head">
+        <div class="cat" id="cat"></div>
+        <h2 id="title"></h2>
+        <p class="blurb" id="blurb"></p>
+        <div class="sample" id="sample">Sample tree in level order: <code id="sampleTree"></code></div>
+      </section>
+
+      <section class="work">
+        <div>
+          <div class="stage" id="stage">
+            <svg id="svg" role="img" aria-label="Animated tree"></svg>
+            <div id="rows"></div>
+          </div>
+          <div class="legend" id="legend"></div>
+
+          <div class="controls">
+            <div class="btns">
+              <button class="ib" id="first" aria-label="Go to first step" title="First step"><svg viewBox="0 0 16 16"><path d="M3 2h2v12H3zM14 2v12L6 8z"/></svg></button>
+              <button class="ib" id="prev" aria-label="Previous step" title="Previous step (←)"><svg viewBox="0 0 16 16"><path d="M12 2v12L3 8z"/></svg></button>
+              <button class="ib" id="play" aria-label="Play" data-state="play" title="Play or pause (Space)"><svg class="i-play" viewBox="0 0 16 16"><path d="M4 2v12l10-6z"/></svg><svg class="i-pause" viewBox="0 0 16 16"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg><span id="playText">Play</span></button>
+              <button class="ib" id="next" aria-label="Next step" title="Next step (→)"><svg viewBox="0 0 16 16"><path d="M4 2v12l9-6z"/></svg></button>
+              <button class="ib" id="last" aria-label="Go to last step" title="Last step"><svg viewBox="0 0 16 16"><path d="M11 2h2v12h-2zM2 2v12l8-6z"/></svg></button>
+            </div>
+            <div class="scrubwrap"><input type="range" id="scrub" min="0" max="0" value="0" aria-label="Step"><span id="counter"></span></div>
+            <label class="speed">Speed <input type="range" id="speed" min="0.5" max="3" step="0.25" value="1"><span id="speedVal">1×</span></label>
+          </div>
+
+          <p class="narr" id="narr" aria-live="polite"></p>
+          <div class="aux" id="aux"></div>
+
+          <form class="custom" id="custom">
+            <label for="treeIn">Try your own tree <span>(level order, null for gaps, up to 25 nodes)</span></label>
+            <div class="crow" id="treeForm-row">
+              <input id="treeIn" autocomplete="off" spellcheck="false">
+              <button class="tb" type="submit">Run on this tree</button>
+              <button class="tb ghost" type="button" id="treeReset">Use the sample</button>
+            </div>
+            <p id="treeErr" role="alert"></p>
+          </form>
+        </div>
+
+        <div class="codebox">
+          <div class="codehead"><span><strong>C++</strong></span><button id="copy" type="button">Copy code</button></div>
+          <pre id="code"></pre>
+          <div class="nodedef" id="nodedef">Snippets assume <code>struct Node { int val; Node *left = nullptr, *right = nullptr; Node(int v) : val(v) {} };</code></div>
+        </div>
+      </section>
+
+      <section id="notes" aria-label="Interview notes"></section>
+    </main>
+  </div>
+</div>
+<script>
+/* ================= Engine ================= */
+let NID = 0;
+const mk = (val) => ({ id: 'n' + (NID++), val, left: null, right: null });
+function fromLevel(arr) {
+  if (!arr || !arr.length || arr[0] == null) return null;
+  const root = mk(arr[0]); const q = [root]; let i = 1;
+  while (q.length && i < arr.length) {
+    const n = q.shift();
+    if (i < arr.length && arr[i] != null) { n.left = mk(arr[i]); q.push(n.left); } i++;
+    if (i < arr.length && arr[i] != null) { n.right = mk(arr[i]); q.push(n.right); } i++;
+  }
+  return root;
+}
+function findVal(root, v) { if (!root) return null; if (root.val === v) return root; return findVal(root.left, v) || findVal(root.right, v); }
+const isLeaf = (n) => !n.left && !n.right;
+const idOf = (n) => (n && typeof n === 'object') ? n.id : n;
+
+function snap(root) {
+  if (!root) return null;
+  const nodes = {}; const nary = !!root.children;
+  const go = (n) => {
+    if (nary) {
+      nodes[n.id] = { val: n.val, ring: !!n.ring, ch: n.children.map(c => c.id) };
+      n.children.forEach(go);
+    } else {
+      nodes[n.id] = { val: n.val, ring: !!n.ring, l: n.left ? n.left.id : null, r: n.right ? n.right.id : null };
+      if (n.left) go(n.left); if (n.right) go(n.right);
+    }
+  };
+  go(root);
+  return { root: root.id, nodes, nary };
+}
+
+function parseCode(src) {
+  const lines = [], marks = {};
+  src.replace(/^\n+/, '').replace(/\s+$/, '').split('\n').forEach((ln, i) => {
+    const m = ln.match(/\/\/@(\w+)/);
+    if (m) { marks[m[1]] = i; ln = ln.replace(/\s*\/\/@\w+/, ''); }
+    lines.push(ln.replace(/\s+$/, ''));
+  });
+  return { lines, marks };
+}
+
+class Tracer {
+  constructor(marks) {
+    this.marks = marks; this.frames = []; this.root = null;
+    this.st = {}; this.badge = {}; this.tag = {}; this.edge = {}; this.extra = [];
+    this.out = []; this.aux = []; this.rows = null;
+  }
+  s(n, c) { const id = idOf(n); if (id == null) return; if (c) this.st[id] = c; else delete this.st[id]; }
+  b(n, t) { const id = idOf(n); if (id == null) return; if (t !== '' && t != null) this.badge[id] = String(t); else delete this.badge[id]; }
+  e(n, c) { const id = idOf(n); if (id == null) return; if (c) this.edge[id] = c; else delete this.edge[id]; }
+  tg(text, n) {
+    for (const k in this.tag) if (this.tag[k] === text) delete this.tag[k];
+    const id = idOf(n); if (id != null) this.tag[id] = text;
+  }
+  ax(name, items, kind = 'list') {
+    const a = this.aux.find(x => x.name === name);
+    if (a) { a.items = [...items]; a.kind = kind; } else this.aux.push({ name, items: [...items], kind });
+  }
+  dimSub(n) { if (!n) return; this.s(n, 'dim'); this.dimSub(n.left); this.dimSub(n.right); }
+  step(mark, msg) {
+    if (mark && this.marks[mark] === undefined) throw new Error('Unknown code mark: ' + mark);
+    this.frames.push({
+      tree: snap(this.root), st: { ...this.st }, badge: { ...this.badge }, tag: { ...this.tag }, edge: { ...this.edge },
+      extra: this.extra.map(x => [...x]), out: [...this.out],
+      aux: this.aux.map(a => ({ name: a.name, kind: a.kind, items: [...a.items] })),
+      rows: this.rows ? JSON.parse(JSON.stringify(this.rows)) : null,
+      line: mark ? this.marks[mark] : -1, msg
+    });
+  }
+}
+
+const ALGOS = [];
+const A = (o) => { o.parsed = parseCode(o.code); ALGOS.push(o); };
+function framesFor(algo, arr) {
+  NID = 0;
+  const T = new Tracer(algo.parsed.marks);
+  T.root = algo.tree ? fromLevel(arr || algo.tree) : null;
+  algo.run(T, T.root);
+  return T.frames;
+}
+
+const GEN = [1, 2, 3, 4, 5, 6, 7, null, null, 8, 9];
+const BST = [8, 3, 10, 1, 6, null, 14, null, null, 4, 7, 13];
+const LCAT = [3, 5, 1, 6, 2, 0, 8, null, null, 7, 4];
+const fmtArr = (a) => '[' + a.join(', ') + ']';
+
+/* ================= Traversals ================= */
+function orderDFS(T, root, kind) {
+  const cs = [], outd = new Set();
+  const rest = (n) => T.s(n, outd.has(n.id) ? 'done' : 'stack');
+  const go = (n) => {
+    cs.push(n.val); T.ax('Call stack', cs, 'stack'); T.e(n, 'path'); T.s(n, 'cur');
+    T.step('base', `Call on ${n.val}. It isn't null, so keep going.`);
+    const emit = () => { outd.add(n.id); T.out.push(n.val); T.s(n, 'cur'); T.step('visit', `Output ${n.val}.`); };
+    if (kind === 'pre') emit();
+    if (n.left) { T.step('left', `From ${n.val}, recurse into the left child ${n.left.val}.`); rest(n); go(n.left); T.s(n, 'cur'); }
+    if (kind === 'in') emit();
+    if (n.right) { T.step('right', `Back at ${n.val}; recurse into the right child ${n.right.val}.`); rest(n); go(n.right); T.s(n, 'cur'); }
+    if (kind === 'post') emit();
+    cs.pop(); T.ax('Call stack', cs, 'stack'); T.e(n, ''); T.s(n, 'done');
+  };
+  go(root);
+  T.step(null, `Done: ${kind}order is ${fmtArr(T.out)}.`);
+}
+
+A({
+  id: 'preorder', cat: 'Traversals', title: 'Preorder (recursive)', custom: true, tree: GEN,
+  blurb: 'Visit the node first, then its left subtree, then its right subtree.',
+  code: `
+void preorder(Node* root, vector<int>& out) {
+    if (!root) return;            //@base
+    out.push_back(root->val);     //@visit
+    preorder(root->left, out);    //@left
+    preorder(root->right, out);   //@right
+}`,
+  run: (T, r) => orderDFS(T, r, 'pre'),
+  idea: 'A node is recorded the moment you reach it, before any of its descendants. That makes preorder the natural choice whenever a parent must be handled before its children: copying a tree, serializing it, or passing information downward.',
+  time: 'O(n)', space: 'O(h) for the call stack; O(n) on a skewed tree',
+  vars: ['Iterative preorder with an explicit stack (push right before left)', 'Serialize and deserialize a tree (LC 297)', 'Flatten binary tree to linked list (LC 114)', 'Build a tree from preorder + inorder (LC 105)']
+});
+A({
+  id: 'inorder', cat: 'Traversals', title: 'Inorder (recursive)', custom: true, tree: BST,
+  blurb: 'Left subtree, then the node, then the right subtree. On a BST this prints values in sorted order.',
+  code: `
+void inorder(Node* root, vector<int>& out) {
+    if (!root) return;            //@base
+    inorder(root->left, out);     //@left
+    out.push_back(root->val);     //@visit
+    inorder(root->right, out);    //@right
+}`,
+  run: (T, r) => orderDFS(T, r, 'in'),
+  idea: 'A node is recorded only after its entire left subtree. The sample is a BST, so the output comes out sorted, which is the property behind most BST interview questions.',
+  time: 'O(n)', space: 'O(h)',
+  vars: ['Kth smallest in a BST (LC 230) — stop after k outputs', 'Validate a BST (LC 98) — output must be strictly increasing', 'Recover a BST with two swapped nodes (LC 99)', 'Iterative and Morris versions for interview follow-ups']
+});
+A({
+  id: 'postorder', cat: 'Traversals', title: 'Postorder (recursive)', custom: true, tree: GEN,
+  blurb: 'Both subtrees first, then the node. Use it when a node needs answers from its children.',
+  code: `
+void postorder(Node* root, vector<int>& out) {
+    if (!root) return;            //@base
+    postorder(root->left, out);   //@left
+    postorder(root->right, out);  //@right
+    out.push_back(root->val);     //@visit
+}`,
+  run: (T, r) => orderDFS(T, r, 'post'),
+  idea: 'A node is recorded after everything beneath it is finished. Every "compute from children and return upward" problem — height, diameter, balance, max path sum, tree DP — is a postorder traversal in disguise.',
+  time: 'O(n)', space: 'O(h)',
+  vars: ['Height, diameter and balance checks (see Bottom-up recursion)', 'Delete or free a whole tree', 'Iterative postorder: two stacks, or reverse a node-right-left preorder']
+});
+
+A({
+  id: 'iter-inorder', cat: 'Traversals', title: 'Inorder (iterative, stack)', custom: true, tree: BST,
+  blurb: 'Simulate the recursion: slide left pushing nodes, pop one, output it, then step right.',
+  code: `
+vector<int> inorder(Node* root) {
+    vector<int> out;
+    stack<Node*> st;
+    Node* cur = root;                 //@init
+    while (cur || !st.empty()) {
+        while (cur) {
+            st.push(cur);             //@push
+            cur = cur->left;
+        }
+        cur = st.top(); st.pop();     //@pop
+        out.push_back(cur->val);      //@visit
+        cur = cur->right;             //@right
+    }
+    return out;
+}`,
+  run(T, root) {
+    const st = []; let cur = root;
+    const show = () => T.ax('Stack', st.map(x => x.val), 'stack');
+    show(); T.tg('cur', cur); T.step('init', 'cur starts at the root; the stack is empty.');
+    while (cur || st.length) {
+      while (cur) {
+        st.push(cur); T.s(cur, 'stack'); show();
+        T.step('push', `Push ${cur.val}, then slide to its left child.`);
+        cur = cur.left; T.tg('cur', cur);
+      }
+      cur = st.pop(); show(); T.s(cur, 'cur'); T.tg('cur', cur);
+      T.step('pop', `cur is null, so the left side is exhausted. Pop ${cur.val}.`);
+      T.out.push(cur.val); T.step('visit', `Output ${cur.val}.`); T.s(cur, 'done');
+      cur = cur.right; T.tg('cur', cur);
+      T.step('right', cur ? `Move to the right child ${cur.val}.` : 'No right child: cur = null, so the next pop happens.');
+    }
+    T.step(null, `Done: ${fmtArr(T.out)}.`);
+  },
+  idea: 'The stack holds exactly the ancestors whose left subtree is still in progress. Each node is pushed once and popped once, which is why this also powers the BST iterator.',
+  time: 'O(n)', space: 'O(h)',
+  vars: ['BST iterator (LC 173) — same loop, paused between next() calls', 'Two Sum in a BST (LC 653) with a forward and a reverse iterator', 'Kth smallest without recursion']
+});
+
+A({
+  id: 'iter-preorder', cat: 'Traversals', title: 'Preorder (iterative, stack)', custom: true, tree: GEN,
+  blurb: 'Pop, output, push children. Right goes in first so the left comes out first.',
+  code: `
+vector<int> preorder(Node* root) {
+    vector<int> out;
+    if (!root) return out;
+    stack<Node*> st; st.push(root);      //@init
+    while (!st.empty()) {
+        Node* n = st.top(); st.pop();
+        out.push_back(n->val);           //@visit
+        if (n->right) st.push(n->right); //@pushR
+        if (n->left)  st.push(n->left);  //@pushL
+    }
+    return out;
+}`,
+  run(T, root) {
+    const st = [root]; const show = () => T.ax('Stack', st.map(x => x.val), 'stack');
+    T.s(root, 'stack'); show(); T.step('init', 'Push the root.');
+    while (st.length) {
+      const n = st.pop(); show(); T.s(n, 'cur'); T.out.push(n.val);
+      T.step('visit', `Pop ${n.val} and output it.`);
+      if (n.right) { st.push(n.right); T.s(n.right, 'stack'); show(); T.step('pushR', `Push the right child ${n.right.val} first, so it comes out later.`); }
+      if (n.left) { st.push(n.left); T.s(n.left, 'stack'); show(); T.step('pushL', `Push the left child ${n.left.val}. It's on top, so it's next.`); }
+      T.s(n, 'done');
+    }
+    T.step(null, `Done: ${fmtArr(T.out)}.`);
+  },
+  idea: 'A stack is last-in, first-out, so pushing right before left guarantees the left subtree is fully explored first, matching the recursive order.',
+  time: 'O(n)', space: 'O(h)',
+  vars: ['Iterative postorder: push left before right, then reverse the output', 'N-ary tree preorder (LC 589) — push children in reverse', 'Iterative DFS on graphs uses the same skeleton']
+});
+
+A({
+  id: 'level-order', cat: 'Traversals', title: 'Level order (BFS)', custom: true, tree: GEN,
+  blurb: 'Process the tree one level at a time with a queue.',
+  code: `
+vector<vector<int>> levelOrder(Node* root) {
+    vector<vector<int>> res;
+    if (!root) return res;
+    queue<Node*> q; q.push(root);            //@init
+    while (!q.empty()) {
+        int sz = q.size();                   //@level
+        vector<int> level;
+        for (int i = 0; i < sz; i++) {
+            Node* n = q.front(); q.pop();
+            level.push_back(n->val);         //@pop
+            if (n->left)  q.push(n->left);   //@pushL
+            if (n->right) q.push(n->right);  //@pushR
+        }
+        res.push_back(level);                //@done
+    }
+    return res;
+}`,
+  run(T, root) {
+    const q = [root]; const showQ = () => T.ax('Queue', q.map(x => x.val), 'queue');
+    T.s(root, 'stack'); showQ(); T.step('init', 'Enqueue the root.');
+    let d = 0;
+    while (q.length) {
+      const sz = q.length, level = [];
+      T.ax('Current level', [], 'list');
+      T.step('level', `Level ${d}: the queue holds exactly ${sz} node${sz > 1 ? 's' : ''}, all from this level.`);
+      for (let i = 0; i < sz; i++) {
+        const n = q.shift(); level.push(n.val); T.s(n, 'cur'); showQ(); T.ax('Current level', level, 'list');
+        T.step('pop', `Dequeue ${n.val} and add it to the level.`);
+        const kids = [n.left, n.right].filter(Boolean);
+        if (kids.length) { kids.forEach(k => { q.push(k); T.s(k, 'stack'); }); showQ(); T.step(n.left ? 'pushL' : 'pushR', `Enqueue ${kids.map(k => k.val).join(' and ')} for the next level.`); }
+        T.s(n, 'done');
+      }
+      T.out.push(fmtArr(level)); T.step('done', `Level ${d} finished.`); d++;
+    }
+    T.step(null, `Done: ${T.out.length} levels.`);
+  },
+  idea: 'Freezing sz = q.size() at the start of each round separates one level from the next, even though children are being added to the same queue.',
+  time: 'O(n)', space: 'O(w), the widest level (up to n/2)',
+  vars: ['Bottom-up level order (LC 107) — reverse the result', 'Average or largest value per level (LC 637, LC 515)', 'Maximum width with index numbering (LC 662)', 'Minimum depth: the first leaf BFS meets (LC 111)', 'Populating next right pointers (LC 116)']
+});
+
+A({
+  id: 'zigzag', cat: 'Traversals', title: 'Zigzag level order', custom: true, tree: GEN,
+  blurb: 'Level order, but every other level is read right to left.',
+  code: `
+vector<vector<int>> zigzag(Node* root) {
+    vector<vector<int>> res;
+    if (!root) return res;
+    queue<Node*> q; q.push(root);
+    bool leftToRight = true;
+    while (!q.empty()) {
+        int sz = q.size();
+        vector<int> level(sz);                       //@level
+        for (int i = 0; i < sz; i++) {
+            Node* n = q.front(); q.pop();
+            int idx = leftToRight ? i : sz - 1 - i;  //@place
+            level[idx] = n->val;
+            if (n->left)  q.push(n->left);
+            if (n->right) q.push(n->right);
+        }
+        res.push_back(level);                        //@done
+        leftToRight = !leftToRight;
+    }
+    return res;
+}`,
+  run(T, root) {
+    const q = [root]; const showQ = () => T.ax('Queue', q.map(x => x.val), 'queue');
+    T.s(root, 'stack'); showQ();
+    let ltr = true, d = 0;
+    while (q.length) {
+      const sz = q.length; const level = Array(sz).fill('_');
+      T.ax('Level slots', level, 'list');
+      T.step('level', `Level ${d}, read ${ltr ? 'left to right' : 'right to left'}: make ${sz} empty slot${sz > 1 ? 's' : ''}.`);
+      for (let i = 0; i < sz; i++) {
+        const n = q.shift(); const idx = ltr ? i : sz - 1 - i; level[idx] = n.val;
+        T.s(n, 'cur'); [n.left, n.right].filter(Boolean).forEach(k => { q.push(k); T.s(k, 'stack'); });
+        showQ(); T.ax('Level slots', level, 'list');
+        T.step('place', `Dequeued #${i} (${n.val}) goes into slot ${idx}.`);
+        T.s(n, 'done');
+      }
+      T.out.push(fmtArr(level)); T.step('done', `Level ${d} saved. Flip the direction.`); ltr = !ltr; d++;
+    }
+    T.step(null, 'Done.');
+  },
+  idea: 'The queue order never changes; only where each value lands in the level array does. Writing to index sz − 1 − i on odd levels avoids reversing anything.',
+  time: 'O(n)', space: 'O(w)',
+  vars: ['Deque version: push_front or push_back depending on direction', 'Spiral order with two stacks (classic GfG form)', 'Reverse every odd level of a perfect tree (LC 2415)']
+});
+
+A({
+  id: 'morris', cat: 'Traversals', title: 'Morris inorder (O(1) space)', custom: true, tree: BST,
+  blurb: 'Inorder without a stack: temporarily thread each predecessor back to its successor.',
+  code: `
+vector<int> morrisInorder(Node* root) {
+    vector<int> out; Node* cur = root;
+    while (cur) {
+        if (!cur->left) {
+            out.push_back(cur->val);          //@visitNoLeft
+            cur = cur->right;
+        } else {
+            Node* pre = cur->left;            //@findPre
+            while (pre->right && pre->right != cur)
+                pre = pre->right;             //@walk
+            if (!pre->right) {
+                pre->right = cur;             //@thread
+                cur = cur->left;
+            } else {
+                pre->right = nullptr;         //@unthread
+                out.push_back(cur->val);      //@visitBack
+                cur = cur->right;
+            }
+        }
+    }
+    return out;
+}`,
+  run(T, root) {
+    const th = new Map(); const R = (n) => n.right || th.get(n.id) || null;
+    const sync = () => { T.extra = [...th].map(([a, b]) => [a, b.id]); };
+    let cur = root; T.tg('cur', cur);
+    while (cur) {
+      T.s(cur, 'cur');
+      if (!cur.left) {
+        const viaThread = !cur.right && th.has(cur.id);
+        T.out.push(cur.val);
+        T.step('visitNoLeft', `${cur.val} has no left subtree: output it, then follow right${viaThread ? ' (along a thread)' : ''}.`);
+        T.s(cur, 'done'); cur = R(cur); T.tg('cur', cur);
+      } else {
+        let pre = cur.left; T.tg('pre', pre);
+        T.step('findPre', `${cur.val} has a left subtree. Find its inorder predecessor: the rightmost node there.`);
+        while (R(pre) && R(pre) !== cur) { pre = R(pre); T.tg('pre', pre); T.step('walk', `Keep going right: pre = ${pre.val}.`); }
+        if (!R(pre)) {
+          th.set(pre.id, cur); sync(); T.s(cur, 'stack');
+          T.step('thread', `Thread ${pre.val} → ${cur.val} so we can climb back later, then go left.`);
+          cur = cur.left; T.tg('pre', null); T.tg('cur', cur);
+        } else {
+          th.delete(pre.id); sync(); T.tg('pre', null);
+          T.step('unthread', `pre already points back to ${cur.val}, so its left side is done. Remove the thread.`);
+          T.out.push(cur.val); T.step('visitBack', `Output ${cur.val}.`);
+          T.s(cur, 'done'); cur = R(cur); T.tg('cur', cur);
+        }
+      }
+    }
+    T.step(null, `Done: ${fmtArr(T.out)} using no stack, and every thread is removed.`);
+  },
+  idea: 'The rightmost node of a left subtree has a spare null right pointer. Pointing it back at the current node replaces the stack. Meeting that thread a second time tells you the left side is finished, and you restore the pointer.',
+  time: 'O(n) — each edge is walked at most a few times', space: 'O(1) extra',
+  trap: 'You must remove every thread, or the caller gets a corrupted tree. Interviewers often ask for this as the follow-up to "can you do it without a stack?"',
+  vars: ['Morris preorder: output when creating the thread instead of when removing it', 'Recover a BST (LC 99) in O(1) space', 'Kth smallest in O(1) space']
+});
+
+/* ================= Views & orders ================= */
+A({
+  id: 'right-view', cat: 'Views & orders', title: 'Right side view', custom: true, tree: GEN,
+  blurb: 'The last node of every level is the one you see from the right.',
+  code: `
+vector<int> rightSideView(Node* root) {
+    vector<int> res;
+    if (!root) return res;
+    queue<Node*> q; q.push(root);
+    while (!q.empty()) {
+        int sz = q.size();
+        for (int i = 0; i < sz; i++) {
+            Node* n = q.front(); q.pop();          //@pop
+            if (i == sz - 1) res.push_back(n->val); //@take
+            if (n->left)  q.push(n->left);
+            if (n->right) q.push(n->right);
+        }
+    }
+    return res;
+}`,
+  run(T, root) {
+    const q = [root]; const showQ = () => T.ax('Queue', q.map(x => x.val), 'queue');
+    T.s(root, 'stack'); showQ();
+    let d = 0;
+    while (q.length) {
+      const sz = q.length;
+      for (let i = 0; i < sz; i++) {
+        const n = q.shift(); [n.left, n.right].filter(Boolean).forEach(k => { q.push(k); T.s(k, 'stack'); }); showQ();
+        if (i === sz - 1) { T.s(n, 'found'); T.out.push(n.val); T.step('take', `${n.val} is the last node on level ${d}: it's visible from the right.`); }
+        else { T.s(n, 'cur'); T.step('pop', `${n.val} is hidden behind a node further right on level ${d}.`); T.s(n, 'done'); }
+      }
+      d++;
+    }
+    T.step(null, `Right view: ${fmtArr(T.out)}.`);
+  },
+  idea: 'Run a normal level-order traversal and keep only the last node of each level. Note that 9 shows up even though it is a left-leaning branch: the view depends on depth, not on side.',
+  time: 'O(n)', space: 'O(w)',
+  vars: ['Left view: keep i == 0 instead', 'DFS version: visit right before left and record when depth == res.size()', 'Find bottom-left tree value (LC 513)']
+});
+
+A({
+  id: 'top-view', cat: 'Views & orders', title: 'Top view', custom: true, tree: BST,
+  blurb: 'Give each node a column (left −1, right +1). The first node BFS meets in a column is visible from above.',
+  code: `
+vector<int> topView(Node* root) {
+    map<int, int> top;                           // column -> value
+    queue<pair<Node*, int>> q; q.push({root, 0});
+    while (!q.empty()) {
+        auto [n, hd] = q.front(); q.pop();       //@pop
+        if (!top.count(hd)) top[hd] = n->val;    //@take
+        if (n->left)  q.push({n->left, hd - 1});
+        if (n->right) q.push({n->right, hd + 1});
+    }
+    vector<int> res;
+    for (auto& [hd, v] : top) res.push_back(v);  //@collect
+    return res;
+}`,
+  run(T, root) {
+    const q = [[root, 0]]; const top = new Map(); T.b(root, 'col 0'); T.s(root, 'stack');
+    const showQ = () => T.ax('Queue', q.map(([n, h]) => `${n.val}@${h}`), 'queue');
+    const showM = () => T.ax('Column → value', [...top].sort((a, b) => a[0] - b[0]).map(([h, v]) => `${h}: ${v}`), 'list');
+    showQ(); showM();
+    while (q.length) {
+      const [n, hd] = q.shift(); showQ(); T.s(n, 'cur');
+      T.step('pop', `Dequeue ${n.val} in column ${hd}.`);
+      if (!top.has(hd)) { top.set(hd, n.val); T.s(n, 'found'); showM(); T.step('take', `Column ${hd} is new, so ${n.val} is the topmost there.`); }
+      else { T.s(n, 'dim'); T.step('take', `Column ${hd} already has ${top.get(hd)} above it: ${n.val} is hidden.`); }
+      if (n.left) { q.push([n.left, hd - 1]); T.b(n.left, 'col ' + (hd - 1)); T.s(n.left, 'stack'); }
+      if (n.right) { q.push([n.right, hd + 1]); T.b(n.right, 'col ' + (hd + 1)); T.s(n.right, 'stack'); }
+      showQ();
+    }
+    [...top].sort((a, b) => a[0] - b[0]).forEach(([, v]) => T.out.push(v));
+    T.step('collect', `Read columns left to right: ${fmtArr(T.out)}.`);
+  },
+  idea: 'Tag each node with a horizontal distance. Because BFS visits shallower nodes first, the first value stored for a column is the highest one. A std::map keeps columns sorted for free.',
+  time: 'O(n log n) with map; O(n) tracking min/max column', space: 'O(n)',
+  trap: 'Plain DFS can reach a deeper node in a column before a shallower one. Use BFS, or DFS that also compares depth.',
+  vars: ['Bottom view: overwrite the column every time, so the last one wins', 'Vertical order traversal (next in this list)', 'Vertical sum of a binary tree']
+});
+
+A({
+  id: 'vertical', cat: 'Views & orders', title: 'Vertical order traversal', custom: true, tree: BST,
+  blurb: 'Group nodes by column, top to bottom, columns left to right.',
+  code: `
+vector<vector<int>> verticalOrder(Node* root) {
+    map<int, vector<int>> cols;                  // column -> values top-down
+    queue<pair<Node*, int>> q; q.push({root, 0}); //@init
+    while (!q.empty()) {
+        auto [n, hd] = q.front(); q.pop();
+        cols[hd].push_back(n->val);              //@add
+        if (n->left)  q.push({n->left, hd - 1});
+        if (n->right) q.push({n->right, hd + 1});
+    }
+    vector<vector<int>> res;
+    for (auto& [hd, v] : cols) res.push_back(v);  //@collect
+    return res;
+}`,
+  run(T, root) {
+    const q = [[root, 0]]; const cols = new Map(); T.b(root, 'col 0'); T.s(root, 'stack');
+    const showM = () => T.ax('Columns', [...cols].sort((a, b) => a[0] - b[0]).map(([h, v]) => `${h}: ${fmtArr(v)}`), 'list');
+    const showQ = () => T.ax('Queue', q.map(([n, h]) => `${n.val}@${h}`), 'queue');
+    showQ(); showM(); T.step('init', 'Start BFS from the root in column 0.');
+    while (q.length) {
+      const [n, hd] = q.shift();
+      if (!cols.has(hd)) cols.set(hd, []); cols.get(hd).push(n.val);
+      if (n.left) { q.push([n.left, hd - 1]); T.b(n.left, 'col ' + (hd - 1)); T.s(n.left, 'stack'); }
+      if (n.right) { q.push([n.right, hd + 1]); T.b(n.right, 'col ' + (hd + 1)); T.s(n.right, 'stack'); }
+      T.s(n, 'cur'); showQ(); showM();
+      T.step('add', `${n.val} goes into column ${hd}.`); T.s(n, 'done');
+    }
+    [...cols].sort((a, b) => a[0] - b[0]).forEach(([, v]) => T.out.push(fmtArr(v)));
+    T.step('collect', 'Read the columns from leftmost to rightmost.');
+  },
+  idea: 'Same column labelling as the top view, but every node is kept. BFS guarantees top-to-bottom order inside each column.',
+  time: 'O(n log n)', space: 'O(n)',
+  trap: 'LC 987 adds a tie rule: nodes in the same row and column are sorted by value. Store (row, col, val) and sort, instead of relying on BFS order.',
+  vars: ['LC 314 (BFS order) vs LC 987 (sorted ties)', 'Top and bottom views are projections of this', 'Diagonal traversal: same idea with "diagonal = depth along left edges"']
+});
+
+A({
+  id: 'boundary', cat: 'Views & orders', title: 'Boundary traversal', custom: true, tree: GEN,
+  blurb: 'Anticlockwise outline: root, left edge, all leaves, then the right edge from bottom up.',
+  code: `
+bool isLeaf(Node* n) { return !n->left && !n->right; }
+
+void addLeft(Node* n, vector<int>& res) {
+    for (Node* c = n->left; c; c = c->left ? c->left : c->right)
+        if (!isLeaf(c)) res.push_back(c->val);     //@left
+}
+void addLeaves(Node* n, vector<int>& res) {
+    if (isLeaf(n)) { res.push_back(n->val); return; } //@leaf
+    if (n->left)  addLeaves(n->left, res);
+    if (n->right) addLeaves(n->right, res);
+}
+void addRight(Node* n, vector<int>& res) {
+    vector<int> tmp;
+    for (Node* c = n->right; c; c = c->right ? c->right : c->left)
+        if (!isLeaf(c)) tmp.push_back(c->val);     //@right
+    res.insert(res.end(), tmp.rbegin(), tmp.rend()); //@rev
+}
+vector<int> boundary(Node* root) {
+    vector<int> res;
+    if (!root) return res;
+    if (!isLeaf(root)) res.push_back(root->val);   //@root
+    addLeft(root, res);
+    addLeaves(root, res);
+    addRight(root, res);
+    return res;
+}`,
+  run(T, root) {
+    const add = (n) => { T.out.push(n.val); T.s(n, 'found'); T.b(n, '#' + T.out.length); };
+    if (!isLeaf(root)) { add(root); T.step('root', `Start with the root ${root.val}.`); }
+    for (let c = root.left; c; c = c.left ? c.left : c.right) {
+      if (!isLeaf(c)) { add(c); T.step('left', `Left boundary: add ${c.val}.`); }
+      else { T.s(c, 'cur'); T.step('left', `${c.val} is a leaf. Skip it here; the leaf pass will add it.`); T.s(c, ''); }
+    }
+    const leaves = (n) => {
+      if (isLeaf(n)) { add(n); T.step('leaf', `Leaf ${n.val}, left to right.`); return; }
+      if (n.left) leaves(n.left); if (n.right) leaves(n.right);
+    };
+    if (!isLeaf(root)) leaves(root);
+    const tmp = [];
+    for (let c = root.right; c; c = c.right ? c.right : c.left) {
+      if (!isLeaf(c)) { tmp.push(c); T.s(c, 'stack'); T.ax('tmp (right edge, top-down)', tmp.map(x => x.val), 'list'); T.step('right', `Right boundary: hold ${c.val} in tmp.`); }
+    }
+    if (tmp.length) { tmp.reverse().forEach(add); T.ax('tmp (right edge, top-down)', [], 'list'); T.step('rev', 'Append tmp in reverse so the right edge runs bottom-up.'); }
+    T.step(null, `Boundary: ${fmtArr(T.out)}.`);
+  },
+  idea: 'Split the outline into three non-overlapping parts: left edge without leaves, every leaf, right edge without leaves reversed. Excluding leaves from both edges is what prevents duplicates.',
+  time: 'O(n)', space: 'O(h)',
+  trap: 'A tree that is only a root is a leaf; adding it in both the root step and the leaf step is the classic bug.',
+  vars: ['Clockwise order: root, right edge, leaves right-to-left, left edge reversed', 'Leaves of a tree, or leaf-similar trees (LC 872)']
+});
+
+/* ================= Bottom-up recursion ================= */
+A({
+  id: 'max-depth', cat: 'Bottom-up recursion', title: 'Height / max depth', custom: true, tree: GEN,
+  blurb: 'Each node returns 1 + the taller of its two subtrees.',
+  code: `
+int maxDepth(Node* root) {
+    if (!root) return 0;                  //@base
+    int l = maxDepth(root->left);         //@left
+    int r = maxDepth(root->right);        //@right
+    return 1 + max(l, r);                 //@ret
+}`,
+  run(T, root) {
+    const go = (n) => {
+      if (!n) return 0;
+      T.e(n, 'path');
+      if (isLeaf(n)) { T.s(n, 'cur'); T.b(n, 'h=1'); T.step('ret', `${n.val} is a leaf: both calls return 0, so its height is 1.`); T.s(n, 'done'); T.e(n, ''); return 1; }
+      T.s(n, 'cur'); T.step('left', `At ${n.val}: ask the left subtree for its height.`); T.s(n, 'stack');
+      const l = go(n.left);
+      T.s(n, 'cur'); T.step('right', `Left of ${n.val} says ${l}. Now ask the right subtree.`); T.s(n, 'stack');
+      const r = go(n.right);
+      const h = 1 + Math.max(l, r); T.s(n, 'cur'); T.b(n, 'h=' + h);
+      T.step('ret', `height(${n.val}) = 1 + max(${l}, ${r}) = ${h}.`); T.s(n, 'done'); T.e(n, '');
+      return h;
+    };
+    const h = go(root); T.out.push(h); T.step(null, `Max depth = ${h}.`);
+  },
+  idea: 'The template for every bottom-up problem: trust the recursive call to solve each subtree, then combine the two answers at the current node.',
+  time: 'O(n)', space: 'O(h)',
+  vars: ['Minimum depth (LC 111): a node with one child is not a leaf', 'BFS alternative: count levels', 'Balanced check and diameter reuse this exact function']
+});
+
+A({
+  id: 'diameter', cat: 'Bottom-up recursion', title: 'Diameter', custom: true,
+  tree: [1, 2, 3, 4, 5, null, null, 8, null, null, 9, 10, null, null, 11],
+  blurb: 'Longest path between any two nodes, counted in edges. It does not have to pass through the root.',
+  code: `
+int best = 0;
+int height(Node* n) {
+    if (!n) return 0;
+    int l = height(n->left);
+    int r = height(n->right);
+    best = max(best, l + r);            //@update
+    return 1 + max(l, r);               //@ret
+}
+int diameter(Node* root) { height(root); return best; }`,
+  run(T, root) {
+    let best = 0, bestIds = [];
+    const show = () => {
+      for (const k in T.edge) if (T.edge[k] === 'best') delete T.edge[k];
+      bestIds.forEach(id => T.e(id, 'best')); T.ax('best', [best], 'list');
+    };
+    show();
+    const go = (n) => {
+      if (!n) return { h: 0, p: [] };
+      if (isLeaf(n)) { T.s(n, 'cur'); T.b(n, 'h=1'); T.step('ret', `Leaf ${n.val}: height 1.`); T.s(n, 'done'); return { h: 1, p: [n.id] }; }
+      T.s(n, 'stack');
+      const L = go(n.left), R = go(n.right);
+      T.s(n, 'cur'); const through = L.h + R.h;
+      if (through > best) { best = through; bestIds = [...L.p, ...R.p]; show(); T.step('update', `Longest path bending at ${n.val}: ${L.h} + ${R.h} = ${through} edges. New best.`); }
+      else T.step('update', `Path bending at ${n.val} is ${through} edges; best stays ${best}.`);
+      const h = 1 + Math.max(L.h, R.h); T.b(n, 'h=' + h);
+      T.step('ret', `Return height ${h} to the parent.`); T.s(n, 'done');
+      return { h, p: [n.id, ...(L.h >= R.h ? L.p : R.p)] };
+    };
+    go(root); T.out.push(best);
+    T.step(null, `Diameter = ${best} edges, and it doesn't pass through the root.`);
+  },
+  idea: 'At every node, the longest path that bends there is left height + right height. The function returns height (useful to the parent) but records the bend length in a global (the actual answer). Returning one thing while tracking another is the core trick.',
+  time: 'O(n)', space: 'O(h)',
+  trap: 'Clarify whether the answer is in edges or nodes; they differ by 1.',
+  vars: ['Diameter of an N-ary tree: combine the top two child heights', 'Longest univalue path (LC 687)', 'Tree diameter of a general tree: two BFS passes (LC 1245)']
+});
+
+A({
+  id: 'balanced', cat: 'Bottom-up recursion', title: 'Check if balanced', custom: true,
+  tree: [1, 2, 3, 4, 5, null, null, 8, 9],
+  blurb: 'Every node\'s subtrees differ in height by at most 1. Return −1 to signal "already unbalanced".',
+  code: `
+// height of n, or -1 if anything below is unbalanced
+int check(Node* n) {
+    if (!n) return 0;
+    int l = check(n->left);
+    if (l == -1) return -1;              //@propL
+    int r = check(n->right);
+    if (r == -1) return -1;              //@propR
+    if (abs(l - r) > 1) return -1;       //@bad
+    return 1 + max(l, r);                //@ret
+}
+bool isBalanced(Node* root) { return check(root) != -1; }`,
+  run(T, root) {
+    const go = (n) => {
+      if (!n) return 0;
+      if (isLeaf(n)) { T.s(n, 'cur'); T.b(n, 'h=1'); T.step('ret', `Leaf ${n.val}: height 1.`); T.s(n, 'done'); return 1; }
+      T.s(n, 'stack');
+      const l = go(n.left);
+      if (l === -1) { T.s(n, 'bad'); T.b(n, '−1'); T.step('propL', `Left of ${n.val} is unbalanced: pass −1 straight up.`); return -1; }
+      const r = go(n.right);
+      if (r === -1) { T.s(n, 'bad'); T.b(n, '−1'); T.step('propR', `Right of ${n.val} is unbalanced: pass −1 straight up.`); return -1; }
+      T.s(n, 'cur');
+      if (Math.abs(l - r) > 1) { T.s(n, 'bad'); T.b(n, '−1'); T.step('bad', `At ${n.val}: |${l} − ${r}| = ${Math.abs(l - r)} > 1. Unbalanced.`); return -1; }
+      const h = 1 + Math.max(l, r); T.b(n, 'h=' + h);
+      T.step('ret', `At ${n.val}: |${l} − ${r}| ≤ 1, fine. Height ${h}.`); T.s(n, 'done');
+      return h;
+    };
+    const res = go(root); T.out.push(res !== -1 ? 'true' : 'false');
+    T.step(null, res !== -1 ? 'The tree is balanced.' : 'Not balanced: the root\'s left side is 2 levels taller.');
+  },
+  idea: 'Compute heights bottom-up and fold the balance check into the same pass. The −1 sentinel lets an unbalanced subtree short-circuit everything above it.',
+  time: 'O(n)', space: 'O(h)',
+  trap: 'Calling a separate height() at every node is O(n²) on skewed trees. Interviewers expect the single-pass version.',
+  vars: ['Same sentinel pattern: "is this subtree a BST, and what are its bounds?" (largest BST subtree, LC 333)', 'Balance a BST (LC 1382)']
+});
+
+A({
+  id: 'max-path-sum', cat: 'Bottom-up recursion', title: 'Maximum path sum', custom: true,
+  tree: [-10, 9, 20, null, null, 15, 7],
+  blurb: 'Best sum along any path. A path may bend at one node; negative branches are dropped.',
+  code: `
+int best = INT_MIN;
+int gain(Node* n) {
+    if (!n) return 0;
+    int l = max(0, gain(n->left));        // drop a negative branch
+    int r = max(0, gain(n->right));
+    best = max(best, n->val + l + r);     //@update
+    return n->val + max(l, r);            //@ret
+}
+int maxPathSum(Node* root) { gain(root); return best; }`,
+  run(T, root) {
+    let best = -Infinity, bestIds = [];
+    const show = () => {
+      for (const k in T.edge) if (T.edge[k] === 'best') delete T.edge[k];
+      bestIds.forEach(id => T.e(id, 'best')); T.ax('best', [best === -Infinity ? '−∞' : best], 'list');
+    };
+    show();
+    const go = (n) => {
+      if (!n) return { g: 0, p: [] };
+      T.s(n, 'stack');
+      const L = go(n.left), R = go(n.right);
+      T.s(n, 'cur');
+      const l = Math.max(0, L.g), r = Math.max(0, R.g), through = n.val + l + r;
+      const note = (n.left || n.right) ? ` (left gain ${L.g}${L.g < 0 ? ' → 0' : ''}, right gain ${R.g}${R.g < 0 ? ' → 0' : ''})` : '';
+      if (through > best) { best = through; bestIds = [...(l > 0 ? L.p : []), ...(r > 0 ? R.p : [])]; show(); T.step('update', `Path bending at ${n.val} sums to ${through}${note}. New best.`); }
+      else T.step('update', `Path bending at ${n.val} sums to ${through}${note}. Best stays ${best}.`);
+      const g = n.val + Math.max(l, r); T.b(n, 'gain ' + g);
+      T.step('ret', `Return ${n.val} + max(${l}, ${r}) = ${g}. A path continuing upward can use only one side.`); T.s(n, 'done');
+      const down = l >= r ? (l > 0 ? L.p : []) : R.p;
+      return { g, p: [n.id, ...down] };
+    };
+    go(root); T.out.push(best);
+    T.step(null, `Maximum path sum = ${best}: 15 → 20 → 7, which skips the root entirely.`);
+  },
+  idea: 'Two different quantities live at each node: the best path that bends here (uses both sides, updates the global) and the best one-sided path you can hand to the parent. Clamping negative gains to 0 means "don\'t take that branch".',
+  time: 'O(n)', space: 'O(h)',
+  trap: 'Initialise best to INT_MIN, not 0, or an all-negative tree returns the wrong answer.',
+  vars: ['Diameter is the same shape with heights instead of sums', 'Longest ZigZag path (LC 1372)', 'Binary tree cameras (LC 968) — three-state return']
+});
+
+A({
+  id: 'symmetric', cat: 'Bottom-up recursion', title: 'Symmetric tree', custom: true, tree: [1, 2, 2, 3, 4, 4, 3],
+  blurb: 'Mirror check: compare the left subtree with the right subtree, crossing children.',
+  code: `
+bool mirror(Node* a, Node* b) {
+    if (!a && !b) return true;
+    if (!a || !b || a->val != b->val) return false; //@cmp
+    return mirror(a->left, b->right) &&              //@outer
+           mirror(a->right, b->left);               //@inner
+}
+bool isSymmetric(Node* root) {
+    return !root || mirror(root->left, root->right);  //@start
+}`,
+  run(T, root) {
+    T.s(root, 'done'); T.step('start', `Compare the two halves under ${root.val}.`);
+    let ok = true;
+    const go = (a, b) => {
+      if (!a && !b) return true;
+      if (!a || !b) { const x = a || b; T.s(x, 'bad'); T.tg('a', a); T.tg('b', b); T.step('cmp', `${x.val} has no mirror partner. Not symmetric.`); return false; }
+      T.s(a, 'cur'); T.s(b, 'cur'); T.tg('a', a); T.tg('b', b);
+      if (a.val !== b.val) { T.s(a, 'bad'); T.s(b, 'bad'); T.step('cmp', `${a.val} ≠ ${b.val}. Not symmetric.`); return false; }
+      T.step('cmp', `${a.val} = ${b.val}. Now check their children crosswise.`);
+      T.s(a, 'stack'); T.s(b, 'stack');
+      if (a.left || b.right) { T.tg('a', null); T.tg('b', null); T.step('outer', `Outer pair: ${a.val}.left with ${b.val}.right.`); }
+      if (!go(a.left, b.right)) return false;
+      if (a.right || b.left) { T.tg('a', null); T.tg('b', null); T.step('inner', `Inner pair: ${a.val}.right with ${b.val}.left.`); }
+      if (!go(a.right, b.left)) return false;
+      T.s(a, 'done'); T.s(b, 'done'); return true;
+    };
+    ok = go(root.left, root.right); T.tg('a', null); T.tg('b', null);
+    T.out.push(ok ? 'true' : 'false'); T.step(null, ok ? 'Every mirrored pair matched: symmetric.' : 'Not symmetric.');
+  },
+  idea: 'Recurse on two nodes at once. The outer children (a.left, b.right) and the inner children (a.right, b.left) must mirror each other.',
+  time: 'O(n)', space: 'O(h)',
+  vars: ['Same tree (LC 100): pair a.left with b.left instead', 'Subtree of another tree (LC 572)', 'Iterative version with a queue of node pairs', 'Flip equivalent trees (LC 951)']
+});
+
+A({
+  id: 'invert', cat: 'Bottom-up recursion', title: 'Invert (mirror) a tree', custom: true, tree: GEN,
+  blurb: 'Swap every node\'s left and right children.',
+  code: `
+Node* invert(Node* root) {
+    if (!root) return nullptr;
+    swap(root->left, root->right);   //@swap
+    invert(root->left);              //@recL
+    invert(root->right);             //@recR
+    return root;
+}`,
+  run(T, root) {
+    const go = (n) => {
+      if (!n) return;
+      if (isLeaf(n)) { T.s(n, 'done'); return; }
+      T.s(n, 'cur'); [n.left, n.right] = [n.right, n.left];
+      T.step('swap', `Swap the children of ${n.val}. Its whole subtrees move with them.`);
+      T.s(n, 'done');
+      if (n.left && !isLeaf(n.left)) T.step('recL', `Recurse into the new left child ${n.left.val}.`);
+      go(n.left);
+      if (n.right && !isLeaf(n.right)) T.step('recR', `Recurse into the new right child ${n.right.val}.`);
+      go(n.right);
+    };
+    go(root); T.step(null, 'Every node has been swapped: the tree is mirrored.');
+  },
+  idea: 'Any traversal order works as long as each node is swapped exactly once. Preorder (swap, then recurse) is the most readable.',
+  time: 'O(n)', space: 'O(h)',
+  vars: ['BFS version: swap children of each dequeued node', 'Compare with symmetric check: that one only reads, this one rewrites']
+});
+
+A({
+  id: 'house-robber-3', cat: 'Bottom-up recursion', title: 'Tree DP: House Robber III', custom: true, tree: [3, 4, 5, 1, 3, null, 1],
+  blurb: 'Pick nodes with maximum total value so that no parent and child are both picked.',
+  code: `
+// returns {best if n is robbed, best if n is skipped}
+pair<int,int> dfs(Node* n) {
+    if (!n) return {0, 0};
+    auto [lr, ls] = dfs(n->left);
+    auto [rr, rs] = dfs(n->right);
+    int rob  = n->val + ls + rs;               //@rob
+    int skip = max(lr, ls) + max(rr, rs);      //@skip
+    return {rob, skip};                        //@ret
+}
+int rob(Node* root) {
+    auto [a, b] = dfs(root);
+    return max(a, b);                          //@ans
+}`,
+  run(T, root) {
+    const memo = new Map();
+    const go = (n) => {
+      if (!n) return [0, 0];
+      T.s(n, 'stack');
+      const [lr, ls] = go(n.left), [rr, rs] = go(n.right);
+      T.s(n, 'cur');
+      const rob = n.val + ls + rs; T.b(n, `rob ${rob}`);
+      T.step('rob', `Rob ${n.val}: its children must be skipped, so ${n.val} + ${ls} + ${rs} = ${rob}.`);
+      const skip = Math.max(lr, ls) + Math.max(rr, rs); T.b(n, `rob ${rob} / skip ${skip}`);
+      T.step('skip', `Skip ${n.val}: each child picks its better option, max(${lr}, ${ls}) + max(${rr}, ${rs}) = ${skip}.`);
+      T.s(n, 'done'); memo.set(n.id, [rob, skip]);
+      return [rob, skip];
+    };
+    const [a, b] = go(root);
+    const pick = (n, can) => {
+      if (!n) return; const [r, s] = memo.get(n.id);
+      if (can && r >= s) { T.s(n, 'found'); pick(n.left, false); pick(n.right, false); }
+      else { T.s(n, 'dim'); pick(n.left, true); pick(n.right, true); }
+    };
+    pick(root, true); T.out.push(Math.max(a, b));
+    T.step('ans', `Answer = max(${a}, ${b}) = ${Math.max(a, b)}. Highlighted: the houses actually robbed.`);
+  },
+  idea: 'Return a pair of answers per node: one assuming it is taken, one assuming it is not. The parent combines them in O(1), giving a linear-time DP with no memo table.',
+  time: 'O(n)', space: 'O(h)',
+  vars: ['Maximum independent set in a tree', 'Binary tree cameras (LC 968) — three states', 'Distribute coins (LC 979) — return excess flow', 'Rerooting DP: sum of distances in tree (LC 834)']
+});
+
+/* ================= Paths & ancestors ================= */
+A({
+  id: 'root-leaf-paths', cat: 'Paths & ancestors', title: 'All root-to-leaf paths', custom: true, tree: GEN,
+  blurb: 'DFS with a shared path vector: push on the way down, pop on the way back up.',
+  code: `
+void dfs(Node* n, vector<int>& path, vector<vector<int>>& res) {
+    if (!n) return;
+    path.push_back(n->val);                          //@push
+    if (!n->left && !n->right) res.push_back(path);  //@leaf
+    dfs(n->left, path, res);
+    dfs(n->right, path, res);
+    path.pop_back();                                 //@pop
+}`,
+  run(T, root) {
+    const path = [];
+    const go = (n) => {
+      if (!n) return;
+      path.push(n.val); T.s(n, 'path'); T.e(n, 'path'); T.ax('path', path, 'stack');
+      if (isLeaf(n)) { T.s(n, 'found'); T.out.push(path.join('→')); T.step('leaf', `Leaf ${n.val}: save ${path.join(' → ')}.`); }
+      else T.step('push', `Add ${n.val} to the path.`);
+      go(n.left); go(n.right);
+      path.pop(); T.s(n, 'done'); T.e(n, ''); T.ax('path', path, 'stack');
+      T.step('pop', `Backtrack: remove ${n.val}.`);
+    };
+    go(root); T.step(null, `Found ${T.out.length} root-to-leaf paths.`);
+  },
+  idea: 'One vector is shared across the whole recursion. Pushing before the calls and popping after them is backtracking: the vector always equals the current root-to-node path.',
+  time: 'O(n · h) including copying paths', space: 'O(h)',
+  vars: ['Path Sum (LC 112) and Path Sum II (LC 113) — check a target at leaves', 'Sum root-to-leaf numbers (LC 129)', 'Smallest string starting from leaf (LC 988)']
+});
+
+A({
+  id: 'path-sum-3', cat: 'Paths & ancestors', title: 'Path Sum III (prefix sums)', tree: [10, 5, -3, 3, 2, null, 11, 3, -2, null, 1],
+  blurb: 'Count downward paths (any start, any end) that sum to 8, in one DFS.',
+  code: `
+unordered_map<long, int> cnt;  // prefix sum -> count on current path
+int dfs(Node* n, long sum, int target) {
+    if (!n) return 0;
+    sum += n->val;
+    int res = cnt.count(sum - target) ? cnt[sum - target] : 0; //@look
+    cnt[sum]++;                                  //@inc
+    res += dfs(n->left, sum, target) + dfs(n->right, sum, target);
+    cnt[sum]--;                                  //@dec
+    return res;
+}
+int pathSum(Node* root, int target) {
+    cnt[0] = 1;                                  //@init
+    return dfs(root, 0, target);
+}`,
+  run(T, root) {
+    const target = 8; const cnt = new Map([[0, 1]]); const path = [];
+    const showMap = () => T.ax('prefix → count', [...cnt].filter(([, v]) => v > 0).map(([k, v]) => `${k}: ${v}`), 'list');
+    showMap(); T.ax('found', [0], 'list');
+    T.step('init', 'Seed the map with prefix 0 (the empty prefix). Target is 8.');
+    let total = 0;
+    const go = (n, sum) => {
+      if (!n) return;
+      sum += n.val; path.push({ n, sum }); T.s(n, 'cur'); T.e(n, 'path'); T.b(n, 'Σ ' + sum);
+      const need = sum - target, c = cnt.get(need) || 0;
+      if (c > 0) {
+        const starts = []; if (need === 0) starts.push(0);
+        path.forEach((p, j) => { if (j < path.length - 1 && p.sum === need) starts.push(j + 1); });
+        starts.forEach(s => { const seg = path.slice(s); seg.forEach(p => T.s(p.n, 'found')); T.out.push(seg.map(p => p.n.val).join('→')); });
+        total += c; T.ax('found', [total], 'list');
+        T.step('look', `Running sum ${sum}. Need an earlier prefix of ${sum} − 8 = ${need}: it appears ${c}×, so ${c} path${c > 1 ? 's' : ''} end${c > 1 ? '' : 's'} here.`);
+        path.forEach(p => T.s(p.n, 'stack')); T.s(n, 'cur');
+      } else T.step('look', `Running sum ${sum}. Need an earlier prefix of ${need}: not on this path.`);
+      cnt.set(sum, (cnt.get(sum) || 0) + 1); showMap(); T.s(n, 'stack');
+      T.step('inc', `Record prefix ${sum} for the nodes below.`);
+      go(n.left, sum); go(n.right, sum);
+      cnt.set(sum, cnt.get(sum) - 1); showMap(); path.pop(); T.s(n, 'done'); T.e(n, '');
+      T.step('dec', `Leaving ${n.val}: forget prefix ${sum} so other branches can't use it.`);
+    };
+    go(root, 0);
+    T.step(null, `${total} paths sum to 8.`);
+  },
+  idea: 'It is "subarray sum equals K" on each root-to-node path. If the running sum is S and some ancestor prefix equals S − target, the nodes between them sum to target. Decrementing on the way out keeps the map scoped to the current path.',
+  time: 'O(n)', space: 'O(h) for the map and recursion',
+  trap: 'Forgetting cnt[0] = 1 misses paths that start at the root. Use long for sums; LeetCode tests overflow.',
+  vars: ['Subarray sum equals K (LC 560) — the array version', 'Brute force O(n²): start a DFS from every node', 'Path Sum II for root-to-leaf only']
+});
+
+A({
+  id: 'lca', cat: 'Paths & ancestors', title: 'Lowest common ancestor', tree: LCAT,
+  blurb: 'Find the deepest node that has both p = 6 and q = 4 below it (or is one of them).',
+  code: `
+Node* lca(Node* root, Node* p, Node* q) {
+    if (!root || root == p || root == q) return root;  //@base
+    Node* l = lca(root->left, p, q);                   //@left
+    Node* r = lca(root->right, p, q);                  //@right
+    if (l && r) return root;                           //@split
+    return l ? l : r;                                  //@pass
+}`,
+  run(T, root) {
+    const p = findVal(root, 6), q = findVal(root, 4);
+    T.tg('p', p); T.tg('q', q); T.s(p, 'target'); T.s(q, 'target');
+    let ans = null;
+    const go = (n) => {
+      if (!n) return null;
+      const keep = (n === p || n === q) ? 'target' : 'done';
+      T.s(n, 'cur'); T.e(n, 'path');
+      if (n === p || n === q) { T.b(n, '→ ' + n.val); T.step('base', `${n.val} is ${n === p ? 'p' : 'q'} itself: return it without looking deeper.`); T.s(n, keep); T.e(n, ''); return n; }
+      if (isLeaf(n)) { T.b(n, '∅'); T.step('pass', `${n.val} is a leaf that isn't p or q: return null.`); T.s(n, 'done'); T.e(n, ''); return null; }
+      T.step('left', `At ${n.val}: search the left subtree.`); T.s(n, 'stack');
+      const l = go(n.left); T.s(n, 'cur');
+      T.step('right', `Left of ${n.val} returned ${l ? l.val : 'null'}. Search the right subtree.`); T.s(n, 'stack');
+      const r = go(n.right); T.s(n, 'cur');
+      if (l && r) { T.b(n, '→ ' + n.val); T.s(n, 'found'); ans = n; T.step('split', `Both sides found something, so p and q split here: ${n.val} is the LCA.`); T.e(n, ''); return n; }
+      const res = l || r; T.b(n, res ? '→ ' + res.val : '∅');
+      T.step('pass', res ? `Only one side found something: pass ${res.val} up.` : 'Nothing found below: return null.');
+      T.s(n, n === ans ? 'found' : 'done'); T.e(n, '');
+      return res;
+    };
+    const res = go(root); if (res) T.s(res, 'found');
+    T.out.push(res.val); T.step(null, `LCA(6, 4) = ${res.val}.`);
+  },
+  idea: 'Each call answers "did you find p or q down here?". The first node to hear "yes" from both sides is the split point, and that node is passed all the way to the root.',
+  time: 'O(n)', space: 'O(h)',
+  trap: 'This version assumes both p and q exist. If one might be missing, count how many were actually found.',
+  vars: ['LCA in a BST: walk down by value (see BST section)', 'With parent pointers: like intersecting two linked lists (LC 1650)', 'Many queries: binary lifting, O(log n) each', 'Distance between nodes = depth(p) + depth(q) − 2·depth(lca)', 'LCA of deepest leaves (LC 1123)']
+});
+
+A({
+  id: 'distance-k', cat: 'Paths & ancestors', title: 'All nodes at distance K', tree: LCAT,
+  blurb: 'Treat the tree as an undirected graph using parent pointers, then BFS outward from target 5 for K = 2 rings.',
+  code: `
+vector<int> distanceK(Node* root, Node* target, int k) {
+    unordered_map<Node*, Node*> parent;
+    queue<Node*> q; q.push(root);
+    while (!q.empty()) {                               // 1) parent links
+        Node* n = q.front(); q.pop();
+        if (n->left)  { parent[n->left] = n;  q.push(n->left); }  //@par
+        if (n->right) { parent[n->right] = n; q.push(n->right); }
+    }
+    unordered_set<Node*> seen{target};                 // 2) BFS from target
+    q.push(target);                                    //@start
+    for (int d = 0; d < k && !q.empty(); d++) {
+        int sz = q.size();                             //@ring
+        while (sz--) {
+            Node* n = q.front(); q.pop();
+            for (Node* nb : {n->left, n->right, parent[n]})
+                if (nb && !seen.count(nb)) { seen.insert(nb); q.push(nb); } //@expand
+        }
+    }
+    vector<int> res;
+    while (!q.empty()) { res.push_back(q.front()->val); q.pop(); }  //@collect
+    return res;
+}`,
+  run(T, root) {
+    const k = 2, tgt = findVal(root, 5); const par = new Map();
+    const bq = [root];
+    while (bq.length) {
+      const n = bq.shift(); const kids = [n.left, n.right].filter(Boolean);
+      if (!kids.length) continue;
+      kids.forEach(c => { par.set(c.id, n); bq.push(c); T.b(c, '↑' + n.val); });
+      T.s(n, 'cur'); T.step('par', `Record ${kids.map(c => c.val).join(' and ')} → parent ${n.val}.`); T.s(n, '');
+    }
+    Object.keys(T.badge).forEach(id => T.b(id, ''));
+    T.tg('target', tgt); T.s(tgt, 'target'); T.b(tgt, 'd=0');
+    const seen = new Set([tgt.id]); let q = [tgt];
+    const showQ = () => T.ax('Queue', q.map(x => x.val), 'queue'); showQ();
+    T.step('start', 'Parent links ready. Now BFS outward from target 5; edges work in both directions.');
+    for (let d = 0; d < k && q.length; d++) {
+      let sz = q.length;
+      T.step('ring', `Ring ${d}: ${q.map(x => x.val).join(', ')}. Expand each one step outward.`);
+      while (sz--) {
+        const n = q.shift(); const added = [];
+        for (const nb of [n.left, n.right, par.get(n.id)]) if (nb && !seen.has(nb.id)) { seen.add(nb.id); q.push(nb); added.push(nb); T.s(nb, 'stack'); T.b(nb, 'd=' + (d + 1)); }
+        T.s(n, 'cur'); showQ();
+        T.step('expand', added.length ? `From ${n.val}, reach ${added.map(x => x.val).join(', ')} (children and parent).` : `From ${n.val}, nothing new to reach.`);
+        T.s(n, n === tgt ? 'target' : 'done');
+      }
+    }
+    q.forEach(n => { T.s(n, 'found'); T.out.push(n.val); });
+    T.step('collect', `Whatever is left in the queue is exactly distance ${k}: ${fmtArr(T.out)}.`);
+  },
+  idea: 'A tree only lets you walk down. Adding parent pointers turns it into a graph where you can walk up too, and then "distance K" is a plain BFS that stops after K rings.',
+  time: 'O(n)', space: 'O(n)',
+  vars: ['Amount of time for a binary tree to be infected / burning tree (LC 2385)', 'Closest leaf to a node (LC 742)', 'Any "move up and down" tree problem: build the parent map first']
+});
+
+/* ================= Binary search trees ================= */
+A({
+  id: 'bst-search', cat: 'Binary search trees', title: 'Search', tree: BST,
+  blurb: 'Look for 7. Each comparison throws away an entire subtree.',
+  code: `
+Node* search(Node* root, int key) {
+    while (root && root->val != key)                        //@cmp
+        root = key < root->val ? root->left : root->right;  //@move
+    return root;                                            //@ret
+}`,
+  run(T, root) {
+    const key = 7; let n = root; T.ax('key', [key], 'list');
+    while (n && n.val !== key) {
+      T.s(n, 'cur'); T.e(n, 'path');
+      T.step('cmp', `${key} vs ${n.val}: ${key < n.val ? 'smaller' : 'larger'}.`);
+      T.s(n, 'path'); const goLeft = key < n.val;
+      T.dimSub(goLeft ? n.right : n.left);
+      T.step('move', `Go ${goLeft ? 'left' : 'right'}. The whole ${goLeft ? 'right' : 'left'} subtree is ruled out.`);
+      n = goLeft ? n.left : n.right;
+    }
+    if (n) { T.s(n, 'found'); T.e(n, 'path'); T.out.push('found ' + key); T.step('ret', `Found ${key}.`); }
+    else { T.out.push('null'); T.step('ret', `${key} is not in the tree.`); }
+  },
+  idea: 'Every node splits the remaining values into "smaller" (left) and "larger" (right), so search follows one root-to-leaf path. Iterative beats recursive here: same speed, no stack.',
+  time: 'O(h): O(log n) balanced, O(n) skewed', space: 'O(1)',
+  vars: ['Floor and ceil in a BST: remember the best candidate while walking', 'Closest value in BST (LC 270)', 'Search in a sorted rotated structure uses the same "discard half" idea']
+});
+
+A({
+  id: 'bst-insert', cat: 'Binary search trees', title: 'Insert', tree: BST,
+  blurb: 'Insert 5 by searching for where it would be and hanging it there as a new leaf.',
+  code: `
+Node* insert(Node* root, int key) {
+    if (!root) return new Node(key);                          //@new
+    if (key < root->val) root->left = insert(root->left, key);   //@goL
+    else                 root->right = insert(root->right, key); //@goR
+    return root;
+}`,
+  run(T, root) {
+    const key = 5; T.ax('key', [key], 'list');
+    const ins = (n) => {
+      T.s(n, 'cur'); T.e(n, 'path');
+      const left = key < n.val;
+      T.step(left ? 'goL' : 'goR', `${key} ${left ? '<' : '≥'} ${n.val}: go ${left ? 'left' : 'right'}.`);
+      T.s(n, 'path');
+      const child = left ? n.left : n.right;
+      if (!child) {
+        const x = mk(key); if (left) n.left = x; else n.right = x;
+        T.s(x, 'found'); T.e(x, 'path');
+        T.step('new', `The ${left ? 'left' : 'right'} spot of ${n.val} is empty: new Node(${key}) goes there.`);
+      } else ins(child);
+    };
+    ins(root); T.out.push('inserted ' + key); T.step(null, 'Inserted. Every existing node stayed where it was.');
+  },
+  idea: 'A new key always becomes a leaf: follow the search path until it falls off the tree, then attach it there. Assigning root->left = insert(...) on the way back makes the recursive version clean.',
+  time: 'O(h)', space: 'O(h) recursive, O(1) iterative',
+  vars: ['Iterative insert keeping a parent pointer', 'Self-balancing trees (AVL, red-black) add rotations after the insert; know the idea, rarely coded', 'std::set / std::map are red-black trees']
+});
+
+A({
+  id: 'bst-delete', cat: 'Binary search trees', title: 'Delete', tree: BST,
+  blurb: 'Delete 3, which has two children: copy in its inorder successor, then delete the successor.',
+  code: `
+Node* remove(Node* root, int key) {
+    if (!root) return nullptr;
+    if (key < root->val) root->left = remove(root->left, key);       //@goL
+    else if (key > root->val) root->right = remove(root->right, key); //@goR
+    else {
+        if (!root->left)  return root->right;     //@noL
+        if (!root->right) return root->left;      //@noR
+        Node* s = root->right;                    //@succ
+        while (s->left) s = s->left;
+        root->val = s->val;                       //@copy
+        root->right = remove(root->right, s->val); //@delS
+    }
+    return root;
+}`,
+  run(T, root) {
+    T.ax('key', [3], 'list');
+    const del = (n, key) => {
+      if (!n) return null;
+      T.s(n, 'cur'); T.e(n, 'path');
+      if (key < n.val || key > n.val) {
+        const left = key < n.val;
+        T.step(left ? 'goL' : 'goR', `${key} ${left ? '<' : '>'} ${n.val}: delete from the ${left ? 'left' : 'right'} subtree.`);
+        T.s(n, 'path');
+        const old = left ? n.left : n.right; const res = del(old, key);
+        if (res !== old) {
+          if (left) n.left = res; else n.right = res;
+          T.s(n, 'cur'); T.step(left ? 'goL' : 'goR', `Re-link: ${n.val}.${left ? 'left' : 'right'} now points to ${res ? res.val : 'null'}.`); T.s(n, 'path');
+        }
+        return n;
+      }
+      T.s(n, 'target');
+      if (!n.left) { T.step('noL', `Found ${key}. No left child, so it's replaced by its right child (${n.right ? n.right.val : 'null'}).`); return n.right; }
+      if (!n.right) { T.step('noR', `Found ${key}. No right child, so it's replaced by its left child.`); return n.left; }
+      let s = n.right; T.tg('succ', s); T.s(s, 'cur');
+      T.step('succ', `Found ${key}, and it has two children. Its inorder successor is the smallest value in the right subtree.`);
+      while (s.left) { T.s(s, 'path'); s = s.left; T.tg('succ', s); T.s(s, 'cur'); T.step('succ', `Keep going left: ${s.val}.`); }
+      n.val = s.val; T.s(n, 'found'); T.step('copy', `Copy ${s.val} into the node. The tree is still ordered, but ${s.val} now appears twice.`);
+      T.tg('succ', null); T.s(s, '');
+      T.step('delS', `Delete the old ${s.val} from the right subtree. It has no left child, so it's the easy case.`);
+      const old = n.right; const r = del(n.right, s.val);
+      if (r !== old) n.right = r;
+      T.s(n, 'found');
+      return n;
+    };
+    T.root = del(root, 3);
+    T.out.push('deleted 3'); T.step(null, 'Done. 3 is gone and the inorder order is still 1, 4, 6, 7, 8, 10, 13, 14.');
+  },
+  idea: 'Three cases. Leaf: just remove it. One child: let the child take its place. Two children: overwrite the value with the inorder successor (smallest on the right), then delete that successor, which never has a left child.',
+  time: 'O(h)', space: 'O(h)',
+  vars: ['Use the inorder predecessor (largest on the left) instead; equally valid', 'Trim a BST to a range (LC 669)', 'Delete nodes and return the forest (LC 1110)']
+});
+
+A({
+  id: 'validate-bst', cat: 'Binary search trees', title: 'Validate BST', tree: [10, 5, 15, null, null, 6, 20],
+  blurb: 'Pass down an allowed (low, high) range. Comparing only with the parent is not enough.',
+  code: `
+bool valid(Node* n, long lo, long hi) {
+    if (!n) return true;
+    if (n->val <= lo || n->val >= hi) return false;  //@check
+    return valid(n->left, lo, n->val) &&             //@left
+           valid(n->right, n->val, hi);              //@right
+}
+bool isValidBST(Node* root) {
+    return valid(root, LONG_MIN, LONG_MAX);
+}`,
+  run(T, root) {
+    const f = (x) => x === -Infinity ? '−∞' : x === Infinity ? '+∞' : x;
+    const go = (n, lo, hi) => {
+      if (!n) return true;
+      T.s(n, 'cur'); T.b(n, `(${f(lo)}, ${f(hi)})`);
+      if (n.val <= lo || n.val >= hi) { T.s(n, 'bad'); T.step('check', `${n.val} is outside (${f(lo)}, ${f(hi)}). It sits in 10's right subtree but is smaller than 10. Not a BST.`); return false; }
+      T.step('check', `${n.val} is inside (${f(lo)}, ${f(hi)}).`); T.s(n, 'done');
+      if (n.left) T.step('left', `Left of ${n.val} must be below ${n.val}: range (${f(lo)}, ${n.val}).`);
+      if (!go(n.left, lo, n.val)) return false;
+      if (n.right) T.step('right', `Right of ${n.val} must be above ${n.val}: range (${n.val}, ${f(hi)}).`);
+      return go(n.right, n.val, hi);
+    };
+    const ok = go(root, -Infinity, Infinity); T.out.push(ok ? 'true' : 'false');
+    T.step(null, ok ? 'Valid BST.' : 'Invalid: 6 < 15 locally, but it also needs to be > 10.');
+  },
+  idea: 'Every node must respect all of its ancestors, not just its parent. Carrying a (low, high) window down the recursion enforces that in one pass.',
+  time: 'O(n)', space: 'O(h)',
+  trap: 'Using int bounds breaks on nodes equal to INT_MIN or INT_MAX. Use long, or pass Node* bounds that can be null.',
+  vars: ['Alternative: inorder traversal must be strictly increasing', 'Largest BST subtree (LC 333): return (isBST, min, max, size) bottom-up', 'Recover a BST with two swapped nodes (LC 99)']
+});
+
+A({
+  id: 'kth-smallest', cat: 'Binary search trees', title: 'Kth smallest', tree: BST,
+  blurb: 'Iterative inorder, counting down from k = 3 and stopping early.',
+  code: `
+int kthSmallest(Node* root, int k) {
+    stack<Node*> st; Node* cur = root;
+    while (cur || !st.empty()) {
+        while (cur) { st.push(cur); cur = cur->left; }  //@push
+        cur = st.top(); st.pop();                       //@pop
+        if (--k == 0) return cur->val;                  //@count
+        cur = cur->right;
+    }
+    return -1;
+}`,
+  run(T, root) {
+    let k = 3; const st = []; let cur = root; let i = 0;
+    const show = () => T.ax('Stack', st.map(x => x.val), 'stack');
+    T.ax('k', [k], 'list');
+    while (cur || st.length) {
+      const pushed = [];
+      while (cur) { st.push(cur); T.s(cur, 'stack'); pushed.push(cur.val); cur = cur.left; }
+      if (pushed.length) { show(); T.step('push', `Push ${pushed.join(', ')} while sliding left.`); }
+      cur = st.pop(); show(); T.s(cur, 'cur');
+      T.step('pop', `Pop ${cur.val}: the next smallest value.`);
+      k--; i++; T.b(cur, '#' + i); T.ax('k', [k], 'list');
+      if (k === 0) { T.s(cur, 'found'); T.out.push(cur.val); T.step('count', `k reached 0: the 3rd smallest is ${cur.val}. Stop without visiting the rest.`); return; }
+      T.step('count', `${cur.val} is #${i}. k is now ${k}.`); T.s(cur, 'done');
+      cur = cur.right;
+    }
+  },
+  idea: 'Inorder on a BST yields values in ascending order, so the kth value popped is the answer. The iterative form lets you stop after O(h + k) work instead of walking the whole tree.',
+  time: 'O(h + k)', space: 'O(h)',
+  vars: ['Kth largest: reverse inorder (right, node, left)', 'Frequent queries with inserts: store subtree sizes in each node', 'Order statistics: __gnu_pbds ordered_set in C++']
+});
+
+A({
+  id: 'lca-bst', cat: 'Binary search trees', title: 'LCA in a BST', tree: BST,
+  blurb: 'Find the LCA of 4 and 7 using values alone.',
+  code: `
+Node* lcaBST(Node* root, Node* p, Node* q) {
+    while (root) {
+        if (p->val < root->val && q->val < root->val)
+            root = root->left;                       //@left
+        else if (p->val > root->val && q->val > root->val)
+            root = root->right;                      //@right
+        else return root;                            //@split
+    }
+    return nullptr;
+}`,
+  run(T, root) {
+    const p = findVal(root, 4), q = findVal(root, 7);
+    T.tg('p', p); T.tg('q', q); T.s(p, 'target'); T.s(q, 'target');
+    let n = root;
+    while (n) {
+      T.s(n, 'cur'); T.e(n, 'path');
+      if (4 < n.val && 7 < n.val) { T.dimSub(n.right); T.s(n, 'cur'); T.step('left', `4 and 7 are both smaller than ${n.val}: the LCA is on the left.`); T.s(n, 'path'); n = n.left; }
+      else if (4 > n.val && 7 > n.val) { T.dimSub(n.left); T.s(n, 'cur'); T.step('right', `4 and 7 are both larger than ${n.val}: the LCA is on the right.`); T.s(n, 'path'); n = n.right; }
+      else { T.s(n, 'found'); T.out.push(n.val); T.step('split', `4 ≤ ${n.val} ≤ 7: they go different ways (or one is ${n.val}). LCA = ${n.val}.`); break; }
+    }
+  },
+  idea: 'The LCA is the first node whose value lies between p and q. Above it, both keys go the same direction; at it, they split.',
+  time: 'O(h)', space: 'O(1)',
+  vars: ['Recursive two-liner with the same three cases', 'General binary tree LCA (Paths & ancestors section)', 'Range sum of BST (LC 938) prunes the same way']
+});
+
+A({
+  id: 'bst-successor', cat: 'Binary search trees', title: 'Inorder successor', tree: BST,
+  blurb: 'Find the next larger value after 4. Every time you go left, the current node becomes a candidate.',
+  code: `
+Node* successor(Node* root, Node* p) {
+    Node* succ = nullptr;
+    while (root) {
+        if (p->val < root->val) {
+            succ = root;                 //@cand
+            root = root->left;
+        } else root = root->right;       //@right
+    }
+    return succ;                         //@ret
+}`,
+  run(T, root) {
+    const p = findVal(root, 4); T.tg('p', p); T.s(p, 'target');
+    let n = root, succ = null;
+    while (n) {
+      T.s(n, n === p ? 'target' : 'cur'); T.e(n, 'path');
+      if (4 < n.val) {
+        if (succ) T.s(succ, 'path'); succ = n; T.tg('succ', n); T.s(n, 'found'); T.ax('succ', [n.val], 'list');
+        T.step('cand', `4 < ${n.val}: ${n.val} is a candidate. Look left for something smaller that's still > 4.`); n = n.left;
+      } else {
+        T.step('right', `4 ≥ ${n.val}: the successor must be to the right.`); if (n !== p) T.s(n, 'path'); n = n.right;
+      }
+    }
+    T.out.push(succ ? succ.val : 'null'); T.step('ret', `Fell off the tree. The last candidate, ${succ.val}, is the successor.`);
+  },
+  idea: 'Walk like a search. Going left means the current node is larger than p, so it might be the answer; the last such node on the path is the smallest value larger than p.',
+  time: 'O(h)', space: 'O(1)',
+  vars: ['Predecessor: mirror it, candidate when going right', 'Shortcut: if p has a right subtree, the answer is that subtree\'s leftmost node', 'Floor, ceil and closest value use this exact walk']
+});
+
+A({
+  id: 'sorted-to-bst', cat: 'Binary search trees', title: 'Sorted array → balanced BST', tree: null,
+  blurb: 'The middle element becomes the root; recurse on both halves.',
+  code: `
+Node* build(vector<int>& a, int lo, int hi) {
+    if (lo > hi) return nullptr;
+    int mid = lo + (hi - lo) / 2;            //@mid
+    Node* n = new Node(a[mid]);              //@new
+    n->left  = build(a, lo, mid - 1);        //@left
+    n->right = build(a, mid + 1, hi);        //@right
+    return n;
+}`,
+  run(T) {
+    const a = [2, 5, 9, 12, 15, 18, 21]; const built = new Set();
+    const rows = (lo, hi, mid) => {
+      const st = {}; a.forEach((_, i) => { st[i] = built.has(i) ? 'done' : (i < lo || i > hi) ? 'dim' : ''; });
+      if (mid != null) st[mid] = 'cur'; T.rows = [{ name: 'a', cells: a, st, base: 0 }];
+    };
+    rows(0, a.length - 1, null); T.step(null, 'Start with the whole sorted array.');
+    const go = (lo, hi, attach) => {
+      if (lo > hi) return;
+      const mid = lo + ((hi - lo) >> 1); rows(lo, hi, mid);
+      T.step('mid', `Range [${lo}..${hi}]: middle index ${mid} holds ${a[mid]}.`);
+      const n = mk(a[mid]); attach(n); built.add(mid); T.s(n, 'cur'); rows(lo, hi, mid);
+      T.step('new', `${a[mid]} becomes the root of this range.`); T.s(n, 'done');
+      if (lo <= mid - 1) T.step('left', `Build its left subtree from [${lo}..${mid - 1}].`);
+      go(lo, mid - 1, c => { n.left = c; });
+      if (mid + 1 <= hi) T.step('right', `Build its right subtree from [${mid + 1}..${hi}].`);
+      go(mid + 1, hi, c => { n.right = c; });
+    };
+    go(0, a.length - 1, c => { T.root = c; }); rows(-1, -1, null);
+    T.step(null, 'Height-balanced BST built. Its inorder traversal gives the array back.');
+  },
+  idea: 'Picking the middle splits the remaining values evenly, so both subtrees differ in size by at most one, and the tree is height-balanced by construction.',
+  time: 'O(n)', space: 'O(log n) recursion',
+  vars: ['Sorted linked list → BST (LC 109): fast/slow pointer, or simulate inorder', 'Balance a BST (LC 1382): inorder into an array, then this', 'Count unique BSTs (LC 96): Catalan numbers']
+});
+
+/* ================= Build & serialize ================= */
+A({
+  id: 'build-pre-in', cat: 'Build & serialize', title: 'Build from preorder + inorder', tree: null,
+  blurb: 'Preorder tells you who the root is; inorder tells you what goes left and right of it.',
+  code: `
+unordered_map<int, int> pos;   // value -> index in inorder
+int pre = 0;
+Node* build(vector<int>& preorder, int lo, int hi) {
+    if (lo > hi) return nullptr;
+    Node* n = new Node(preorder[pre++]);      //@take
+    int m = pos[n->val];                      //@split
+    n->left  = build(preorder, lo, m - 1);    //@left
+    n->right = build(preorder, m + 1, hi);    //@right
+    return n;
+}
+// fill pos from inorder, then call build(preorder, 0, n - 1)`,
+  run(T) {
+    const pre = [8, 3, 1, 6, 4, 7, 10, 14, 13], ino = [1, 3, 4, 6, 7, 8, 10, 13, 14];
+    let pi = 0; const built = new Set();
+    const rows = (lo, hi, m) => {
+      const ps = {}; pre.forEach((_, i) => { ps[i] = i < pi - 1 ? 'done' : i === pi - 1 ? 'cur' : ''; });
+      const is = {}; ino.forEach((_, i) => { is[i] = built.has(i) ? 'done' : (i < lo || i > hi) ? 'dim' : ''; }); if (m != null) is[m] = 'cur';
+      T.rows = [{ name: 'preorder', cells: pre, st: ps, base: 0 }, { name: 'inorder', cells: ino, st: is, base: 0 }];
+    };
+    rows(0, ino.length - 1, null); T.step(null, 'Two traversals of the same tree. pre points at index 0.');
+    const go = (lo, hi, attach) => {
+      if (lo > hi) return;
+      const v = pre[pi++]; const n = mk(v); attach(n); T.s(n, 'cur'); rows(lo, hi, null);
+      T.step('take', `Next preorder value ${v} is the root of inorder[${lo}..${hi}].`);
+      const m = ino.indexOf(v); built.add(m); rows(lo, hi, m);
+      T.step('split', `${v} sits at inorder index ${m}: [${lo}..${m - 1}] is its left subtree, [${m + 1}..${hi}] its right.`);
+      T.s(n, 'done');
+      go(lo, m - 1, c => { n.left = c; }); go(m + 1, hi, c => { n.right = c; });
+    };
+    go(0, ino.length - 1, c => { T.root = c; }); rows(-1, -1, null);
+    T.step(null, 'Tree rebuilt. Values must be unique for the index lookup to work.');
+  },
+  idea: 'Preorder is consumed left to right with a single global pointer, and each value becomes a root. Its position in inorder splits the remaining values into left and right subtrees. The hash map makes each split O(1).',
+  time: 'O(n) with the map (O(n²) with linear search)', space: 'O(n)',
+  trap: 'Build the left subtree before the right, because that is the order preorder lists them in.',
+  vars: ['Postorder + inorder (LC 106): take roots from the end, build right before left', 'Preorder + postorder (LC 889): not unique without full-tree guarantee', 'BST from preorder alone with bounds (LC 1008)']
+});
+
+A({
+  id: 'serialize', cat: 'Build & serialize', title: 'Serialize (preorder with nulls)', tree: [1, 2, 3, null, null, 4, 5],
+  blurb: 'Write values in preorder and mark every missing child with #. That is enough to rebuild the exact shape.',
+  code: `
+void serialize(Node* n, string& s) {
+    if (!n) { s += "#,"; return; }            //@null
+    s += to_string(n->val) + ",";             //@val
+    serialize(n->left, s);
+    serialize(n->right, s);
+}
+Node* deserialize(istringstream& in) {
+    string tok; getline(in, tok, ',');
+    if (tok == "#") return nullptr;
+    Node* n = new Node(stoi(tok));
+    n->left = deserialize(in);
+    n->right = deserialize(in);
+    return n;
+}`,
+  run(T, root) {
+    const go = (n, parent, side) => {
+      if (!n) { T.out.push('#'); if (parent) T.s(parent, 'cur'); T.step('null', `${parent.val}.${side} is null: write #.`); if (parent) T.s(parent, 'stack'); return; }
+      T.out.push(n.val); T.s(n, 'cur'); T.e(n, 'path'); T.step('val', `Write ${n.val}.`); T.s(n, 'stack');
+      go(n.left, n, 'left'); go(n.right, n, 'right');
+      T.s(n, 'done'); T.e(n, '');
+    };
+    go(root, null, '');
+    T.step(null, `Serialized: "${T.out.join(',')},". Deserialize reads the same tokens in the same order.`);
+  },
+  idea: 'Preorder alone is ambiguous, but preorder plus null markers is not: deserialization reads tokens in the identical recursive order, so every # tells it exactly where a subtree ends.',
+  time: 'O(n)', space: 'O(n)',
+  outLabel: 'Tokens',
+  vars: ['Level order with nulls (LeetCode\'s own format)', 'BST serialization without nulls: preorder + bounds (LC 449)', 'Find duplicate subtrees (LC 652): serialize every subtree as a key']
+});
+
+/* ================= Tree-shaped structures ================= */
+A({
+  id: 'heap', cat: 'Tree-shaped structures', title: 'Binary heap (min-heap)', tree: null,
+  blurb: 'A complete tree stored in an array. Push 5, 3, 8, 1, 9, 2, then pop twice.',
+  code: `
+struct MinHeap {
+    vector<int> h;    // children of i: 2i+1, 2i+2; parent: (i-1)/2
+    void push(int x) {
+        h.push_back(x);                              //@append
+        int i = h.size() - 1;
+        while (i > 0 && h[(i - 1) / 2] > h[i]) {     //@cmpUp
+            swap(h[i], h[(i - 1) / 2]);              //@swapUp
+            i = (i - 1) / 2;
+        }
+    }
+    int pop() {
+        int top = h[0];                              //@top
+        h[0] = h.back(); h.pop_back();               //@moveLast
+        int i = 0, n = h.size();
+        while (true) {
+            int l = 2 * i + 1, r = l + 1, m = i;
+            if (l < n && h[l] < h[m]) m = l;         //@pick
+            if (r < n && h[r] < h[m]) m = r;
+            if (m == i) break;                       //@stop
+            swap(h[i], h[m]);                        //@swapDown
+            i = m;
+        }
+        return top;
+    }
+};`,
+  run(T) {
+    const h = []; let uid = 0;
+    const tree = () => { const ns = h.map(e => ({ id: e.id, val: e.val, left: null, right: null })); ns.forEach((n, i) => { n.left = ns[2 * i + 1] || null; n.right = ns[2 * i + 2] || null; }); return ns[0] || null; };
+    const sync = (cells = {}) => { T.root = tree(); T.rows = [{ name: 'h', cells: h.map(e => e.val), st: cells, base: 0 }]; };
+    const clear = () => { T.st = {}; };
+    sync(); T.step(null, 'Empty heap.');
+    for (const x of [5, 3, 8, 1, 9, 2]) {
+      const e = { id: 'h' + (uid++), val: x }; h.push(e); let i = h.length - 1;
+      clear(); T.s(e, 'cur'); sync({ [i]: 'cur' }); T.step('append', `push(${x}): append at index ${i}, the next free spot.`);
+      while (i > 0) {
+        const p = (i - 1) >> 1; T.s(h[p], 'stack');
+        if (h[p].val > h[i].val) {
+          sync({ [i]: 'cur', [p]: 'stack' }); T.step('cmpUp', `Parent ${h[p].val} > ${x}: heap order is broken.`);
+          [h[i], h[p]] = [h[p], h[i]]; T.s(h[i], ''); i = p; sync({ [i]: 'cur' });
+          T.step('swapUp', `Swap them. ${x} moves up to index ${i}.`);
+        } else {
+          sync({ [i]: 'cur', [p]: 'stack' }); T.step('cmpUp', `Parent ${h[p].val} ≤ ${x}: stop.`); T.s(h[p], ''); break;
+        }
+      }
+      if (i === 0 && h.length > 1) { T.step('cmpUp', `${x} reached the root: it's the new minimum.`); }
+      clear();
+    }
+    for (let k = 0; k < 2; k++) {
+      clear(); const top = h[0]; T.s(top, 'found'); sync({ 0: 'found' }); T.step('top', `pop(): the minimum ${top.val} is always at the root.`);
+      const last = h.pop(); if (h.length) h[0] = last; T.out.push(top.val); clear();
+      let i = 0; T.s(h[0], 'cur'); sync({ 0: 'cur' });
+      T.step('moveLast', `Move the last element ${last.val} to the root, then sift it down.`);
+      while (true) {
+        const n = h.length, l = 2 * i + 1, r = l + 1; let m = i;
+        if (l < n && h[l].val < h[m].val) m = l; if (r < n && h[r].val < h[m].val) m = r;
+        const kids = [l, r].filter(j => j < n);
+        kids.forEach(j => T.s(h[j], 'stack')); const cs = { [i]: 'cur' }; kids.forEach(j => cs[j] = 'stack'); sync(cs);
+        if (!kids.length) { T.step('stop', `${h[i].val} has no children: stop.`); break; }
+        T.step('pick', `Children of ${h[i].val}: ${kids.map(j => h[j].val).join(' and ')}. Smallest of the three is ${h[m].val}.`);
+        kids.forEach(j => T.s(h[j], ''));
+        if (m === i) { T.step('stop', `${h[i].val} is already smaller than its children: stop.`); break; }
+        [h[i], h[m]] = [h[m], h[i]]; i = m; T.s(h[i], 'cur'); sync({ [i]: 'cur' });
+        T.step('swapDown', `Swap down: ${h[i].val} moves to index ${i}.`);
+      }
+      clear(); sync();
+    }
+    T.step(null, `Popped ${T.out.join(' then ')}. The heap is only partially ordered, which is what makes it fast.`);
+  },
+  idea: 'A heap only promises that each parent ≤ its children. Push bubbles a new value up; pop moves the last value to the root and sinks it. Both touch one root-to-leaf path, so each is O(log n).',
+  time: 'push / pop O(log n), top O(1), heapify O(n)', space: 'O(n)',
+  outLabel: 'Popped',
+  trap: 'std::priority_queue<int> is a max-heap. Use priority_queue<int, vector<int>, greater<int>> for a min-heap.',
+  vars: ['Kth largest element (LC 215) with a size-k min-heap', 'Merge k sorted lists (LC 23)', 'Find median from data stream (LC 295) with two heaps', 'Heapify an array in O(n) by sifting down from n/2 − 1']
+});
+
+A({
+  id: 'segment-tree', cat: 'Tree-shaped structures', title: 'Segment tree (range sum)', tree: null,
+  blurb: 'Every node stores the sum of a range. Build it, query sum[1..4], then set a[2] = 1.',
+  code: `
+vector<int> seg;   // size 4n, node i has children 2i and 2i+1
+void build(vector<int>& a, int i, int l, int r) {
+    if (l == r) { seg[i] = a[l]; return; }          //@leaf
+    int m = (l + r) / 2;
+    build(a, 2*i, l, m);
+    build(a, 2*i+1, m+1, r);
+    seg[i] = seg[2*i] + seg[2*i+1];                 //@pull
+}
+int query(int i, int l, int r, int ql, int qr) {
+    if (qr < l || r < ql) return 0;                 //@out
+    if (ql <= l && r <= qr) return seg[i];          //@in
+    int m = (l + r) / 2;                            //@partial
+    return query(2*i, l, m, ql, qr) + query(2*i+1, m+1, r, ql, qr);
+}
+void update(int i, int l, int r, int pos, int val) {
+    if (l == r) { seg[i] = val; return; }           //@set
+    int m = (l + r) / 2;
+    if (pos <= m) update(2*i, l, m, pos, val);
+    else          update(2*i+1, m+1, r, pos, val);
+    seg[i] = seg[2*i] + seg[2*i+1];                 //@repull
+}`,
+  run(T) {
+    const a = [2, 1, 5, 3, 4, 2]; const N = {}; let rowSt = {};
+    const mkSeg = (i, l, r) => { const n = { id: 's' + i, val: '–', left: null, right: null, l, r }; N[i] = n; T.b(n, `[${l},${r}]`); if (l < r) { const m = (l + r) >> 1; n.left = mkSeg(2 * i, l, m); n.right = mkSeg(2 * i + 1, m + 1, r); } return n; };
+    T.root = mkSeg(1, 0, a.length - 1);
+    const rows = (l, r, cls = 'cur') => { const st = {}; if (l != null) for (let j = l; j <= r; j++) st[j] = cls; T.rows = [{ name: 'a', cells: a, st: { ...rowSt, ...st }, base: 0 }]; };
+    rows(); T.step(null, 'Shape is fixed by n = 6: each node covers [l, r] and splits at the midpoint.');
+    const build = (i, l, r) => {
+      const n = N[i];
+      if (l === r) { n.val = a[l]; T.s(n, 'cur'); rows(l, r); T.step('leaf', `Leaf [${l},${r}] = a[${l}] = ${a[l]}.`); T.s(n, 'done'); return; }
+      const m = (l + r) >> 1; T.s(n, 'stack');
+      build(2 * i, l, m); build(2 * i + 1, m + 1, r);
+      n.val = N[2 * i].val + N[2 * i + 1].val; T.s(n, 'cur'); rows(l, r);
+      T.step('pull', `[${l},${r}] = ${N[2 * i].val} + ${N[2 * i + 1].val} = ${n.val}.`); T.s(n, 'done');
+    };
+    build(1, 0, a.length - 1);
+    T.st = {}; rowSt = {}; const ql = 1, qr = 4; const parts = [];
+    for (let j = ql; j <= qr; j++) rowSt[j] = 'stack'; rows();
+    T.ax('query [1,4] parts', parts, 'list');
+    T.step(null, `Built. Now query sum of a[${ql}..${qr}].`);
+    const query = (i, l, r) => {
+      const n = N[i];
+      if (qr < l || r < ql) { T.s(n, 'dim'); T.step('out', `[${l},${r}] doesn't overlap [${ql},${qr}]: contributes 0.`); return 0; }
+      if (ql <= l && r <= qr) { T.s(n, 'found'); parts.push(n.val); T.ax('query [1,4] parts', parts, 'list'); rows(l, r, 'found'); T.step('in', `[${l},${r}] lies fully inside: take ${n.val} without going deeper.`); return n.val; }
+      T.s(n, 'path'); rows(l, r, 'cur'); T.step('partial', `[${l},${r}] partly overlaps: ask both children.`);
+      const m = (l + r) >> 1; return query(2 * i, l, m) + query(2 * i + 1, m + 1, r);
+    };
+    const s = query(1, 0, a.length - 1); T.out.push(`sum[1..4] = ${s}`); rows();
+    T.step(null, `sum[1..4] = ${parts.join(' + ')} = ${s}, using only ${parts.length} stored ranges.`);
+    T.st = {}; rowSt = {}; T.aux = []; const pos = 2, val = 1;
+    rows(pos, pos, 'cur'); T.step(null, `Now update a[${pos}] from ${a[pos]} to ${val}.`);
+    const update = (i, l, r) => {
+      const n = N[i];
+      if (l === r) { a[l] = val; n.val = val; T.s(n, 'cur'); rows(l, r); T.step('set', `Leaf [${l},${r}] becomes ${val}.`); T.s(n, 'found'); return; }
+      T.s(n, 'path'); const m = (l + r) >> 1;
+      if (pos <= m) update(2 * i, l, m); else update(2 * i + 1, m + 1, r);
+      n.val = N[2 * i].val + N[2 * i + 1].val; T.s(n, 'cur'); rows(l, r);
+      T.step('repull', `Recompute [${l},${r}] = ${n.val}.`); T.s(n, 'found');
+    };
+    update(1, 0, a.length - 1); T.out.push(`a[2] = 1, total = ${N[1].val}`); rows();
+    T.step(null, 'Only the nodes on one root-to-leaf path changed.');
+  },
+  idea: 'Any range splits into O(log n) stored nodes. A query stops at nodes fully inside the range and ignores nodes fully outside, so it never visits more than about 4 nodes per level.',
+  time: 'build O(n), query O(log n), update O(log n)', space: 'O(4n)',
+  trap: 'Allocate 4n, not 2n, for the recursive layout. Off-by-one in the overlap checks is the most common bug.',
+  vars: ['Range min / max / gcd: change only the merge', 'Lazy propagation for range updates (add to a range)', 'Count of smaller numbers after self (LC 315)', 'Iterative bottom-up segment tree (size 2n)']
+});
+
+A({
+  id: 'fenwick', cat: 'Tree-shaped structures', title: 'Fenwick tree (BIT)', tree: null,
+  blurb: 'An implicit tree in one array. bit[i] covers the last (i & −i) elements ending at i.',
+  code: `
+vector<int> bit;   // 1-indexed, size n + 1
+void update(int i, int delta) {
+    for (; i < (int)bit.size(); i += i & -i)    //@up
+        bit[i] += delta;
+}
+int prefix(int i) {
+    int s = 0;
+    for (; i > 0; i -= i & -i)                  //@down
+        s += bit[i];
+    return s;
+}
+int rangeSum(int l, int r) {
+    return prefix(r) - prefix(l - 1);           //@range
+}`,
+  run(T) {
+    const a = [3, 2, -1, 6, 5, 4, -3, 3], n = a.length; const bit = Array(n).fill(0);
+    const lb = (i) => i & -i; const bin = (i) => i.toString(2).padStart(4, '0');
+    let aSt = {}, bSt = {}, spSt = {};
+    const sync = () => {
+      const spans = []; for (let i = 1; i <= n; i++) spans.push({ a: i - lb(i), b: i - 1, line: Math.log2(lb(i)), label: String(i), cls: spSt[i] || '' });
+      T.rows = [{ name: 'a', cells: a, st: aSt, base: 1 }, { name: 'bit', cells: bit, st: bSt, base: 1, spans }];
+    };
+    sync(); T.step(null, 'Bars under bit show which a-range each cell sums. Build by calling update(i, a[i]) for every i.');
+    for (let k = 1; k <= n; k++) {
+      aSt = { [k - 1]: 'cur' };
+      for (let i = k; i <= n; i += lb(i)) {
+        bit[i - 1] += a[k - 1]; bSt = { [i - 1]: 'cur' }; spSt = { [i]: 'cur' }; sync();
+        T.ax('i', [`${i} = ${bin(i)}₂`, `i & −i = ${lb(i)}`], 'list');
+        T.step('up', `update(${k}, ${a[k - 1]}): bit[${i}] covers a[${i - lb(i) + 1}..${i}], so add ${a[k - 1]} → ${bit[i - 1]}. Next i = ${i} + ${lb(i)}.`);
+      }
+    }
+    aSt = {}; bSt = {}; spSt = {}; sync(); T.step(null, 'Built. Each a[k] lives in about log n cells.');
+    const prefix = (r, tag) => {
+      let s = 0;
+      for (let i = r; i > 0; i -= lb(i)) {
+        s += bit[i - 1]; bSt = { ...bSt, [i - 1]: 'found' }; spSt = { ...spSt, [i]: 'found' };
+        aSt = {}; for (let j = 0; j < r; j++) aSt[j] = 'stack'; sync();
+        T.ax('i', [`${i} = ${bin(i)}₂`, `i & −i = ${lb(i)}`], 'list');
+        T.step('down', `${tag}: add bit[${i}] (a[${i - lb(i) + 1}..${i}]) → ${s}. Strip the lowest set bit: i = ${i - lb(i)}.`);
+      }
+      return s;
+    };
+    const p7 = prefix(7, 'prefix(7)'); T.out.push(`prefix(7) = ${p7}`);
+    bSt = {}; spSt = {}; aSt = {}; sync(); T.step(null, `prefix(7) = ${p7}. The three bars tile a[1..7] exactly.`);
+    const p6 = prefix(6, 'prefix(6)'); bSt = {}; spSt = {}; const p2 = prefix(2, 'prefix(2)');
+    aSt = { 2: 'found', 3: 'found', 4: 'found', 5: 'found' }; bSt = {}; spSt = {}; sync();
+    T.out.push(`sum[3..6] = ${p6 - p2}`);
+    T.step('range', `rangeSum(3, 6) = prefix(6) − prefix(2) = ${p6} − ${p2} = ${p6 - p2}.`);
+  },
+  idea: 'Adding the lowest set bit climbs to every cell whose range contains i (update). Subtracting it hops across disjoint ranges that tile 1..i (query). Both loops run at most log n times.',
+  time: 'update / prefix O(log n), build O(n log n)', space: 'O(n)',
+  trap: 'It is 1-indexed: index 0 would make i & −i equal 0 and loop forever.',
+  vars: ['Count inversions, or count smaller after self (LC 315)', 'Range update + point query: BIT over a difference array', 'Only for invertible operations like sum or xor; use a segment tree for min/max', '2D BIT for matrix prefix sums (LC 308)']
+});
+
+A({
+  id: 'trie', cat: 'Tree-shaped structures', title: 'Trie (prefix tree)', tree: null,
+  blurb: 'Insert car, cat, cart, dog, do. Then search cart, ca and cow.',
+  code: `
+struct TrieNode {
+    TrieNode* next[26] = {};
+    bool end = false;
+};
+void insert(TrieNode* root, const string& w) {
+    TrieNode* cur = root;
+    for (char c : w) {
+        if (!cur->next[c - 'a'])
+            cur->next[c - 'a'] = new TrieNode();   //@new
+        cur = cur->next[c - 'a'];                  //@move
+    }
+    cur->end = true;                               //@end
+}
+bool search(TrieNode* root, const string& w) {
+    TrieNode* cur = root;
+    for (char c : w) {
+        cur = cur->next[c - 'a'];                  //@walk
+        if (!cur) return false;                    //@miss
+    }
+    return cur->end;                               //@found
+}`,
+  run(T) {
+    let uid = 0; const node = (c) => ({ id: 't' + (uid++), val: c, children: [], ring: false });
+    const root = node('·'); T.root = root;
+    const child = (n, c) => n.children.find(x => x.val === c);
+    const word = (w, i) => w.split('').map((c, j) => j === i ? `[${c}]` : c).join(' ');
+    T.step(null, 'An empty trie is a single root with no children.');
+    for (const w of ['car', 'cat', 'cart', 'dog', 'do']) {
+      let cur = root; T.st = {};
+      for (let i = 0; i < w.length; i++) {
+        const c = w[i]; let nx = child(cur, c); T.ax('word', [word(w, i)], 'list');
+        if (!nx) {
+          nx = node(c); cur.children.push(nx); cur.children.sort((x, y) => x.val < y.val ? -1 : 1);
+          T.s(nx, 'cur'); T.step('new', `insert("${w}"): no '${c}' edge yet, create it.`); T.s(nx, 'path');
+        } else { T.s(nx, 'cur'); T.step('move', `insert("${w}"): '${c}' already exists, reuse it.`); T.s(nx, 'path'); }
+        cur = nx;
+      }
+      cur.ring = true; T.s(cur, 'found'); T.step('end', `Mark the last node as end of "${w}" (double ring).`);
+    }
+    for (const w of ['cart', 'ca', 'cow']) {
+      let cur = root; T.st = {}; let ok = true;
+      for (let i = 0; i < w.length; i++) {
+        const c = w[i]; const nx = child(cur, c); T.ax('word', [word(w, i)], 'list');
+        if (!nx) { T.s(cur, 'bad'); T.out.push(`${w}: false`); T.step('miss', `search("${w}"): no '${c}' edge below '${cur.val}'. Not found.`); ok = false; break; }
+        cur = nx; T.s(cur, 'cur'); T.step('walk', `search("${w}"): follow '${c}'.`); T.s(cur, 'path');
+      }
+      if (ok) {
+        if (cur.ring) { T.s(cur, 'found'); T.out.push(`${w}: true`); T.step('found', `"${w}" ends on an end-of-word node: true.`); }
+        else { T.s(cur, 'bad'); T.out.push(`${w}: false`); T.step('found', `The path for "${w}" exists, but no word ends there: false. (startsWith would say true.)`); }
+      }
+    }
+  },
+  idea: 'Each edge is a character, so all words sharing a prefix share a path. Lookup cost depends on word length, not on how many words are stored. The end flag separates a full word from a mere prefix.',
+  time: 'insert / search O(L) for word length L', space: 'O(total characters × alphabet)',
+  outLabel: 'Search results',
+  vars: ['startsWith(prefix) — same walk, ignore the end flag (LC 208)', 'Word Search II (LC 212): trie + DFS on the grid', 'Maximum XOR of two numbers (LC 421): binary trie', 'Autocomplete / search suggestions (LC 1268)', 'Replace words (LC 648)']
+});
+
+/* ================= UI ================= */
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const NS = 'http://www.w3.org/2000/svg';
+const RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const GX = 54, GY = 70, RAD = 18;
+
+const S = { algo: null, frames: [], i: 0, playing: false, timer: null, speed: 1, arr: null };
+const V = { nodes: new Map(), edges: new Map(), parentOf: new Map(), extras: [], disp: new Map(), anim: 0, box: null };
+
+function sel(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+
+/* ---------- C++ highlighting ---------- */
+const KW = new Set('if else for while return break continue new struct class const auto true false nullptr this'.split(' '));
+const TY = new Set('void int long bool char string vector stack queue map unordered_map unordered_set pair size_t istringstream Node TrieNode MinHeap'.split(' '));
+const FN = new Set('max min abs swap push_back pop_back push pop top front back size empty count insert to_string stoi getline rbegin rend end INT_MIN LONG_MIN LONG_MAX'.split(' '));
+function hl(line) {
+  let code = line, com = '';
+  const ci = line.indexOf('//'); if (ci >= 0) { code = line.slice(0, ci); com = line.slice(ci); }
+  const re = /("[^"]*"|'[^']*')|(\b\d+\b)|([A-Za-z_]\w*)/g; let out = '', last = 0, m;
+  while ((m = re.exec(code))) {
+    out += esc(code.slice(last, m.index)); last = re.lastIndex;
+    if (m[1]) out += `<span class="t-str">${esc(m[1])}</span>`;
+    else if (m[2]) out += `<span class="t-num">${m[2]}</span>`;
+    else { const w = m[3]; out += KW.has(w) ? `<span class="t-kw">${w}</span>` : TY.has(w) ? `<span class="t-ty">${w}</span>` : FN.has(w) ? `<span class="t-fn">${w}</span>` : w; }
+  }
+  out += esc(code.slice(last));
+  if (com) out += `<span class="t-com">${esc(com)}</span>`;
+  return out || ' ';
+}
+
+/* ---------- Layout ---------- */
+function layout(tree) {
+  const pos = new Map(); if (!tree) return pos;
+  const N = tree.nodes; let x = 0;
+  if (!tree.nary) {
+    const go = (id, d) => { const n = N[id]; if (n.l) go(n.l, d + 1); pos.set(id, { x: x++ * GX, y: d * GY }); if (n.r) go(n.r, d + 1); };
+    go(tree.root, 0);
+  } else {
+    const go = (id, d) => {
+      const n = N[id];
+      if (!n.ch.length) { pos.set(id, { x: x++ * (GX - 6), y: d * GY }); return; }
+      n.ch.forEach(c => go(c, d + 1));
+      const xs = n.ch.map(c => pos.get(c).x); pos.set(id, { x: (xs[0] + xs[xs.length - 1]) / 2, y: d * GY });
+    };
+    go(tree.root, 0);
+  }
+  return pos;
+}
+
+/* ---------- Tree rendering ---------- */
+function setupSvg() {
+  const svg = $('#svg'); svg.innerHTML = '';
+  const defs = sel('defs', {}, svg);
+  const mk = sel('marker', { id: 'arrow', viewBox: '0 0 10 10', refX: '8', refY: '5', markerWidth: '7', markerHeight: '7', orient: 'auto-start-reverse' }, defs);
+  sel('path', { d: 'M0,0 L10,5 L0,10 z', class: 'arrowhead' }, mk);
+  V.gE = sel('g', { class: 'edges' }, svg); V.gX = sel('g', { class: 'threads' }, svg); V.gN = sel('g', { class: 'nodes' }, svg);
+  V.nodes.clear(); V.edges.clear(); V.parentOf.clear(); V.disp.clear(); V.extras = []; V.box = null;
+}
+
+function renderTree(f, animate) {
+  const tree = f.tree; $('#stage').classList.toggle('no-tree', !tree);
+  const tgt = layout(tree);
+  for (const [id, g] of V.nodes) if (!tgt.has(id)) { g.remove(); V.nodes.delete(id); V.disp.delete(id); }
+  const fresh = new Set();
+  for (const [id, p] of tgt) {
+    let g = V.nodes.get(id);
+    if (!g) {
+      g = sel('g', { class: 'nd' }, V.gN);
+      const inner = sel('g', { class: 'in' + (animate && !RM ? ' pop' : '') }, g);
+      sel('circle', { r: RAD + 5, class: 'halo' }, inner);
+      sel('circle', { r: RAD, class: 'body' }, inner);
+      sel('circle', { r: RAD - 4, class: 'ring' }, inner);
+      sel('text', { class: 'v', dy: '.35em' }, inner);
+      sel('text', { class: 'bd', y: RAD + 16 }, inner);
+      sel('text', { class: 'tg', y: -RAD - 9 }, inner);
+      V.nodes.set(id, g); fresh.add(id);
+    }
+    const nd = tree.nodes[id], st = f.st[id] || '';
+    g.setAttribute('class', 'nd' + (st ? ' s-' + st : '') + (nd.ring ? ' ringed' : ''));
+    const [, , , v, bd, tg] = g.firstChild.childNodes;
+    const val = String(nd.val); v.textContent = val; v.setAttribute('class', 'v' + (val.length > 2 ? ' small' : ''));
+    bd.textContent = f.badge[id] || ''; tg.textContent = f.tag[id] || '';
+  }
+  // edges
+  const want = new Map();
+  if (tree) for (const id in tree.nodes) { const n = tree.nodes[id]; (tree.nary ? n.ch : [n.l, n.r]).forEach(c => { if (c) want.set(c, id); }); }
+  for (const [c, line] of V.edges) if (!want.has(c)) { line.remove(); V.edges.delete(c); }
+  for (const [c] of want) {
+    let line = V.edges.get(c); if (!line) { line = sel('line', {}, V.gE); V.edges.set(c, line); }
+    line.setAttribute('class', 'eg' + (f.edge[c] ? ' e-' + f.edge[c] : ''));
+  }
+  V.parentOf = want;
+  V.gX.innerHTML = '';
+  V.extras = f.extra.map(([a, b]) => ({ a, b, p: sel('path', { class: 'thread', 'marker-end': 'url(#arrow)' }, V.gX) }));
+  // tween
+  const from = new Map(); for (const [id, p] of tgt) from.set(id, fresh.has(id) ? p : (V.disp.get(id) || p));
+  const dur = animate && !RM ? Math.max(140, Math.min(520, 460 / S.speed)) : 0;
+  const box0 = V.box; const box1 = fitBox(tgt); if (box1) sizeSvg(box1);
+  cancelAnimationFrame(V.anim); const t0 = performance.now();
+  const tick = (now) => {
+    const t = dur ? Math.min(1, (now - t0) / dur) : 1; const e = t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    for (const [id, p] of tgt) {
+      const a = from.get(id); const x = a.x + (p.x - a.x) * e, y = a.y + (p.y - a.y) * e;
+      V.disp.set(id, { x, y }); V.nodes.get(id).setAttribute('transform', `translate(${x.toFixed(1)},${y.toFixed(1)})`);
+    }
+    for (const [c, line] of V.edges) {
+      const P = V.disp.get(V.parentOf.get(c)), C = V.disp.get(c); if (!P || !C) continue;
+      line.setAttribute('x1', P.x.toFixed(1)); line.setAttribute('y1', P.y.toFixed(1)); line.setAttribute('x2', C.x.toFixed(1)); line.setAttribute('y2', C.y.toFixed(1));
+    }
+    for (const x of V.extras) {
+      const A_ = V.disp.get(x.a), B_ = V.disp.get(x.b); if (!A_ || !B_) continue;
+      const dx = B_.x - A_.x, dy = B_.y - A_.y, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
+      const sx = A_.x + ux * (RAD + 2), sy = A_.y + uy * (RAD + 2), ex = B_.x - ux * (RAD + 5), ey = B_.y - uy * (RAD + 5);
+      const bow = Math.min(46, L * .35); const mx = (sx + ex) / 2 - uy * bow, my = (sy + ey) / 2 + ux * bow;
+      x.p.setAttribute('d', `M${sx.toFixed(1)},${sy.toFixed(1)} Q${mx.toFixed(1)},${my.toFixed(1)} ${ex.toFixed(1)},${ey.toFixed(1)}`);
+    }
+    if (box1) {
+      const b = box0 ? box0.map((v, k) => v + (box1[k] - v) * e) : box1; V.box = b;
+      $('#svg').setAttribute('viewBox', b.map(v => v.toFixed(1)).join(' '));
+    }
+    if (t < 1) V.anim = requestAnimationFrame(tick);
+  };
+  if (dur) V.anim = requestAnimationFrame(tick); else tick(t0);
+}
+function sizeSvg(b) {
+  const svg = $('#svg'); const w = svg.clientWidth || 600; V.last = b;
+  const h = Math.max(190, Math.min(430, window.innerHeight * 0.52, w * b[3] / b[2]));
+  svg.style.height = Math.round(h) + 'px';
+}
+window.addEventListener('resize', () => { if (V.last) sizeSvg(V.last); });
+function fitBox(pos) {
+  if (!pos.size) return null;
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const p of pos.values()) { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); }
+  x0 -= 52; x1 += 52; y0 -= 44; y1 += 50;
+  let w = x1 - x0, h = y1 - y0; const minW = 420, minH = 250;
+  if (w < minW) { x0 -= (minW - w) / 2; w = minW; } if (h < minH) { y0 -= (minH - h) / 2; h = minH; }
+  return [x0, y0, w, h];
+}
+
+/* ---------- Rows, aux, legend ---------- */
+function renderRows(rows) {
+  const box = $('#rows');
+  if (!rows || !rows.length) { box.innerHTML = ''; box.hidden = true; return; }
+  box.hidden = false;
+  box.innerHTML = rows.map(r => {
+    const n = r.cells.length; let h = `<div class="arow" style="grid-template-columns:4.6rem repeat(${n}, minmax(2.3rem, 1fr))">`;
+    h += `<span class="rname" style="grid-row:2">${esc(r.name)}</span>`;
+    r.cells.forEach((c, i) => {
+      h += `<span class="ridx" style="grid-row:1;grid-column:${i + 2}">${i + (r.base || 0)}</span>`;
+      h += `<span class="cell${r.st[i] ? ' c-' + r.st[i] : ''}" style="grid-row:2;grid-column:${i + 2}">${esc(c)}</span>`;
+    });
+    (r.spans || []).forEach(s => {
+      h += `<span class="span${s.cls ? ' sp-' + s.cls : ''}" style="grid-row:${3 + s.line};grid-column:${s.a + 2} / ${s.b + 3}" title="covers ${s.a + 1}..${s.b + 1}">${esc(s.label)}</span>`;
+    });
+    return h + '</div>';
+  }).join('');
+}
+function renderAux(f) {
+  const blocks = f.aux.map(a => {
+    const chips = a.items.length ? a.items.map((v, i) => {
+      const mark = a.kind === 'stack' && i === a.items.length - 1 ? ' edge-top' : a.kind === 'queue' && i === 0 ? ' edge-front' : '';
+      return `<span class="chip${mark}">${esc(v)}</span>`;
+    }).join('') : '<span class="empty">empty</span>';
+    const hint = a.kind === 'stack' ? '<span class="axhint">top is on the right</span>' : a.kind === 'queue' ? '<span class="axhint">front is on the left</span>' : '';
+    return `<div class="ax"><div class="axn">${esc(a.name)}${hint}</div><div class="chips">${chips}</div></div>`;
+  });
+  if (S.hasOut) blocks.push(`<div class="ax out"><div class="axn">${esc(S.algo.outLabel || 'Output')}</div><div class="chips">${f.out.length ? f.out.map(v => `<span class="chip">${esc(v)}</span>`).join('') : '<span class="empty">nothing yet</span>'}</div></div>`);
+  $('#aux').innerHTML = blocks.join('');
+}
+const LEG = { cur: 'Current', stack: 'Waiting (stack, queue, call)', done: 'Finished', path: 'On the current path', found: 'Result', target: 'Target', bad: 'Fails the check', dim: 'Ruled out' };
+function renderLegend() {
+  const used = new Set(), edges = new Set(); let thread = false, ring = false;
+  S.frames.forEach(f => {
+    Object.values(f.st).forEach(s => used.add(s)); Object.values(f.edge).forEach(e => edges.add(e));
+    if (f.extra.length) thread = true; if (f.tree && Object.values(f.tree.nodes).some(n => n.ring)) ring = true;
+    if (f.rows) f.rows.forEach(r => Object.values(r.st).forEach(s => s && used.add(s)));
+  });
+  const items = Object.keys(LEG).filter(k => used.has(k)).map(k => `<span class="lg"><i class="sw sw-${k}"></i>${LEG[k]}</span>`);
+  if (edges.has('best')) items.push('<span class="lg"><i class="ln-best"></i>Best path so far</span>');
+  if (thread) items.push('<span class="lg"><i class="ln-thread"></i>Temporary thread</span>');
+  if (ring) items.push('<span class="lg"><i class="sw sw-ring"></i>End of a word</span>');
+  $('#legend').innerHTML = items.join('');
+}
+
+/* ---------- Frame display ---------- */
+function show(i, animate) {
+  S.i = Math.max(0, Math.min(S.frames.length - 1, i));
+  const f = S.frames[S.i];
+  renderTree(f, animate); renderRows(f.rows); renderAux(f);
+  $('#narr').textContent = f.msg || '';
+  $('#counter').textContent = `Step ${S.i + 1} of ${S.frames.length}`;
+  $('#scrub').value = S.i;
+  const lines = $('#code').children;
+  for (let k = 0; k < lines.length; k++) lines[k].classList.toggle('hl', k === f.line);
+  if (f.line >= 0) {
+    const ln = lines[f.line], box = $('#code');
+    const top = ln.offsetTop - box.offsetTop, bottom = top + ln.offsetHeight;
+    if (top < box.scrollTop + 8 || bottom > box.scrollTop + box.clientHeight - 8) box.scrollTop = Math.max(0, top - box.clientHeight / 3);
+  }
+  $('#prev').disabled = S.i === 0; $('#first').disabled = S.i === 0;
+  $('#next').disabled = S.i === S.frames.length - 1; $('#last').disabled = S.i === S.frames.length - 1;
+}
+
+/* ---------- Playback ---------- */
+function setPlaying(on) {
+  S.playing = on; clearTimeout(S.timer);
+  const b = $('#play'); b.setAttribute('aria-label', on ? 'Pause' : 'Play'); b.dataset.state = on ? 'pause' : 'play';
+  $('#playText').textContent = on ? 'Pause' : 'Play';
+  if (on) schedule();
+}
+function schedule() {
+  clearTimeout(S.timer);
+  S.timer = setTimeout(() => {
+    if (S.i >= S.frames.length - 1) { setPlaying(false); return; }
+    show(S.i + 1, true); if (S.i >= S.frames.length - 1) setPlaying(false); else schedule();
+  }, 1150 / S.speed);
+}
+function togglePlay() { if (!S.playing && S.i >= S.frames.length - 1) show(0, false); setPlaying(!S.playing); }
+function stepBy(d) { setPlaying(false); show(S.i + d, true); }
+
+/* ---------- Algorithm selection ---------- */
+function sampleText(a) {
+  if (!a.tree) return '';
+  const arr = (S.arr && a.custom) ? S.arr : a.tree;
+  return arr.map(v => v == null ? 'null' : v).join(', ').replace(/(, null)+$/, '');
+}
+function load(id, arr) {
+  const a = ALGOS.find(x => x.id === id) || ALGOS[0];
+  if (S.algo !== a) { S.arr = null; }
+  if (arr !== undefined) S.arr = arr;
+  S.algo = a;
+  S.frames = framesFor(a, a.custom && S.arr ? S.arr : undefined);
+  S.hasOut = S.frames.some(f => f.out.length);
+  setPlaying(false); setupSvg();
+  $('#cat').textContent = a.cat; $('#title').textContent = a.title; $('#blurb').textContent = a.blurb;
+  const st = sampleText(a); $('#sample').hidden = !st; $('#sampleTree').textContent = st;
+  $('#code').innerHTML = a.parsed.lines.map((l, k) => `<div class="cl"><span class="no">${k + 1}</span><span class="tx">${hl(l)}</span></div>`).join('');
+  $('#code').scrollTop = 0;
+  $('#notes').innerHTML = `
+    <div class="note-main"><h3>How it works</h3><p>${esc(a.idea)}</p>${a.trap ? `<h3>Watch out for</h3><p>${esc(a.trap)}</p>` : ''}</div>
+    <div class="note-cost"><h3>Cost</h3><dl><dt>Time</dt><dd>${esc(a.time)}</dd><dt>Space</dt><dd>${esc(a.space)}</dd></dl></div>
+    <div class="note-vars"><h3>Variations to practise</h3><ul>${a.vars.map(v => `<li>${esc(v)}</li>`).join('')}</ul></div>`;
+  $('#custom').hidden = !a.custom; $('#treeErr').textContent = ''; $('#nodedef').hidden = a.cat === 'Tree-shaped structures';
+  if (a.custom) $('#treeIn').value = sampleText(a);
+  $('#scrub').max = S.frames.length - 1;
+  renderLegend();
+  document.querySelectorAll('.item').forEach(b => b.setAttribute('aria-current', b.dataset.id === a.id ? 'true' : 'false'));
+  $('#algoSelect').value = a.id;
+  try { history.replaceState(null, '', '#' + a.id); } catch (e) { }
+  show(0, false);
+}
+
+function buildNav() {
+  const cats = [...new Set(ALGOS.map(a => a.cat))];
+  $('#list').innerHTML = cats.map(c => `<div class="group" data-cat="${esc(c)}"><h4>${esc(c)}</h4>${ALGOS.filter(a => a.cat === c).map(a => `<button class="item" data-id="${a.id}" data-q="${esc((a.title + ' ' + a.cat + ' ' + a.blurb).toLowerCase())}">${esc(a.title)}</button>`).join('')}</div>`).join('');
+  $('#algoSelect').innerHTML = cats.map(c => `<optgroup label="${esc(c)}">${ALGOS.filter(a => a.cat === c).map(a => `<option value="${a.id}">${esc(a.title)}</option>`).join('')}</optgroup>`).join('');
+  $('#list').addEventListener('click', e => { const b = e.target.closest('.item'); if (b) { load(b.dataset.id); $('#main').scrollIntoView({ block: 'start', behavior: RM ? 'auto' : 'smooth' }); } });
+  $('#algoSelect').addEventListener('change', e => load(e.target.value));
+  $('#filter').addEventListener('input', e => {
+    const q = e.target.value.trim().toLowerCase();
+    document.querySelectorAll('.group').forEach(g => {
+      let any = false; g.querySelectorAll('.item').forEach(b => { const hit = !q || b.dataset.q.includes(q); b.hidden = !hit; any = any || hit; });
+      g.hidden = !any;
+    });
+  });
+}
+
+function parseTree(s) {
+  const toks = s.split(/[\s,\[\]]+/).filter(Boolean);
+  if (!toks.length) throw new Error('Enter at least one value.');
+  const arr = toks.map(t => { if (/^(null|#|x|n)$/i.test(t)) return null; const v = Number(t); if (!Number.isInteger(v) || Math.abs(v) > 999) throw new Error(`"${t}" isn't an integer between −999 and 999 or null.`); return v; });
+  if (arr[0] == null) throw new Error('The root can\'t be null.');
+  if (arr.filter(v => v != null).length > 25) throw new Error('Keep it to 25 nodes or fewer so the tree fits.');
+  return arr;
+}
+
+function init() {
+  buildNav();
+  $('#play').addEventListener('click', togglePlay);
+  $('#prev').addEventListener('click', () => stepBy(-1));
+  $('#next').addEventListener('click', () => stepBy(1));
+  $('#first').addEventListener('click', () => { setPlaying(false); show(0, true); });
+  $('#last').addEventListener('click', () => { setPlaying(false); show(S.frames.length - 1, true); });
+  $('#scrub').addEventListener('input', e => { setPlaying(false); show(+e.target.value, true); });
+  $('#speed').addEventListener('input', e => { S.speed = +e.target.value; $('#speedVal').textContent = S.speed + '×'; if (S.playing) schedule(); });
+  $('#custom').addEventListener('submit', e => {
+    e.preventDefault();
+    try { const arr = parseTree($('#treeIn').value); $('#treeErr').textContent = ''; load(S.algo.id, arr); }
+    catch (err) { $('#treeErr').textContent = err.message; }
+  });
+  $('#treeReset').addEventListener('click', () => { load(S.algo.id, null); });
+  $('#copy').addEventListener('click', async () => {
+    const txt = S.algo.parsed.lines.join('\n');
+    try { await navigator.clipboard.writeText(txt); $('#copy').textContent = 'Copied'; }
+    catch (e) { const r = document.createRange(); r.selectNodeContents($('#code')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $('#copy').textContent = 'Selected'; }
+    setTimeout(() => { $('#copy').textContent = 'Copy code'; }, 1400);
+  });
+  document.addEventListener('keydown', e => {
+    if (e.target.closest('input, select, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === ' ' && !e.target.closest('button')) { e.preventDefault(); togglePlay(); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); stepBy(1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); stepBy(-1); }
+  });
+  window.addEventListener('hashchange', () => { const id = location.hash.slice(1); if (id !== S.algo.id && ALGOS.some(a => a.id === id)) load(id); });
+  const h = (location.hash || '').slice(1);
+  load(ALGOS.some(a => a.id === h) ? h : 'preorder');
+}
+init();
+
+</script>
+</body>
+</html>

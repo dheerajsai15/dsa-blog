@@ -1,0 +1,35 @@
+/* Design tokens shared by every page. Same palette as the topic pages. */
+:root{
+  --bg:#ECF0ED; --panel:#F8FAF8; --panel2:#E1E8E3; --stagebg:#E6ECE8; --ink:#16241D; --muted:#55665C; --rule:#C5D0C8; --edge:#97AB9F; --dot:#C3CEC6;
+  --cur:#E8622E; --done:#2C8660; --wait:#3767CC; --wait-bg:#D9E4FA; --path:#8248C2; --found:#E6AE07; --found-ink:#2A2000; --target:#D23E87; --bad:#C43232;
+  --on:#FFFFFF;
+  --font:'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1713; --panel:#13201B; --panel2:#1A2A23; --stagebg:#101C17; --ink:#DCE8E1; --muted:#8DA195; --rule:#25362E; --edge:#4A5F54; --dot:#22332B;
+    --cur:#FF7444; --done:#36A574; --wait:#729BF2; --wait-bg:#1A2A48; --path:#AC7BEA; --found:#F3C232; --found-ink:#251C00; --target:#F06AAD; --bad:#E85A50;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1713; --panel:#13201B; --panel2:#1A2A23; --stagebg:#101C17; --ink:#DCE8E1; --muted:#8DA195; --rule:#25362E; --edge:#4A5F54; --dot:#22332B;
+  --cur:#FF7444; --done:#36A574; --wait:#729BF2; --wait-bg:#1A2A48; --path:#AC7BEA; --found:#F3C232; --found-ink:#251C00; --target:#F06AAD; --bad:#E85A50;
+  color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--wait);outline-offset:2px;border-radius:4px}
+
+/* Theme toggle, used by every page */
+.theme-btn{display:inline-grid;place-items:center;width:36px;height:36px;border:1px solid var(--rule);border-radius:10px;background:var(--panel);cursor:pointer;transition:background .2s}
+.theme-btn:hover{background:var(--panel2)}
+.theme-btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.theme-btn .moon{display:none}
+:root[data-theme="dark"] .theme-btn .sun{display:none}
+:root[data-theme="dark"] .theme-btn .moon{display:block}
