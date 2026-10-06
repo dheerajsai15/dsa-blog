@@ -33,6 +33,13 @@ h1 em{font-style:normal;color:var(--cur)}
 .btn svg{transition:transform .2s}
 .btn:hover svg{transform:translateX(3px)}
 .meta{font-family:var(--mono);font-size:.82rem;color:var(--muted)}
+.stats{display:flex;gap:clamp(22px,4vw,40px);margin:34px 0 0;padding-top:22px;border-top:1px solid var(--rule)}
+.stats div{display:flex;flex-direction:column;gap:4px}
+.stats dd{margin:0;font-size:clamp(1.9rem,3.4vw,2.5rem);font-weight:800;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.stats dt{font-size:.88rem;color:var(--muted)}
+.sources{margin:14px 0 0;font-size:.92rem;color:var(--muted)}
+.sources a{color:var(--ink);text-underline-offset:3px;text-decoration-color:var(--edge)}
+.sources a:hover{text-decoration-color:var(--cur)}
 kbd{font-family:var(--mono);font-size:.78em;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 .35em;background:var(--panel)}
 
 /* stage */
@@ -130,6 +137,11 @@ footer a:hover{text-decoration:underline}
         </a>
         <span class="meta"><kbd>Space</kbd> play · <kbd>←</kbd> <kbd>→</kbd> step</span>
       </div>
+      <dl class="stats rise" style="animation-delay:.32s">
+        <div><dd id="statPatterns">190</dd><dt>patterns, each animated</dt></div>
+        <div><dd id="statTopics">15</dd><dt>topics</dt></div>
+      </dl>
+      <p class="sources rise" style="animation-delay:.38s">Problems picked from <a href="https://neetcode.io/practice" target="_blank" rel="noopener">NeetCode 150</a> and <a href="https://www.hellointerview.com/learn/code" target="_blank" rel="noopener">Hello Interview</a>.</p>
     </div>
 
     <div class="stage hero-stage rise" style="animation-delay:.2s" aria-label="Animated binary tree traversal" role="img">
@@ -154,45 +166,40 @@ footer a:hover{text-decoration:underline}
         <div class="card-b">
           <div class="card-h"><h3>Arrays &amp; hashing</h3><span class="pill live">11 problems</span></div>
           <p>Hash maps, frequency counts and prefix sums: two sum, group anagrams, top-k frequent, longest consecutive sequence.</p>
-        </a>
-
-      </div>
+        </div>
+      </a>
 
       <a class="card" href="twopointers/index.html">
         <div class="stage"><svg id="cardTwo" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
         <div class="card-b">
           <div class="card-h"><h3>Two pointers</h3><span class="pill live">10 problems</span></div>
           <p>Pointers that close in from both ends: valid palindrome, two sum II, 3Sum, container with most water, trapping rain water.</p>
-        </a>
-
-      </div>
+        </div>
+      </a>
 
       <a class="card" href="window/index.html">
         <div class="stage"><svg id="cardWin" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
         <div class="card-b">
           <div class="card-h"><h3>Sliding window</h3><span class="pill live">10 problems</span></div>
           <p>Grow the right edge, shrink the left: longest substring without repeats, character replacement, minimum window substring.</p>
-        </a>
-
-      </div>
+        </div>
+      </a>
 
       <a class="card" href="stack/index.html">
         <div class="stage"><svg id="cardStack" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
         <div class="card-b">
           <div class="card-h"><h3>Stack</h3><span class="pill live">9 problems</span></div>
           <p>Matching, evaluating and monotonic stacks: valid parentheses, min stack, daily temperatures, largest rectangle in a histogram.</p>
-        </a>
-
-      </div>
+        </div>
+      </a>
 
       <a class="card" href="binarysearch/index.html">
         <div class="stage"><svg id="cardBin" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
         <div class="card-b">
           <div class="card-h"><h3>Binary search</h3><span class="pill live">9 problems</span></div>
           <p>Halve the search space: classic search, rotated arrays, searching on the answer, median of two sorted arrays.</p>
-        </a>
-
-      </div>
+        </div>
+      </a>
 
       <a class="card" href="lists/index.html">
         <div class="stage"><svg id="cardList" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
@@ -217,18 +224,16 @@ footer a:hover{text-decoration:underline}
         <div class="card-b">
           <div class="card-h"><h3>Heap &amp; priority queue</h3><span class="pill live">7 problems</span></div>
           <p>Top-k with a size-k heap, k closest points, task scheduler, and a running median with two heaps.</p>
-        </a>
-
-      </div>
+        </div>
+      </a>
 
       <a class="card" href="backtracking/index.html">
         <div class="stage"><svg id="cardBack" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
         <div class="card-b">
           <div class="card-h"><h3>Backtracking</h3><span class="pill live">10 problems</span></div>
           <p>Choose, explore, undo: subsets, permutations, combination sum, word search, palindrome partitioning, N-Queens.</p>
-        </a>
-
-      </div>
+        </div>
+      </a>
 
       <a class="card" href="graphs/index.html">
         <div class="stage"><svg id="cardGraph" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
@@ -253,36 +258,32 @@ footer a:hover{text-decoration:underline}
         <div class="card-b">
           <div class="card-h"><h3>Greedy</h3><span class="pill live">9 problems</span></div>
           <p>Locally best choices that are provably safe: jump game, gas station, hand of straights, partition labels.</p>
-        </a>
-
-      </div>
+        </div>
+      </a>
 
       <a class="card" href="intervals/index.html">
         <div class="stage"><svg id="cardInt" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
         <div class="card-b">
           <div class="card-h"><h3>Intervals</h3><span class="pill live">8 problems</span></div>
           <p>Sort by start, then merge, insert or count overlaps: merge intervals, non-overlapping intervals, meeting rooms.</p>
-        </a>
-
-      </div>
+        </div>
+      </a>
 
       <a class="card" href="math/index.html">
         <div class="stage"><svg id="cardMath" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
         <div class="card-b">
           <div class="card-h"><h3>Math &amp; geometry</h3><span class="pill live">8 problems</span></div>
           <p>Grid walks and number tricks: rotate image, spiral matrix, set matrix zeroes, fast power, multiply strings.</p>
-        </a>
-
-      </div>
+        </div>
+      </a>
 
       <a class="card" href="bits/index.html">
         <div class="stage"><svg id="cardBits" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
         <div class="card-b">
           <div class="card-h"><h3>Bit manipulation</h3><span class="pill live">7 problems</span></div>
           <p>XOR, masks and shifts: single number, counting bits, reverse bits, missing number, sum without +.</p>
-        </a>
-
-      </div>
+        </div>
+      </a>
     </div>
   </section>
 
@@ -292,6 +293,13 @@ footer a:hover{text-decoration:underline}
 </div>
 
 <script>
+/* ============ hero stats: count what the topic cards say is live ============ */
+(() => {
+  const pills = [...document.querySelectorAll('.pill.live')];
+  document.getElementById('statPatterns').textContent = pills.reduce((n, p) => n + (parseInt(p.textContent, 10) || 0), 0);
+  document.getElementById('statTopics').textContent = pills.length;
+})();
+
 /* ============ helpers ============ */
 const NS = 'http://www.w3.org/2000/svg';
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
