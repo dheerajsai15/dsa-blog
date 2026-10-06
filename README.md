@@ -8,6 +8,7 @@ Plain static HTML. No framework, no build step.
 index.html          landing page with a card per topic
 trees/index.html    tree algorithms (37 patterns)
 graphs/index.html   graph algorithms (20 patterns)
+lists/index.html    linked lists (18 patterns)
 dp/index.html       dynamic programming (17 problems, recursion → memo → table)
 shared/theme.css    colors, fonts, light/dark tokens
 shared/theme.js     saved theme + [data-theme-toggle] buttons
@@ -26,7 +27,7 @@ npx serve .
 1. Create `<topic>/index.html`. Load `../shared/theme.js` in `<head>` and add an `← All topics` link to `../index.html`.
 2. Turn its card on the homepage into a link and swap the "Coming soon" pill for a live one.
 
-Now that `trees/`, `graphs/` and `dp/` exist, move what they share (player controls, code panel, tracer) into `shared/`.
+Now that `trees/`, `graphs/`, `lists/` and `dp/` exist, move what they share (player controls, code panel, tracer) into `shared/`.
 
 ## Deploy
 

@@ -1,0 +1,1501 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Linked lists, step by step</title>
+<link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+<script src="../shared/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ECF0ED; --panel:#F8FAF8; --panel2:#E1E8E3; --stagebg:#E6ECE8; --ink:#16241D; --muted:#55665C; --rule:#C5D0C8; --edge:#97AB9F; --dot:#C3CEC6;
+  --cur:#E8622E; --done:#2C8660; --wait:#3767CC; --wait-bg:#D9E4FA; --path:#8248C2; --found:#E6AE07; --found-ink:#2A2000; --target:#D23E87; --bad:#C43232;
+  --hl:rgba(232,98,46,.13); --code-bg:#F4F7F5; --on:#FFFFFF;
+  --g0:#17898A; --g1:#C2457A; --g2:#B0711A; --g3:#4B5BC8; --g4:#5F8A1B; --g5:#8B58B5; --ca:#2F7DC0; --cb:#D7901A;
+  --water:#CFE2F1; --land:#D9CBA5; --fresh:#F3B640; --rotten:#6E5C3D;
+  --t-kw:#8248C2; --t-ty:#2D63B8; --t-fn:#1F7A57; --t-num:#B5531F; --t-str:#B5531F; --t-com:#7C8B82;
+  --font:'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme:light;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1713; --panel:#13201B; --panel2:#1A2A23; --stagebg:#101C17; --ink:#DCE8E1; --muted:#8DA195; --rule:#25362E; --edge:#4A5F54; --dot:#22332B;
+    --cur:#FF7444; --done:#36A574; --wait:#729BF2; --wait-bg:#1A2A48; --path:#AC7BEA; --found:#F3C232; --found-ink:#251C00; --target:#F06AAD; --bad:#E85A50;
+    --hl:rgba(255,116,68,.15); --code-bg:#0F1A16; --on:#FFFFFF;
+  --g0:#2DB3B0; --g1:#E06A9B; --g2:#D99A3A; --g3:#7B89F0; --g4:#8DBA3A; --g5:#B488E0; --ca:#4E9BE0; --cb:#E8A93A;
+  --water:#16304A; --land:#5C5036; --fresh:#E3A52C; --rotten:#806C4B;
+    --g0:#2DB3B0; --g1:#E06A9B; --g2:#D99A3A; --g3:#7B89F0; --g4:#8DBA3A; --g5:#B488E0; --ca:#4E9BE0; --cb:#E8A93A;
+    --water:#16304A; --land:#5C5036; --fresh:#E3A52C; --rotten:#806C4B;
+    --t-kw:#C49AF5; --t-ty:#7FB0F5; --t-fn:#6DD3A6; --t-num:#F2A272; --t-str:#F2A272; --t-com:#6F8378;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1713; --panel:#13201B; --panel2:#1A2A23; --stagebg:#101C17; --ink:#DCE8E1; --muted:#8DA195; --rule:#25362E; --edge:#4A5F54; --dot:#22332B;
+  --cur:#FF7444; --done:#36A574; --wait:#729BF2; --wait-bg:#1A2A48; --path:#AC7BEA; --found:#F3C232; --found-ink:#251C00; --target:#F06AAD; --bad:#E85A50;
+  --hl:rgba(255,116,68,.15); --code-bg:#0F1A16; --on:#FFFFFF;
+  --t-kw:#C49AF5; --t-ty:#7FB0F5; --t-fn:#6DD3A6; --t-num:#F2A272; --t-str:#F2A272; --t-com:#6F8378;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--wait);outline-offset:2px;border-radius:4px}
+[hidden]{display:none !important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.app{max-width:1520px;margin:0 auto;padding:18px clamp(12px,2.4vw,30px) 48px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding-bottom:16px;border-bottom:1px solid var(--rule)}
+.brand{display:flex;gap:14px;align-items:center}
+.brand svg{flex:none}
+h1{font-size:clamp(1.4rem,2.4vw,1.9rem);line-height:1.1;font-weight:800;letter-spacing:-.025em;margin:0;font-variation-settings:"opsz" 96}
+.top p{margin:4px 0 0;color:var(--muted);max-width:70ch;font-size:.95rem}
+.top p a{color:var(--ink);text-underline-offset:2px}
+kbd{font-family:var(--mono);font-size:.78em;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 .35em;background:var(--panel)}
+.mobile-pick{display:none}
+.mobile-pick select{width:100%;padding:9px 10px;border:1px solid var(--rule);border-radius:8px;background:var(--panel)}
+
+.layout{display:grid;grid-template-columns:232px minmax(0,1fr);gap:30px;margin-top:20px}
+.side{position:sticky;top:12px;align-self:start;max-height:calc(100vh - 24px);overflow:auto;padding:2px 6px 20px 2px;scrollbar-width:thin}
+.side input{width:100%;padding:8px 10px;border:1px solid var(--rule);border-radius:8px;background:var(--panel);margin-bottom:4px}
+.group h4{font-size:.8rem;font-weight:600;color:var(--muted);margin:16px 0 3px 10px}
+.item{display:block;width:100%;text-align:left;background:none;border:0;padding:4px 10px;border-radius:6px;font-size:.93rem;cursor:pointer;line-height:1.35}
+.item:hover{background:var(--panel2)}
+.item[aria-current="true"]{background:var(--ink);color:var(--bg)}
+
+.head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px;margin-bottom:14px}
+.head .cat{width:100%;color:var(--muted);font-size:.85rem;font-weight:500}
+.head h2{margin:0;font-size:clamp(1.7rem,3.2vw,2.5rem);line-height:1.05;font-weight:800;letter-spacing:-.03em;font-variation-settings:"opsz" 96}
+.head .blurb{width:100%;margin:6px 0 0;max-width:70ch;font-size:1.02rem}
+.sample{width:100%;color:var(--muted);font-size:.88rem;margin-top:2px}
+.sample code{font-family:var(--mono);font-size:.85em;color:var(--ink)}
+
+.work{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:20px;align-items:start}
+.stage{position:relative;background-color:var(--stagebg);background-image:radial-gradient(var(--dot) 1.2px,transparent 1.4px);background-size:20px 20px;border:1px solid var(--rule);border-radius:18px;padding:8px}
+#svg{display:block;width:100%;height:320px;transition:height .3s}
+
+/* nodes */
+.nd{--nf:var(--panel);--ns:var(--ink);--nt:var(--ink);--nw:1.6;transition:opacity .3s}
+.nd .body{fill:var(--nf);stroke:var(--ns);stroke-width:var(--nw);transition:fill .25s,stroke .25s,stroke-width .25s}
+.nd .halo{fill:none;stroke:transparent;stroke-width:3;transition:stroke .25s}
+.nd .v{font:700 14px var(--font);fill:var(--nt);text-anchor:middle;transition:fill .25s}
+.nd .bd{font:600 11px var(--font);fill:var(--muted);text-anchor:middle;paint-order:stroke;stroke:var(--stagebg);stroke-width:4px;stroke-linejoin:round}
+.nd .tg{font:700 11.5px var(--font);fill:var(--target);text-anchor:middle;paint-order:stroke;stroke:var(--stagebg);stroke-width:4px;stroke-linejoin:round}
+.s-cur{--nf:var(--cur);--ns:var(--cur);--nt:var(--on)} .s-cur .halo{stroke:var(--cur);stroke-opacity:.35}
+.s-done{--nf:var(--done);--ns:var(--done);--nt:var(--on)}
+.s-stack{--nf:var(--wait-bg);--ns:var(--wait);--nw:2.8}
+.s-path{--nf:var(--path);--ns:var(--path);--nt:var(--on)}
+.s-found{--nf:var(--found);--ns:var(--found);--nt:var(--found-ink)}
+.s-target{--ns:var(--target);--nw:3} .s-target .body{stroke-dasharray:4 3}
+.s-bad{--nf:var(--bad);--ns:var(--bad);--nt:var(--on)}
+.s-dim{opacity:.3}
+.s-ca{--nf:var(--ca);--ns:var(--ca);--nt:var(--on)} .s-cb{--nf:var(--cb);--ns:var(--cb);--nt:var(--found-ink)}
+.s-g0{--nf:var(--g0);--ns:var(--g0);--nt:var(--on)} .s-g1{--nf:var(--g1);--ns:var(--g1);--nt:var(--on)} .s-g2{--nf:var(--g2);--ns:var(--g2);--nt:var(--on)}
+.s-g3{--nf:var(--g3);--ns:var(--g3);--nt:var(--on)} .s-g4{--nf:var(--g4);--ns:var(--g4);--nt:var(--on)} .s-g5{--nf:var(--g5);--ns:var(--g5);--nt:var(--on)}
+/* edges */
+.ge{--ec:var(--edge);--ew:2}
+.ge .ln{fill:none;stroke:var(--ec);stroke-width:var(--ew);stroke-linecap:round;transition:stroke .25s,stroke-width .25s,opacity .25s}
+.ge .ah{fill:var(--ec);transition:fill .25s}
+.ge .wt{font:700 12px var(--font);fill:var(--ink);text-anchor:middle;paint-order:stroke;stroke:var(--stagebg);stroke-width:5px;stroke-linejoin:round}
+.e-tree{--ec:var(--ink);--ew:3} .e-cur{--ec:var(--cur);--ew:3.6} .e-mst{--ec:var(--found);--ew:5.5}
+.e-cand .ln{stroke-dasharray:6 5} .e-cand{--ec:var(--cur);--ew:2}
+.e-dim{opacity:.28} .e-back{--ec:var(--bad);--ew:3.8} .e-bridge{--ec:var(--bad);--ew:5.5} .e-path{--ec:var(--path);--ew:4.5}
+.e-g0{--ec:var(--g0);--ew:3.4} .e-g1{--ec:var(--g1);--ew:3.4} .e-g2{--ec:var(--g2);--ew:3.4} .e-g3{--ec:var(--g3);--ew:3.4} .e-g4{--ec:var(--g4);--ew:3.4} .e-g5{--ec:var(--g5);--ew:3.4}
+/* legend + controls */
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;margin:10px 4px 0;font-size:.82rem;color:var(--muted)}
+.lg{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:50%;display:inline-block;border:1.5px solid var(--ink);background:var(--panel)}
+.sw-cur{background:var(--cur);border-color:var(--cur)} .sw-done{background:var(--done);border-color:var(--done)}
+.sw-stack{background:var(--wait-bg);border:2.5px solid var(--wait)} .sw-path{background:var(--path);border-color:var(--path)}
+.sw-found{background:var(--found);border-color:var(--found)} .sw-target{border:2px dashed var(--target)}
+.sw-bad{background:var(--bad);border-color:var(--bad)} .sw-dim{opacity:.35}
+.sw-ca{background:var(--ca);border-color:var(--ca)} .sw-cb{background:var(--cb);border-color:var(--cb)}
+.sw-groups{border:0;background:conic-gradient(var(--g0) 0 60deg,var(--g1) 0 120deg,var(--g2) 0 180deg,var(--g3) 0 240deg,var(--g4) 0 300deg,var(--g5) 0)}
+.sq{width:12px;height:12px;border-radius:3px;display:inline-block}
+.le{--ec:var(--edge);--ew:2px;display:inline-block;width:20px;height:0;border-top:var(--ew) solid var(--ec);border-radius:2px}
+.le-tree{--ec:var(--ink);--ew:3px} .le-cur{--ec:var(--cur);--ew:3px} .le-mst{--ec:var(--found);--ew:5px} .le-cand{border-top-style:dashed;--ec:var(--cur)} .le-dim{opacity:.35} .le-back{--ec:var(--bad);--ew:3px} .le-bridge{--ec:var(--bad);--ew:5px} .le-path{--ec:var(--path);--ew:4px}
+
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:14px}
+.btns{display:flex;gap:4px;align-items:center}
+.ib{width:38px;height:38px;display:grid;place-items:center;border:1px solid var(--rule);background:var(--panel);border-radius:9px;cursor:pointer}
+.ib:hover:not(:disabled){border-color:var(--ink)}
+.ib:disabled{opacity:.4;cursor:default}
+.ib svg{width:16px;height:16px;fill:currentColor}
+#play{width:auto;padding:0 16px 0 13px;display:flex;gap:7px;background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:600}
+#play .i-pause{display:none} #play[data-state="pause"] .i-play{display:none} #play[data-state="pause"] .i-pause{display:block}
+.scrubwrap{flex:1 1 220px;display:flex;align-items:center;gap:10px;min-width:180px}
+input[type=range]{accent-color:var(--cur);width:100%}
+#counter{font-size:.84rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.speed{display:flex;align-items:center;gap:8px;font-size:.84rem;color:var(--muted)}
+.speed input{width:90px}
+#speedVal{min-width:2.6em;font-variant-numeric:tabular-nums}
+
+.narr{min-height:3.1em;margin:14px 0 0;padding:10px 14px;border-left:4px solid var(--cur);background:var(--panel);border-radius:0 10px 10px 0;font-size:1.02rem;font-weight:500}
+.aux{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.ax{display:grid;grid-template-columns:9.5rem minmax(0,1fr);gap:10px;align-items:start}
+.axn{font-size:.86rem;font-weight:600;padding-top:4px}
+.axhint{display:block;font-weight:400;font-size:.75rem;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{padding:3px 9px;border:1px solid var(--rule);background:var(--panel);border-radius:6px;font-weight:600;font-variant-numeric:tabular-nums;font-size:.92rem}
+.chip.edge-top,.chip.edge-front{border-color:var(--wait);background:var(--wait-bg)}
+.ax.out .chip{border-color:var(--done);color:var(--done)}
+.chip.ch-on{background:var(--cur);border-color:var(--cur);color:var(--on)} .chip.ch-ok{background:var(--found);border-color:var(--found);color:var(--found-ink)} .chip.ch-no{opacity:.4;text-decoration:line-through}
+.empty{color:var(--muted);font-size:.86rem;padding-top:4px;font-style:italic}
+
+.custom{margin-top:18px;padding-top:14px;border-top:1px dashed var(--rule)}
+.custom label{display:block;font-weight:600;font-size:.88rem;margin-bottom:6px}
+.custom label span{font-weight:400;color:var(--muted)}
+.crow{display:flex;gap:6px;flex-wrap:wrap}
+.crow input{flex:1 1 220px;padding:8px 10px;border:1px solid var(--rule);border-radius:8px;background:var(--panel);font-family:var(--mono);font-size:.85rem}
+.tb{padding:8px 14px;border:1px solid var(--ink);border-radius:8px;background:var(--panel);font-weight:600;cursor:pointer}
+.tb.ghost{border-color:var(--rule)}
+#treeErr{color:var(--bad);font-size:.85rem;margin:6px 0 0;min-height:1em}
+
+/* code */
+.codebox{position:sticky;top:12px;background:var(--code-bg);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+.codehead{display:flex;justify-content:space-between;align-items:center;padding:8px 10px 8px 14px;border-bottom:1px solid var(--rule);font-size:.85rem;color:var(--muted)}
+.codehead strong{color:var(--ink)}
+#copy{border:1px solid var(--rule);background:var(--panel);border-radius:6px;padding:3px 10px;font-size:.8rem;cursor:pointer}
+#code{margin:0;padding:10px 0;max-height:min(72vh,640px);overflow:auto;font-family:var(--mono);font-size:12.6px;line-height:1.7;position:relative;scroll-behavior:smooth}
+.cl{display:flex;padding-right:14px;transition:background .2s}
+.cl .no{flex:none;width:2.6em;text-align:right;padding-right:12px;color:var(--t-com);user-select:none}
+.cl .tx{white-space:pre}
+.cl.hl{background:var(--hl);box-shadow:inset 3px 0 var(--cur)}
+.cl.hl .no{color:var(--cur);font-weight:600}
+.t-kw{color:var(--t-kw)} .t-ty{color:var(--t-ty)} .t-fn{color:var(--t-fn)} .t-num,.t-str{color:var(--t-num)} .t-com{color:var(--t-com);font-style:italic}
+.nodedef{padding:10px 14px;border-top:1px solid var(--rule);font-size:.8rem;color:var(--muted)}
+.nodedef code{font-family:var(--mono);font-size:.95em;color:var(--ink)}
+
+/* notes */
+#notes{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr) minmax(0,1.2fr);gap:28px;margin-top:30px;padding-top:22px;border-top:1px solid var(--rule)}
+#notes h3{font-size:1.02rem;margin:0 0 6px;font-weight:700}
+#notes p{margin:0 0 16px;max-width:62ch}
+#notes dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+#notes dt{color:var(--muted);font-size:.88rem;padding-top:1px}
+#notes dd{margin:0;font-weight:600}
+#notes ul{margin:0;padding-left:1.1em}
+#notes li{margin-bottom:5px}
+#notes li::marker{color:var(--cur)}
+
+@media (max-width:1180px){ .work{grid-template-columns:1fr} .codebox{position:static} #code{max-height:none} #notes{grid-template-columns:1fr 1fr} .note-vars{grid-column:1 / -1} }
+@media (max-width:860px){
+  .layout{grid-template-columns:1fr;gap:12px}
+  .side{display:none}
+  .mobile-pick{display:block;margin-top:14px}
+  .top{align-items:flex-start}
+  #notes{grid-template-columns:1fr;gap:6px}
+  .ax{grid-template-columns:1fr;gap:4px}
+}
+@media (max-width:520px){ body{font-size:14.5px} .speed input{width:70px} .brand svg{display:none} }
+@media (prefers-reduced-motion: reduce){ *{transition:none !important;animation:none !important;scroll-behavior:auto !important} }
+.topnav{display:flex;align-items:center;gap:14px;flex:none;font-size:.9rem}
+.topnav a{color:var(--muted);text-decoration:none}
+.topnav a:hover{color:var(--ink)}
+.theme-btn{display:inline-grid;place-items:center;width:34px;height:34px;border:1px solid var(--rule);border-radius:9px;background:var(--panel);cursor:pointer}
+.theme-btn:hover{background:var(--panel2)}
+.theme-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.theme-btn .moon{display:none}
+:root[data-theme="dark"] .theme-btn .sun{display:none}
+:root[data-theme="dark"] .theme-btn .moon{display:block}
+/* list extras */
+.nd .v.small{font-size:11px}
+.nd .nl{stroke:var(--edge);stroke-width:2;display:none}
+.nd .nt{font:600 10px var(--mono);fill:var(--muted);text-anchor:middle;display:none}
+.nd.nil .nl,.nd.nil .nt{display:inline}
+.e-path{--ec:var(--done);--ew:3.4}
+.e-rand{--ec:var(--g5);--ew:2} .e-rand .ln,.e-rand-on .ln{stroke-dasharray:5 4}
+.le-path{--ec:var(--done);--ew:3px} .le-rand{border-top-style:dashed;--ec:var(--g5)}
+.lnil{display:inline-block;width:2px;height:12px;background:var(--edge);border-radius:1px}
+.chip.ptr{font-family:var(--mono);font-size:.82rem;font-weight:600;color:var(--target)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true"><g stroke="var(--edge)" stroke-width="2"><line x1="11.5" y1="26" x2="15" y2="26"/><line x1="28.5" y1="26" x2="32" y2="26"/></g><path d="M14.5 22.5 18 26l-3.5 3.5zM31.5 22.5 35 26l-3.5 3.5z" fill="var(--edge)"/><circle cx="6" cy="26" r="5.5" fill="var(--cur)"/><circle cx="23" cy="26" r="5.5" fill="var(--panel)" stroke="var(--wait)" stroke-width="2.2"/><circle cx="40" cy="26" r="5.5" fill="var(--done)"/><text x="6" y="14" text-anchor="middle" font-size="8" font-weight="700" fill="var(--target)">p</text></svg>
+      <div>
+        <h1>Linked lists, step by step</h1>
+        <p>18 interview patterns, each animated next to its C++ code, with every pointer drawn above the node it points at. Press <kbd>Space</kbd> to play or pause, and <kbd>←</kbd> <kbd>→</kbd> to step. Companion to the <a href="../trees/index.html">tree</a>, <a href="../graphs/index.html">graph</a> and <a href="../dp/index.html">DP</a> pages.</p>
+      </div>
+    </div>
+    <nav class="topnav">
+      <a href="../index.html">← All topics</a>
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="Toggle dark mode">
+        <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+    </nav>
+  </header>
+  <div class="mobile-pick"><label for="algoSelect" class="sr">Algorithm</label><select id="algoSelect"></select></div>
+
+  <div class="layout">
+    <nav class="side" aria-label="Algorithms">
+      <input id="filter" type="search" placeholder="Filter, e.g. reverse or cycle" aria-label="Filter algorithms">
+      <div id="list"></div>
+    </nav>
+
+    <main id="main">
+      <section class="head">
+        <div class="cat" id="cat"></div>
+        <h2 id="title"></h2>
+        <p class="blurb" id="blurb"></p>
+        <div class="sample" id="sample">Sample input: <code id="sampleTree"></code></div>
+      </section>
+
+      <section class="work">
+        <div>
+          <div class="stage" id="stage">
+            <svg id="svg" role="img" aria-label="Animated linked list"></svg>
+          </div>
+          <div class="legend" id="legend"></div>
+
+          <div class="controls">
+            <div class="btns">
+              <button class="ib" id="first" aria-label="Go to first step" title="First step"><svg viewBox="0 0 16 16"><path d="M3 2h2v12H3zM14 2v12L6 8z"/></svg></button>
+              <button class="ib" id="prev" aria-label="Previous step" title="Previous step (←)"><svg viewBox="0 0 16 16"><path d="M12 2v12L3 8z"/></svg></button>
+              <button class="ib" id="play" aria-label="Play" data-state="play" title="Play or pause (Space)"><svg class="i-play" viewBox="0 0 16 16"><path d="M4 2v12l10-6z"/></svg><svg class="i-pause" viewBox="0 0 16 16"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg><span id="playText">Play</span></button>
+              <button class="ib" id="next" aria-label="Next step" title="Next step (→)"><svg viewBox="0 0 16 16"><path d="M4 2v12l9-6z"/></svg></button>
+              <button class="ib" id="last" aria-label="Go to last step" title="Last step"><svg viewBox="0 0 16 16"><path d="M11 2h2v12h-2zM2 2v12l8-6z"/></svg></button>
+            </div>
+            <div class="scrubwrap"><input type="range" id="scrub" min="0" max="0" value="0" aria-label="Step"><span id="counter"></span></div>
+            <label class="speed">Speed <input type="range" id="speed" min="0.5" max="3" step="0.25" value="1"><span id="speedVal">1×</span></label>
+          </div>
+
+          <p class="narr" id="narr" aria-live="polite"></p>
+          <div class="aux" id="aux"></div>
+
+          <form class="custom" id="custom">
+            <label for="treeIn">Try your own input <span id="customHint"></span></label>
+            <div class="crow" id="treeForm-row">
+              <input id="treeIn" autocomplete="off" spellcheck="false">
+              <button class="tb" type="submit">Run on this input</button>
+              <button class="tb ghost" type="button" id="treeReset">Use the sample</button>
+            </div>
+            <p id="treeErr" role="alert"></p>
+          </form>
+        </div>
+
+        <div class="codebox">
+          <div class="codehead"><span><strong>C++</strong></span><button id="copy" type="button">Copy code</button></div>
+          <pre id="code"></pre>
+          <div class="nodedef">Nodes are <code>struct ListNode { int val; ListNode* next; };</code> (<code>Node</code> adds a <code>random</code> pointer). <code>D</code> marks a dummy node. A short stub under a node means its <code>next</code> is null.</div>
+        </div>
+      </section>
+
+      <section id="notes" aria-label="Interview notes"></section>
+    </main>
+  </div>
+</div>
+<script>
+/* ================= List engine ================= */
+function parseCode(src) {
+  const lines = [], marks = {};
+  src.replace(/^\n+/, '').replace(/\s+$/, '').split('\n').forEach((ln, i) => {
+    const m = ln.match(/\/\/@([\w,]+)/);
+    if (m) { m[1].split(',').forEach(k => { marks[k] = i; }); ln = ln.replace(/\s*\/\/@[\w,]+/, ''); }
+    lines.push(ln.replace(/\s+$/, ''));
+  });
+  return { lines, marks };
+}
+
+// The tracer owns the heap: nodes with positions, next pointers, optional random pointers,
+// and named pointers (prev, slow, ...) that are drawn above the node they point at.
+class Tracer {
+  constructor(marks) {
+    this.marks = marks; this.frames = [];
+    this.nodes = {}; this.next = {}; this.rand = {}; this.side = {};
+    this.st = {}; this.est = {}; this.ptr = {}; this.out = []; this.aux = [];
+  }
+  node(id, label, x, y) { this.nodes[id] = { label: String(label), x, y }; if (!(id in this.next)) this.next[id] = null; return id; }
+  drop(id) { delete this.nodes[id]; delete this.next[id]; delete this.rand[id]; delete this.st[id]; delete this.est['n' + id]; delete this.est['r' + id]; }
+  at(id, x, y) { this.nodes[id].x = x; this.nodes[id].y = y; }
+  nx(id, to) { this.next[id] = to == null ? null : to; }
+  s(id, c) { if (id == null) return; if (c) this.st[id] = c; else delete this.st[id]; }
+  es(id, c, kind = 'n') { if (id == null) return; const k = kind + id; if (c) this.est[k] = c; else delete this.est[k]; }
+  p(name, id) { this.ptr[name] = id == null ? null : id; }
+  unp(...names) { names.forEach(n => delete this.ptr[n]); }
+  ax(name, items, kind = 'list') {
+    const a = this.aux.find(x => x.name === name);
+    if (a) { a.items = [...items]; a.kind = kind; } else this.aux.push({ name, items: [...items], kind });
+  }
+  // lay the chain starting at head out left to right on row y
+  chain(head, y = 0, x0 = 0) {
+    const seen = new Set(); let x = x0;
+    for (let c = head; c != null && !seen.has(c); c = this.next[c]) { seen.add(c); this.at(c, x, y); x += 1; }
+  }
+  step(mark, msg) {
+    if (mark && this.marks[mark] === undefined) throw new Error('Unknown code mark: ' + mark);
+    const nodes = {}, edges = [], nil = {}, tag = {}, ptrs = [];
+    for (const id in this.nodes) {
+      nodes[id] = { ...this.nodes[id] };
+      const v = this.next[id];
+      if (v == null) nil[id] = 1;
+      else if (this.nodes[v]) edges.push({ id: 'n' + id, u: id, v, side: this.side[id] || 0 });
+    }
+    for (const id in this.rand) if (this.nodes[id] && this.nodes[this.rand[id]]) edges.push({ id: 'r' + id, u: id, v: this.rand[id], rand: true, side: this.side['r' + id] || 0 });
+    for (const k in this.ptr) {
+      const id = this.ptr[k], live = id != null && this.nodes[id];
+      if (live) (tag[id] = tag[id] || []).push(k);
+      ptrs.push(`${k} → ${live ? this.nodes[id].label : 'null'}`);
+    }
+    for (const id in tag) tag[id] = tag[id].join(' · ');
+    this.frames.push({
+      g: { nodes, edges }, nil, tag, ptrs, st: { ...this.st }, est: { ...this.est },
+      out: [...this.out], aux: JSON.parse(JSON.stringify(this.aux)), line: mark ? this.marks[mark] : -1, msg
+    });
+  }
+}
+
+const ALGOS = [];
+const A = (o) => { o.parsed = parseCode(o.code); ALGOS.push(o); };
+function framesFor(algo, sp) { const T = new Tracer(algo.parsed.marks); algo.run(T, sp || algo.spec); return T.frames; }
+function build(T, vals, pre = 'a', y = 0, x0 = 0) {
+  const ids = vals.map((v, i) => T.node(pre + i, v, x0 + i, y));
+  ids.forEach((id, i) => T.nx(id, ids[i + 1]));
+  return ids;
+}
+const lab = (T, id) => id == null ? 'null' : T.nodes[id].label;
+function walk(T, head) { const r = [], seen = new Set(); for (let c = head; c != null && !seen.has(c); c = T.next[c]) { seen.add(c); r.push(T.nodes[c].label); } return r; }
+const arrow = (T, head) => { const w = walk(T, head); return w.length ? w.join(' → ') : 'empty list'; };
+const ord = (n) => n + (n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th');
+const ONE = { lists: [{ name: 'list' }], hint: 'values like 1, 2, 3, 4, 5' };
+function dummy(T, first, x = 0, y = 0) { T.node('d', 'D', x, y); T.nx('d', first); T.s('d', 'target'); T.p('dummy', 'd'); return 'd'; }
+
+/* ================= Basics ================= */
+A({
+  id: 'reverse', cat: 'Basics', title: 'Reverse a linked list',
+  blurb: 'Flip every next pointer in one pass with three pointers: prev, curr and nxt.',
+  spec: { lists: [[1, 2, 3, 4, 5]] }, input: ONE,
+  code: `
+ListNode* reverseList(ListNode* head) {
+    ListNode* prev = nullptr;
+    ListNode* curr = head;                  //@init
+    while (curr) {
+        ListNode* nxt = curr->next;         //@save
+        curr->next = prev;                  //@flip
+        prev = curr;                        //@adv
+        curr = nxt;
+    }
+    return prev;                            //@ret
+}`,
+  run(T, sp) {
+    const ids = build(T, sp.lists[0]);
+    let prev = null, curr = ids[0];
+    T.p('prev', prev); T.p('curr', curr);
+    T.step('init', 'prev starts at null: the reversed part is empty. curr starts at the head.');
+    while (curr != null) {
+      const nxt = T.next[curr]; T.p('nxt', nxt); T.s(curr, 'cur');
+      T.step('save', nxt != null ? `Save curr->next (${lab(T, nxt)}) first. Once the link is flipped, nxt is the only way to reach the rest of the list.` : `curr->next is null: ${lab(T, curr)} is the last node.`);
+      T.nx(curr, prev); T.es(curr, 'cur');
+      T.step('flip', prev != null ? `Flip the link: ${lab(T, curr)} now points back at ${lab(T, prev)}.` : `Flip the link: ${lab(T, curr)} points at null, so it becomes the tail.`);
+      T.es(curr, 'path'); T.s(curr, 'done');
+      prev = curr; curr = nxt; T.p('prev', prev); T.p('curr', curr); T.unp('nxt');
+      T.step('adv', curr != null ? `Advance both: prev = ${lab(T, prev)}, curr = ${lab(T, curr)}. Everything up to prev is reversed.` : 'Advance: curr is null, so every link has been flipped.');
+    }
+    T.unp('curr'); T.chain(prev); T.out.push(arrow(T, prev));
+    T.step('ret', `prev is the new head: ${arrow(T, prev)}.`);
+  },
+  idea: 'Walk the list once. Before overwriting curr->next, save it in nxt; then point curr back at prev and slide both pointers forward. At every moment the list is split into a reversed part (ending at prev) and an untouched part (starting at curr).',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'Forgetting to save curr->next before flipping it cuts off the rest of the list. Return prev, not curr: curr is null when the loop ends.',
+  vars: ['Recursive version: reverse(head->next), then head->next->next = head and head->next = null', 'Reverse a sub-range and reverse in k-groups (Reversal section)', 'Palindrome check and reorder list both reverse half the list', 'Swap nodes in pairs (LC 24) is k-group with k = 2']
+});
+
+A({
+  id: 'remove-val', cat: 'Basics', title: 'Remove elements (dummy head)',
+  blurb: 'Delete every node with a given value. A dummy node in front of the head removes all the special cases.',
+  spec: { lists: [[6, 1, 2, 6, 3, 6, 6, 4]], val: 6 }, input: { lists: [{ name: 'list' }], params: { val: [-99, 99] }, hint: 'values, then ; val = 6' },
+  code: `
+ListNode* removeElements(ListNode* head, int val) {
+    ListNode dummy(0, head);                //@dummy
+    ListNode* prev = &dummy;
+    while (prev->next) {                    //@check
+        if (prev->next->val == val)
+            prev->next = prev->next->next;  //@unlink
+        else
+            prev = prev->next;              //@adv
+    }
+    return dummy.next;                      //@ret
+}`,
+  run(T, sp) {
+    const val = sp.val, ids = build(T, sp.lists[0], 'a', 0, 1);
+    let prev = dummy(T, ids[0]); T.p('prev', prev);
+    T.step('dummy', 'Put a dummy node (D) in front of the head. Now even the head has a node before it, so removing the head works like removing any other node.');
+    while (T.next[prev] != null) {
+      const c = T.next[prev];
+      if (+lab(T, c) === val) {
+        T.s(c, 'bad'); T.step('check', `prev->next is ${val}: it has to go.`);
+        const after = T.next[c]; T.nx(prev, after); T.es(prev, 'cur');
+        T.step('unlink', `prev->next = prev->next->next skips over it to ${lab(T, after)}. prev stays put, because the new next might be ${val} too.`);
+        T.drop(c); T.es(prev, '');
+      } else {
+        T.s(c, 'cur'); T.step('check', `${lab(T, c)} ≠ ${val}: keep it.`);
+        prev = c; T.p('prev', prev); T.s(c, 'done');
+        T.step('adv', `Move prev forward to ${lab(T, c)}.`);
+      }
+    }
+    const head = T.next.d; T.chain('d'); T.out.push(arrow(T, head));
+    T.step('ret', `prev->next is null, so the scan is over. Return dummy.next: ${arrow(T, head)}.`);
+  },
+  idea: 'To delete a node you need the node before it, and the head has none. A dummy node in front fixes that: prev always trails one behind the node being checked, and the real head is dummy.next at the end, even if the original head was deleted.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'Only advance prev when you keep a node. After unlinking, the new prev->next must be checked too, or runs like 6 → 6 leave one behind.',
+  vars: ['Delete node in a linked list (LC 237): copy the next value in, then skip the next node', 'Remove duplicates from sorted list II (LC 82): drop every copy, dummy head again', 'Any merge or partition that builds a new list uses the same dummy trick']
+});
+
+A({
+  id: 'dedup', cat: 'Basics', title: 'Remove duplicates (sorted list)',
+  blurb: 'In a sorted list, equal values are neighbors. Keep one of each by skipping repeats.',
+  spec: { lists: [[1, 1, 2, 3, 3, 3, 4, 5, 5]] }, input: { lists: [{ name: 'list', sorted: true }], hint: 'sorted values like 1, 1, 2, 3, 3' },
+  code: `
+ListNode* deleteDuplicates(ListNode* head) {
+    ListNode* curr = head;
+    while (curr && curr->next) {
+        if (curr->next->val == curr->val)       //@cmp
+            curr->next = curr->next->next;      //@skip
+        else
+            curr = curr->next;                  //@adv
+    }
+    return head;                                //@ret
+}`,
+  run(T, sp) {
+    const ids = build(T, sp.lists[0]); let c = ids[0]; T.p('curr', c); T.s(c, 'cur');
+    T.step(null, 'The list is sorted, so equal values sit next to each other. Compare each node with the one after it.');
+    while (c != null && T.next[c] != null) {
+      const n = T.next[c];
+      if (lab(T, n) === lab(T, c)) {
+        T.s(n, 'bad'); T.step('cmp', `curr->next is also ${lab(T, c)}: a duplicate.`);
+        const after = T.next[n]; T.nx(c, after); T.es(c, 'cur');
+        T.step('skip', `Skip it: curr->next jumps to ${lab(T, after)}. curr stays, in case the next one is a duplicate too.`);
+        T.drop(n); T.es(c, '');
+      } else {
+        T.s(n, 'stack'); T.step('cmp', `${lab(T, n)} ≠ ${lab(T, c)}: nothing to remove here.`);
+        T.s(c, 'done'); c = n; T.s(c, 'cur'); T.p('curr', c);
+        T.step('adv', `Move curr to ${lab(T, c)}.`);
+      }
+    }
+    T.s(c, 'done'); T.chain(ids[0]); T.out.push(arrow(T, ids[0]));
+    T.step('ret', `curr->next is null. Each value now appears once: ${arrow(T, ids[0])}.`);
+  },
+  idea: 'Because the list is sorted, every duplicate is directly after its first copy. Stay on a node while its next has the same value and keep unlinking; move on only when the value changes.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'In C++ the skipped nodes leak unless you delete them. Interviewers sometimes ask about that.',
+  vars: ['Remove duplicates II (LC 82): delete every node that had a duplicate (needs a dummy head)', 'Unsorted list: use a hash set of seen values, O(n) extra space', 'Remove duplicates from sorted array (LC 26): same idea with indices']
+});
+
+/* ================= Fast & slow pointers ================= */
+A({
+  id: 'middle', cat: 'Fast & slow pointers', title: 'Middle of the list',
+  blurb: 'slow moves one step, fast moves two. When fast reaches the end, slow is in the middle.',
+  spec: { lists: [[1, 2, 3, 4, 5, 6]] }, input: ONE,
+  code: `
+ListNode* middleNode(ListNode* head) {
+    ListNode *slow = head, *fast = head;    //@init
+    while (fast && fast->next) {            //@check
+        slow = slow->next;                  //@move
+        fast = fast->next->next;
+    }
+    return slow;                            //@ret
+}`,
+  run(T, sp) {
+    const ids = build(T, sp.lists[0]); let slow = ids[0], fast = ids[0];
+    const mk = () => { T.st = {}; T.s(fast, 'stack'); T.s(slow, 'cur'); };
+    T.p('slow', slow); T.p('fast', fast); mk();
+    T.step('init', 'Both pointers start at the head. Each round, slow moves 1 step and fast moves 2.');
+    while (fast != null && T.next[fast] != null) {
+      slow = T.next[slow]; fast = T.next[T.next[fast]]; T.p('slow', slow); T.p('fast', fast); mk();
+      T.step('move', `slow → ${lab(T, slow)}, fast → ${lab(T, fast)}. fast has gone twice as far as slow.`);
+    }
+    T.step('check', fast == null ? 'fast ran off the end (even length), so the loop stops. slow is on the second of the two middle nodes.' : 'fast is on the last node (odd length), so it can\'t jump two more. slow is exactly in the middle.');
+    T.st = {}; T.s(slow, 'found'); T.out.push(lab(T, slow));
+    T.step('ret', `Return slow: ${lab(T, slow)}.`);
+  },
+  idea: 'When fast has taken 2k steps, slow has taken k, so slow is always halfway to wherever fast is. One pass, no length count needed.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'The loop condition decides which middle you get for even lengths. fast && fast->next gives the second middle; fast->next && fast->next->next gives the first, which is what you want before splitting a list in half.',
+  vars: ['Delete the middle node (LC 2095)', 'Split a list in half for merge sort (LC 148)', 'Palindrome list and reorder list both start here', 'Maximum twin sum (LC 2130)']
+});
+
+A({
+  id: 'cycle', cat: 'Fast & slow pointers', title: 'Cycle detection (Floyd)',
+  blurb: 'Detect a cycle with two pointers, then find exactly where it starts. No extra memory.',
+  spec: { lists: [[3, 2, 0, -4, 5, 7, 9]], pos: 2 }, input: { lists: [{ name: 'list' }], params: { pos: [-1, 9] }, hint: 'values, then ; pos = index the tail links back to (−1 for no cycle)' },
+  check: (sp) => sp.pos >= sp.lists[0].length ? `pos must be −1 or an index from 0 to ${sp.lists[0].length - 1}.` : null,
+  code: `
+ListNode* detectCycle(ListNode* head) {
+    ListNode *slow = head, *fast = head;
+    while (fast && fast->next) {
+        slow = slow->next;                      //@move
+        fast = fast->next->next;
+        if (slow == fast) break;                //@meet
+    }
+    if (!fast || !fast->next) return nullptr;   //@none
+    slow = head;                                //@reset
+    while (slow != fast) {
+        slow = slow->next;                      //@walk
+        fast = fast->next;
+    }
+    return slow;                                //@ret   // where the cycle starts
+}`,
+  run(T, sp) {
+    const a = sp.lists[0], pos = sp.pos, ids = build(T, a), n = a.length;
+    if (pos >= 0) { T.nx(ids[n - 1], ids[pos]); T.es(ids[n - 1], 'back'); }
+    let slow = ids[0], fast = ids[0];
+    const mk = () => { T.st = {}; T.s(fast, 'stack'); T.s(slow, 'cur'); };
+    T.p('slow', slow); T.p('fast', fast); mk();
+    T.step(null, pos >= 0 ? `The tail (${a[n - 1]}) links back to index ${pos} (${a[pos]}), making a cycle. The code can't see that: all it has is next pointers.` : 'This list has no cycle: the tail points to null.');
+    let met = false;
+    while (fast != null && T.next[fast] != null) {
+      slow = T.next[slow]; fast = T.next[T.next[fast]]; T.p('slow', slow); T.p('fast', fast); mk();
+      T.step('move', `slow moves 1 to ${lab(T, slow)}, fast moves 2 to ${lab(T, fast)}.`);
+      if (slow === fast) { met = true; T.s(slow, 'found'); T.step('meet', `slow and fast are on the same node (${lab(T, slow)}). Inside a cycle fast gains one step per round, so it was bound to catch up.`); break; }
+    }
+    if (!met) { T.out.push('null (no cycle)'); T.step('none', 'fast reached the end, so there is no cycle. Return null.'); return; }
+    slow = ids[0]; T.p('slow', slow); mk();
+    T.step('reset', 'Phase 2: move slow back to the head and leave fast at the meeting point. From now on both move 1 step at a time.');
+    while (slow !== fast) {
+      slow = T.next[slow]; fast = T.next[fast]; T.p('slow', slow); T.p('fast', fast); mk();
+      T.step('walk', slow === fast ? `Both land on ${lab(T, slow)}.` : `slow → ${lab(T, slow)}, fast → ${lab(T, fast)}.`);
+    }
+    T.st = {}; T.s(slow, 'found'); T.out.push(`index ${ids.indexOf(slow)} (value ${lab(T, slow)})`);
+    T.step('ret', `They meet where the cycle starts: index ${ids.indexOf(slow)}, value ${lab(T, slow)}.`);
+  },
+  idea: 'Phase 1: if there is a cycle, fast laps slow inside it and they meet. Phase 2: say the cycle starts a steps from the head and they met b steps into the cycle. Then a + b is a multiple of the cycle length, so walking a more steps from the meeting point lands on the cycle start, exactly where a pointer from the head arrives after a steps.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'Check fast && fast->next before jumping two, or you dereference null on lists without a cycle. A hash set of visited nodes also works but costs O(n) memory.',
+  vars: ['Linked list cycle (LC 141): phase 1 only, return true or false', 'Find the duplicate number (LC 287): the array is a linked list via i → nums[i]', 'Happy number (LC 202): Floyd on the digit-square sequence', 'Cycle length: after meeting, keep one pointer still and count steps around']
+});
+
+A({
+  id: 'nth-end', cat: 'Fast & slow pointers', title: 'Remove Nth node from end',
+  blurb: 'Give fast an n-step head start, then move both. When fast hits the end, slow is right before the target.',
+  spec: { lists: [[1, 2, 3, 4, 5, 6]], n: 2 }, input: { lists: [{ name: 'list' }], params: { n: [1, 10] }, hint: 'values, then ; n = 2' },
+  check: (sp) => sp.n > sp.lists[0].length ? `n can be at most the list length (${sp.lists[0].length}).` : null,
+  code: `
+ListNode* removeNthFromEnd(ListNode* head, int n) {
+    ListNode dummy(0, head);
+    ListNode *fast = &dummy, *slow = &dummy;    //@init
+    for (int i = 0; i < n; i++)
+        fast = fast->next;                      //@gap
+    while (fast->next) {
+        fast = fast->next;                      //@move
+        slow = slow->next;
+    }
+    slow->next = slow->next->next;              //@unlink
+    return dummy.next;                          //@ret
+}`,
+  run(T, sp) {
+    const nn = sp.n, ids = build(T, sp.lists[0], 'a', 0, 1);
+    let fast = dummy(T, ids[0]), slow = 'd';
+    const mk = () => { T.st = {}; T.s('d', 'target'); T.s(fast, 'stack'); T.s(slow, 'cur'); };
+    T.p('slow', slow); T.p('fast', fast); mk();
+    T.step('init', 'Both pointers start on a dummy node before the head, so removing the head itself needs no special case.');
+    for (let i = 0; i < nn; i++) {
+      fast = T.next[fast]; T.p('fast', fast); mk();
+      T.step('gap', `fast moves ahead (${i + 1} of ${nn}) to ${lab(T, fast)}.`);
+    }
+    while (T.next[fast] != null) {
+      fast = T.next[fast]; slow = T.next[slow]; T.p('fast', fast); T.p('slow', slow); mk();
+      T.step('move', `Move both: slow → ${lab(T, slow)}, fast → ${lab(T, fast)}. The gap stays ${nn}.`);
+    }
+    const del = T.next[slow]; T.s(del, 'bad');
+    T.step('move', `fast is on the last node, so slow is just before the ${nn === 1 ? 'last node' : ord(nn) + ' node from the end'} (${lab(T, del)}).`);
+    T.nx(slow, T.next[del]); T.es(slow, 'cur');
+    T.step('unlink', `slow->next = slow->next->next removes ${lab(T, del)}.`);
+    T.drop(del); T.es(slow, ''); const head = T.next.d; T.chain('d'); T.out.push(arrow(T, head));
+    T.step('ret', `Return dummy.next: ${arrow(T, head)}.`);
+  },
+  idea: 'Keep a fixed gap of n nodes between fast and slow. When fast is on the last node, slow is n + 1 from the end, which is exactly the node before the one to delete. One pass, no length count.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'Without the dummy, removing the head (n = length) needs its own branch, because slow would have to start before the head.',
+  vars: ['Kth node from the end: same gap, return slow->next', 'Swapping nodes (LC 1721): kth from the start and kth from the end', 'Rotate list uses the same "find the node n from the end" step']
+});
+
+A({
+  id: 'palindrome', cat: 'Fast & slow pointers', title: 'Palindrome linked list',
+  blurb: 'Find the middle, reverse the second half in place, then compare the two halves node by node.',
+  spec: { lists: [[1, 2, 3, 2, 1]] }, input: ONE,
+  code: `
+bool isPalindrome(ListNode* head) {
+    ListNode *slow = head, *fast = head;         // 1. find the middle
+    while (fast && fast->next) {
+        slow = slow->next;                       //@mid
+        fast = fast->next->next;
+    }
+    ListNode* prev = nullptr;                    // 2. reverse the back half
+    while (slow) {
+        ListNode* nxt = slow->next;
+        slow->next = prev;                       //@rev
+        prev = slow;
+        slow = nxt;
+    }
+    for (ListNode *l = head, *r = prev; r; l = l->next, r = r->next)   // 3. compare
+        if (l->val != r->val) return false;      //@cmp
+    return true;                                 //@ret
+}`,
+  run(T, sp) {
+    const ids = build(T, sp.lists[0]); let slow = ids[0], fast = ids[0];
+    const mk = () => { T.st = {}; T.s(fast, 'stack'); T.s(slow, 'cur'); };
+    T.p('slow', slow); T.p('fast', fast); mk();
+    T.step(null, 'Three phases: find the middle, reverse the back half in place, then walk both halves together.');
+    while (fast != null && T.next[fast] != null) {
+      slow = T.next[slow]; fast = T.next[T.next[fast]]; T.p('slow', slow); T.p('fast', fast); mk();
+      T.step('mid', `slow → ${lab(T, slow)}, fast → ${lab(T, fast)}.`);
+    }
+    T.unp('fast'); T.st = {};
+    for (let c = slow; c != null; c = T.next[c]) T.s(c, 'stack');
+    T.step('mid', `fast can't jump two more, so the back half starts at slow (${lab(T, slow)}).`);
+    let prev = null; T.p('prev', prev);
+    while (slow != null) {
+      const nxt = T.next[slow], msg = `Flip ${lab(T, slow)} to point at ${lab(T, prev)}.`;
+      T.nx(slow, prev); T.es(slow, 'cur'); prev = slow; slow = nxt; T.p('prev', prev); T.p('slow', slow);
+      T.step('rev', msg); T.es(prev, 'path');
+    }
+    T.unp('slow', 'prev'); let l = ids[0], r = prev; T.p('l', l); T.p('r', r);
+    T.step('rev', `Back half reversed: ${arrow(T, r)}. Now l walks from the head and r from the old tail.`);
+    while (r != null) {
+      if (lab(T, l) !== lab(T, r)) { T.s(l, 'bad'); T.s(r, 'bad'); T.out.push('false'); T.step('cmp', `${lab(T, l)} ≠ ${lab(T, r)}: not a palindrome.`); return; }
+      T.s(l, 'found'); T.s(r, 'found'); T.step('cmp', l === r ? `l and r are both on the middle node: it matches itself.` : `${lab(T, l)} = ${lab(T, r)}: match.`);
+      l = T.next[l]; r = T.next[r]; T.p('l', l); T.p('r', r);
+    }
+    T.out.push('true'); T.step('ret', 'r ran off the end of the reversed half and every pair matched: it is a palindrome.');
+  },
+  idea: 'A singly linked list can\'t be read backwards, so make the back half readable backwards by reversing it. Then two forward walks compare first with last, second with second-to-last, and so on.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'This modifies the input. In an interview, mention reversing the back half again before returning to restore it. Copying values into an array is simpler but costs O(n) space.',
+  vars: ['Recursive version: a front pointer advanced as the recursion unwinds (O(n) stack)', 'Maximum twin sum (LC 2130): same split and reverse, sum instead of compare', 'Reorder list: same first two phases, then weave']
+});
+
+/* ================= Reversal ================= */
+A({
+  id: 'reverse-between', cat: 'Reversal', title: 'Reverse a sub-range (left to right)',
+  blurb: 'Reverse positions left..right in one pass by repeatedly moving the node after tail to the front of the range.',
+  spec: { lists: [[1, 2, 3, 4, 5, 6, 7]], left: 2, right: 5 }, input: { lists: [{ name: 'list' }], params: { left: [1, 10], right: [1, 10] }, hint: 'values, then ; left = 2; right = 5 (1-based)' },
+  check: (sp) => sp.left > sp.right ? 'left must be ≤ right.' : sp.right > sp.lists[0].length ? `right can be at most the list length (${sp.lists[0].length}).` : null,
+  code: `
+ListNode* reverseBetween(ListNode* head, int left, int right) {
+    ListNode dummy(0, head);
+    ListNode* before = &dummy;
+    for (int i = 1; i < left; i++) before = before->next;   //@walk
+    ListNode* tail = before->next;            //@tail   // ends up last in the range
+    for (int i = 0; i < right - left; i++) {
+        ListNode* move = tail->next;          //@pick
+        tail->next = move->next;              //@cut
+        move->next = before->next;            //@link
+        before->next = move;                  //@front
+    }
+    return dummy.next;                        //@ret
+}`,
+  run(T, sp) {
+    const { left, right } = sp, ids = build(T, sp.lists[0], 'a', 0, 1);
+    let before = dummy(T, ids[0]); T.p('before', before);
+    for (let i = left; i <= right; i++) T.s(ids[i - 1], 'stack');
+    T.step('walk', left === 1 ? 'left is 1, so the dummy itself is the node before the range.' : `before starts on the dummy and walks ${left - 1} step${left > 2 ? 's' : ''} to the node just before position ${left}.`);
+    for (let i = 1; i < left; i++) { before = T.next[before]; T.p('before', before); T.step('walk', `before → ${lab(T, before)}.`); }
+    const tail = T.next[before]; T.p('tail', tail); T.s(tail, 'cur');
+    T.step('tail', `tail = ${lab(T, tail)}, the first node of the range. It will end up last; each round pulls the node after it to the front.`);
+    for (let i = 0; i < right - left; i++) {
+      const move = T.next[tail]; T.p('move', move); T.s(move, 'found');
+      T.step('pick', `move = tail->next = ${lab(T, move)}.`);
+      T.nx(tail, T.next[move]); T.es(tail, 'cur'); T.step('cut', `Unhook it: tail->next skips to ${lab(T, T.next[tail])}.`);
+      T.es(tail, ''); T.nx(move, T.next[before]); T.es(move, 'cur');
+      T.step('link', `move->next = before->next, so ${lab(T, move)} points at the current front of the range (${lab(T, T.next[move])}).`);
+      T.es(move, ''); T.nx(before, move); T.es(before, 'cur'); T.chain('d');
+      T.step('front', `before->next = ${lab(T, move)}: it is now first in the range.`);
+      T.es(before, ''); T.s(move, 'done'); T.unp('move');
+    }
+    T.s(tail, 'done'); T.unp('tail'); const head = T.next.d; T.out.push(arrow(T, head));
+    T.step('ret', `Positions ${left}..${right} are reversed: ${arrow(T, head)}.`);
+  },
+  idea: 'Fix two anchors: before (the node just ahead of the range) and tail (the range\'s first node, which ends up last). Each round, cut the node after tail and insert it right after before. After right − left rounds the range is reversed and already connected at both ends.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'The dummy matters when left = 1: there is no real node before the head. Positions are 1-based in the problem.',
+  vars: ['Reverse the whole list: left = 1, right = n', 'Reverse nodes in k-group (next)', 'Reverse nodes in even length groups (LC 2074)']
+});
+
+A({
+  id: 'k-group', cat: 'Reversal', title: 'Reverse nodes in k-group',
+  blurb: 'Reverse every full block of k nodes; a short block at the end stays as it is.',
+  spec: { lists: [[1, 2, 3, 4, 5, 6, 7, 8]], k: 3 }, input: { lists: [{ name: 'list' }], params: { k: [1, 10] }, hint: 'values, then ; k = 3' },
+  leg: { g0: 'Groups' },
+  code: `
+ListNode* reverseKGroup(ListNode* head, int k) {
+    ListNode dummy(0, head);
+    ListNode* before = &dummy;
+    while (true) {
+        ListNode* end = before;
+        for (int i = 0; i < k && end; i++) end = end->next;   //@probe
+        if (!end) break;                                      //@short  // fewer than k left
+        ListNode* first = before->next;
+        ListNode* after = end->next;
+        ListNode *prev = after, *curr = first;                //@group
+        while (curr != after) {
+            ListNode* nxt = curr->next;
+            curr->next = prev;                                //@flip
+            prev = curr;
+            curr = nxt;
+        }
+        before->next = end;                                   //@join
+        before = first;                                       //@next
+    }
+    return dummy.next;                                        //@ret
+}`,
+  run(T, sp) {
+    const k = sp.k, ids = build(T, sp.lists[0], 'a', 0, 1);
+    let before = dummy(T, ids[0]), g = 0; T.p('before', before);
+    T.step(null, `Reverse the list ${k} nodes at a time. before always sits just in front of the next group.`);
+    while (true) {
+      let end = before; for (let i = 0; i < k && end != null; i++) end = T.next[end];
+      T.p('end', end);
+      if (end == null) { T.step('short', `Fewer than ${k} nodes remain after before, so they stay in their original order.`); break; }
+      T.step('probe', `Probe ${k} steps ahead: end = ${lab(T, end)}, so a full group exists.`);
+      const first = T.next[before], after = T.next[end], grp = [];
+      for (let c = first; c !== after; c = T.next[c]) { grp.push(lab(T, c)); T.s(c, 'g' + (g % 6)); }
+      let prev = after, curr = first; T.p('first', first); T.p('prev', prev); T.p('curr', curr);
+      T.step('group', `Group ${grp.join(', ')}. prev starts at the node after the group (${lab(T, after)}), so the group's first node will link straight to it.`);
+      while (curr !== after) {
+        const nxt = T.next[curr], msg = `${lab(T, curr)} → ${lab(T, prev)}.`;
+        T.nx(curr, prev); T.es(curr, 'cur'); prev = curr; curr = nxt; T.p('prev', prev); T.p('curr', curr);
+        T.step('flip', msg); T.es(prev, '');
+      }
+      T.unp('prev', 'curr'); T.nx(before, end); T.es(before, 'cur'); T.chain('d');
+      T.step('join', `before->next = ${lab(T, end)}: the reversed group is spliced in.`); T.es(before, '');
+      before = first; T.unp('end', 'first'); T.p('before', before);
+      T.step('next', `The group's old first node (${lab(T, before)}) is now its last, so it becomes before for the next group.`); g++;
+    }
+    T.unp('end'); const head = T.next.d; T.out.push(arrow(T, head));
+    T.step('ret', `Return dummy.next: ${arrow(T, head)}.`);
+  },
+  idea: 'Each group is a small "reverse a list" whose tail should connect to whatever follows the group. Starting prev at that following node does it for free. Then splice the reversed group after before and move before to the group\'s new last node.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'Check that a full group of k exists before reversing anything, or the last partial group gets reversed too.',
+  vars: ['Swap nodes in pairs (LC 24): k = 2', 'Reverse alternate k nodes: skip a group after each reversal', 'Recursive version: reverse the first k, then head->next = reverseKGroup(rest, k)']
+});
+
+A({
+  id: 'reorder', cat: 'Reversal', title: 'Reorder list',
+  blurb: 'Rearrange L0, L1, …, Ln into L0, Ln, L1, Ln−1, … by splitting, reversing and weaving.',
+  spec: { lists: [[1, 2, 3, 4, 5, 6, 7]] }, input: ONE,
+  code: `
+void reorderList(ListNode* head) {
+    ListNode *slow = head, *fast = head;         // 1. find the middle
+    while (fast->next && fast->next->next) {
+        slow = slow->next;                       //@mid
+        fast = fast->next->next;
+    }
+    ListNode *prev = nullptr, *curr = slow->next;
+    slow->next = nullptr;                        //@split
+    while (curr) {                               // 2. reverse the back half
+        ListNode* nxt = curr->next;
+        curr->next = prev;                       //@rev
+        prev = curr;
+        curr = nxt;
+    }
+    ListNode *a = head, *b = prev;               // 3. weave
+    while (b) {
+        ListNode *an = a->next, *bn = b->next;
+        a->next = b;                             //@weave
+        b->next = an;
+        a = an; b = bn;
+    }
+}`,
+  run(T, sp) {
+    const ids = build(T, sp.lists[0]); let slow = ids[0], fast = ids[0];
+    const mk = () => { T.st = {}; T.s(fast, 'stack'); T.s(slow, 'cur'); };
+    T.p('slow', slow); T.p('fast', fast); mk();
+    T.step(null, 'Target order: first, last, second, second-to-last, … Split at the middle, reverse the back half, then weave the halves together.');
+    while (T.next[fast] != null && T.next[T.next[fast]] != null) {
+      slow = T.next[slow]; fast = T.next[T.next[fast]]; T.p('slow', slow); T.p('fast', fast); mk();
+      T.step('mid', `slow → ${lab(T, slow)}, fast → ${lab(T, fast)}.`);
+    }
+    let curr = T.next[slow]; T.unp('fast'); T.p('curr', curr); T.st = {};
+    if (curr == null) { T.out.push(arrow(T, ids[0])); T.step('split', 'Only one node: nothing to reorder.'); return; }
+    T.nx(slow, null); T.chain(curr, 1.3, 0.5);
+    for (let c = curr; c != null; c = T.next[c]) T.s(c, 'stack');
+    T.step('split', `slow (${lab(T, slow)}) ends the front half. Cut after it; the back half (bottom row) starts at ${lab(T, curr)}.`);
+    let prev = null; T.p('prev', prev);
+    while (curr != null) {
+      const nxt = T.next[curr], msg = `Flip ${lab(T, curr)} to point at ${lab(T, prev)}.`;
+      T.nx(curr, prev); T.es(curr, 'cur'); prev = curr; curr = nxt; T.p('prev', prev); T.p('curr', curr);
+      T.step('rev', msg); T.es(prev, '');
+    }
+    T.unp('curr', 'slow'); T.chain(prev, 1.3, 0.5);
+    T.step('rev', `Back half reversed: ${arrow(T, prev)}.`);
+    let a = ids[0], b = prev; T.unp('prev'); T.p('a', a); T.p('b', b);
+    while (b != null) {
+      const an = T.next[a], bn = T.next[b], msg = `${lab(T, a)} → ${lab(T, b)} → ${lab(T, an)}. Then move a and b on.`;
+      T.nx(a, b); T.nx(b, an); T.est = {}; T.es(a, 'cur'); T.es(b, 'cur'); T.s(a, 'done'); T.s(b, 'done');
+      a = an; b = bn; T.p('a', a); T.p('b', b);
+      T.step('weave', msg);
+    }
+    T.est = {}; T.unp('a', 'b'); T.s(a, 'done'); T.chain(ids[0]); T.out.push(arrow(T, ids[0]));
+    T.step(null, `Woven: ${arrow(T, ids[0])}.`);
+  },
+  idea: 'The order alternates between the front of the list and the back. The back can\'t be walked backwards, so reverse it first. Then it\'s a zip: take one from the front half, one from the reversed back half, and repeat.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'Cut the front half with slow->next = nullptr before reversing, or the reversed half still hangs off the front and the weave creates a cycle.',
+  vars: ['Palindrome linked list: same split and reverse, compare instead of weave', 'Merge two lists alternately', 'Using a deque or array of nodes is simpler but O(n) space']
+});
+
+/* ================= Rewiring ================= */
+A({
+  id: 'odd-even', cat: 'Rewiring', title: 'Odd even linked list',
+  blurb: 'Group the nodes at odd positions first, then the even positions, keeping relative order.',
+  spec: { lists: [[2, 1, 3, 5, 6, 4, 7]] }, input: ONE,
+  leg: { ca: 'Odd position', cb: 'Even position' },
+  code: `
+ListNode* oddEvenList(ListNode* head) {
+    if (!head) return head;
+    ListNode *odd = head, *even = head->next, *evenHead = even;   //@init
+    while (even && even->next) {
+        odd->next = even->next;            //@odd
+        odd = odd->next;
+        even->next = odd->next;            //@even
+        even = even->next;
+    }
+    odd->next = evenHead;                  //@join
+    return head;
+}`,
+  run(T, sp) {
+    const ids = build(T, sp.lists[0]);
+    ids.forEach((id, i) => { T.s(id, i % 2 ? 'cb' : 'ca'); if (i % 2) { T.at(id, i, 1.1); T.side[id] = 1; } else T.side[id] = -1; });
+    T.step(null, 'Positions 1, 3, 5, … (odd) are drawn on top and 2, 4, 6, … (even) underneath, only to make the two chains easy to see. The links still zigzag between them.');
+    let odd = ids[0], even = T.next[odd]; const evenHead = even;
+    T.p('odd', odd); T.p('even', even); T.p('evenHead', evenHead);
+    T.step('init', 'odd starts at the head, even at the second node. evenHead remembers where the even chain starts.');
+    while (even != null && T.next[even] != null) {
+      T.est = {}; T.nx(odd, T.next[even]); T.es(odd, 'cur'); odd = T.next[odd]; T.p('odd', odd);
+      T.step('odd', `odd->next skips the even node and lands on ${lab(T, odd)}. odd moves there.`);
+      T.est = {}; T.nx(even, T.next[odd]); T.es(even, 'cur'); even = T.next[even]; T.p('even', even);
+      T.step('even', `even->next skips over ${lab(T, odd)} to ${lab(T, even)}. even moves there.`);
+    }
+    T.est = {}; T.nx(odd, evenHead); T.es(odd, 'cur');
+    T.step('join', `even can't skip any further. Hook the even chain after the last odd node: ${lab(T, odd)} → ${lab(T, evenHead)}.`);
+    T.est = {}; T.side = {}; T.unp('odd', 'even', 'evenHead'); T.chain(ids[0]); T.out.push(arrow(T, ids[0]));
+    T.step(null, `${arrow(T, ids[0])}: all odd positions, then all even positions.`);
+  },
+  idea: 'Grow two chains at once by letting each pointer skip one node: odd->next jumps over an even node, even->next jumps over an odd node. When the even pointer runs out, attach the even chain (remembered in evenHead) after the odd chain.',
+  time: 'O(n)', space: 'O(1)',
+  trap: '"Odd" means position, not value. Save evenHead before the loop: the second node\'s position in the chain is lost once the links are rewired.',
+  vars: ['Partition list (next): split by value instead of position', 'Split a linked list into parts (LC 725)', 'Sort a list that alternates ascending and descending: split odd/even, reverse one, merge']
+});
+
+A({
+  id: 'partition', cat: 'Rewiring', title: 'Partition list',
+  blurb: 'Move every node less than x before every node ≥ x, keeping the original order on each side.',
+  spec: { lists: [[1, 4, 3, 2, 5, 2, 6]], x: 3 }, input: { lists: [{ name: 'list' }], params: { x: [-99, 99] }, hint: 'values, then ; x = 3' },
+  leg: { ca: 'Less than x', cb: 'x or more' },
+  code: `
+ListNode* partition(ListNode* head, int x) {
+    ListNode lessHead(0), moreHead(0);
+    ListNode *less = &lessHead, *more = &moreHead;     //@init
+    for (ListNode* c = head; c; c = c->next) {
+        if (c->val < x) less = less->next = c;         //@less
+        else            more = more->next = c;         //@more
+    }
+    more->next = nullptr;                               //@cut
+    less->next = moreHead.next;                         //@join
+    return lessHead.next;
+}`,
+  run(T, sp) {
+    const x = sp.x, ids = build(T, sp.lists[0], 'a', 0, 1);
+    T.node('L', '<' + x, 0, 1.3); T.node('M', '≥' + x, 0, 2.6); T.s('L', 'target'); T.s('M', 'target');
+    let less = 'L', more = 'M', nl = 0, nm = 0, c = ids[0]; T.p('less', less); T.p('more', more); T.p('c', c);
+    T.step('init', `Two dummy heads start two new chains: values < ${x} and values ≥ ${x}. Walk the list once and append each node to one of them.`);
+    while (c != null) {
+      T.est = {};
+      if (+lab(T, c) < x) { T.nx(less, c); T.es(less, 'cur'); less = c; T.p('less', less); T.at(c, ++nl, 1.3); T.s(c, 'ca'); T.step('less', `${lab(T, c)} < ${x}: append it to the less chain.`); }
+      else { T.nx(more, c); T.es(more, 'cur'); more = c; T.p('more', more); T.at(c, ++nm, 2.6); T.s(c, 'cb'); T.step('more', `${lab(T, c)} ≥ ${x}: append it to the more chain.`); }
+      c = T.next[c]; T.p('c', c);
+    }
+    T.est = {}; const old = T.next[more]; T.nx(more, null);
+    T.step('cut', more === 'M' ? 'No node was ≥ x, so more is still its dummy. Setting its next to null is harmless.' : old != null ? `more->next = null. ${lab(T, more)} still pointed at ${lab(T, old)} from the original list; leaving that would create a cycle.` : `more->next = null. ${lab(T, more)} was already last, but in general it can still point into the old list.`);
+    T.nx(less, T.next.M); T.es(less, 'cur');
+    T.step('join', `less->next = moreHead.next: the ≥ chain follows the < chain.`);
+    const head = T.next.L; T.est = {}; T.unp('less', 'more', 'c'); T.drop('L'); T.drop('M'); T.chain(head); T.out.push(arrow(T, head));
+    T.step(null, `Return lessHead.next: ${arrow(T, head)}. Each side kept its original order.`);
+  },
+  idea: 'Instead of shuffling nodes around in place, deal them into two new chains, each with a dummy head so appending is uniform. At the end, cap the second chain with null and hang it off the first.',
+  time: 'O(n)', space: 'O(1): nodes are reused, only two dummies are added',
+  trap: 'Forgetting more->next = nullptr. The last ≥ node may still point at a node that went into the less chain, which turns the result into a cycle.',
+  vars: ['Odd even linked list: split by position', 'Sort colors / Dutch flag on a list: three chains', 'Quick sort on a linked list partitions around a pivot this way']
+});
+
+A({
+  id: 'rotate', cat: 'Rewiring', title: 'Rotate list',
+  blurb: 'Rotate right by k: close the list into a ring, then cut it n − k nodes from the head.',
+  spec: { lists: [[1, 2, 3, 4, 5, 6]], k: 8 }, input: { lists: [{ name: 'list' }], params: { k: [0, 50] }, hint: 'values, then ; k = 2' },
+  code: `
+ListNode* rotateRight(ListNode* head, int k) {
+    if (!head) return head;
+    int n = 1; ListNode* tail = head;
+    while (tail->next) { tail = tail->next; n++; }   //@len
+    k %= n;
+    if (k == 0) return head;                          //@zero
+    tail->next = head;                                //@ring   // close into a ring
+    ListNode* newTail = head;
+    for (int i = 0; i < n - k - 1; i++)
+        newTail = newTail->next;                      //@walk
+    ListNode* newHead = newTail->next;
+    newTail->next = nullptr;                          //@cut
+    return newHead;                                   //@ret
+}`,
+  run(T, sp) {
+    const ids = build(T, sp.lists[0]); let tail = ids[0], n = 1; const k0 = sp.k;
+    T.p('tail', tail); T.ax('n', [n]);
+    T.step('len', 'Count the nodes. tail starts at the head, n = 1.');
+    while (T.next[tail] != null) { tail = T.next[tail]; n++; T.p('tail', tail); T.ax('n', [n]); T.step('len', `tail → ${lab(T, tail)}, n = ${n}.`); }
+    const k = k0 % n; T.ax('k', [`${k0} % ${n} = ${k}`]);
+    if (k === 0) { T.out.push(arrow(T, ids[0])); T.step('zero', `k % n = 0: rotating by a multiple of the length changes nothing.`); return; }
+    T.nx(tail, ids[0]); T.es(tail, 'back');
+    T.step('ring', `k = ${k0} % ${n} = ${k}. Join the tail to the head, making a ring. Rotating is now just choosing where to cut it.`);
+    let nt = ids[0]; T.p('newTail', nt); T.s(nt, 'cur');
+    for (let i = 0; i < n - k - 1; i++) { T.s(nt, ''); nt = T.next[nt]; T.p('newTail', nt); T.s(nt, 'cur'); T.step('walk', `newTail → ${lab(T, nt)} (${i + 1} of ${n - k - 1}).`); }
+    const nh = T.next[nt]; T.p('newHead', nh); T.s(nh, 'found'); T.nx(nt, null); T.es(tail, '');
+    T.step('cut', `newTail is n − k − 1 = ${n - k - 1} steps from the head. Cut after it; ${lab(T, nh)} becomes the new head.`);
+    T.unp('tail'); T.chain(nh); T.out.push(arrow(T, nh));
+    T.step('ret', `Rotated right by ${k}: ${arrow(T, nh)}.`);
+  },
+  idea: 'Rotating right by k moves the last k nodes to the front. Find the length and tail, link tail to head to form a ring, walk to the node n − k − 1 steps in, and cut there. Reducing k mod n first handles huge k.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'k can be much larger than n (try k = 2,000,000,000). Take k %= n before walking, and return early when it is 0.',
+  vars: ['Rotate left by k: cut after k − 1 steps instead', 'Rotate array (LC 189): reverse whole, then reverse both parts', 'Split linked list in parts (LC 725)']
+});
+
+A({
+  id: 'copy-random', cat: 'Rewiring', title: 'Copy list with random pointer',
+  blurb: 'Deep-copy a list whose nodes also have a random pointer, by weaving the copies in between the originals.',
+  spec: { lists: [[7, 13, 11, 10, 1], [-1, 0, 4, 2, 0]] },
+  input: { lists: [{ name: 'values', maxLen: 6 }, { name: 'random index', min: -1, max: 9, maxLen: 6 }], hint: 'values | random index per node (−1 for null), like 7, 13, 11 | -1, 0, 1' },
+  check: (sp) => sp.lists[0].length !== sp.lists[1].length ? 'Give one random index per value.' : sp.lists[1].some(r => r >= sp.lists[0].length) ? `Random indexes must be −1 or 0 to ${sp.lists[0].length - 1}.` : null,
+  leg: { ca: 'Copy' },
+  code: `
+Node* copyRandomList(Node* head) {
+    for (Node* c = head; c; c = c->next->next) {          // 1. weave copies in
+        Node* copy = new Node(c->val);
+        copy->next = c->next;
+        c->next = copy;                                    //@weave
+    }
+    for (Node* c = head; c; c = c->next->next)            // 2. copy random pointers
+        if (c->random) c->next->random = c->random->next;  //@random
+    Node* newHead = head ? head->next : nullptr;
+    for (Node* c = head; c; c = c->next) {                 // 3. unweave
+        Node* copy = c->next;
+        c->next = copy->next;                              //@split
+        if (copy->next) copy->next = copy->next->next;
+    }
+    return newHead;                                        //@ret
+}`,
+  run(T, sp) {
+    const [vals, rnd] = sp.lists, O = build(T, vals, 'o', 0, 0);
+    O.forEach((id, i) => { if (rnd[i] >= 0) T.rand[id] = O[rnd[i]]; });
+    T.step(null, 'Each node has a next pointer (solid) and a random pointer (dashed) to any node or null. The copy\'s random pointers must point into the copy, not the original.');
+    let i = 0;
+    for (let c = O[0]; c != null; i++) {
+      const cp = T.node('c' + i, vals[i] + '′', i + 0.5, 1.3); T.s(cp, 'ca'); T.side['r' + cp] = 1;
+      T.nx(cp, T.next[c]); T.nx(c, cp); T.p('c', c); T.est = {}; T.es(c, 'cur'); T.es(cp, 'cur');
+      T.step('weave', `Copy ${vals[i]} and splice the copy right after it: ${lab(T, c)} → ${lab(T, cp)} → ${lab(T, T.next[cp])}.`);
+      c = T.next[cp];
+    }
+    T.est = {};
+    for (let c = O[0]; c != null; c = T.next[T.next[c]]) {
+      T.p('c', c); const cp = T.next[c];
+      if (T.rand[c] != null) {
+        T.rand[cp] = T.next[T.rand[c]]; T.es(cp, 'cur', 'r');
+        T.step('random', `${lab(T, c)}.random is ${lab(T, T.rand[c])}, and that node's copy sits right after it. So ${lab(T, cp)}.random = ${lab(T, T.rand[cp])}.`);
+        T.es(cp, '', 'r');
+      } else T.step('random', `${lab(T, c)}.random is null, so ${lab(T, cp)}.random stays null.`);
+    }
+    const newHead = T.next[O[0]]; T.p('newHead', newHead);
+    for (let c = O[0]; c != null; c = T.next[c]) {
+      T.p('c', c); const cp = T.next[c]; T.nx(c, T.next[cp]); if (T.next[cp] != null) T.nx(cp, T.next[T.next[cp]]);
+      T.est = {}; T.es(c, 'cur'); T.es(cp, 'cur');
+      T.step('split', `Unweave: ${lab(T, c)} → ${lab(T, T.next[c])} again, and ${lab(T, cp)} → ${lab(T, T.next[cp])}.`);
+    }
+    T.est = {}; T.unp('c'); T.chain(newHead, 1.3, 0); T.chain(O[0], 0, 0);
+    T.out.push(`${arrow(T, newHead)}`);
+    T.step('ret', 'Two separate lists again. The copy (bottom row) has its own next and random pointers and shares no nodes with the original.');
+  },
+  idea: 'The hard part is mapping "original node → its copy" for the random pointers. Putting each copy directly after its original stores that mapping in the list itself: the copy of any node X is X->next. That turns the usual hash map into O(1) extra space.',
+  time: 'O(n)', space: 'O(1) extra (besides the copy)',
+  trap: 'Restore the original list while unweaving. Leaving it modified is usually counted as wrong. The hash-map version (original → copy) is easier to get right under pressure: two passes, O(n) space.',
+  vars: ['Clone graph (LC 133): same mapping problem, use a hash map', 'Copy a binary tree with random pointers (LC 1485)', 'Flatten a multilevel doubly linked list (LC 430)']
+});
+
+/* ================= Two or more lists ================= */
+A({
+  id: 'merge', cat: 'Two or more lists', title: 'Merge two sorted lists',
+  blurb: 'Splice two sorted lists into one by always taking the smaller head. A dummy node anchors the result.',
+  spec: { lists: [[1, 2, 4, 7], [1, 3, 4, 5, 9]] },
+  input: { lists: [{ name: 'a', sorted: true, minLen: 0, maxLen: 7 }, { name: 'b', sorted: true, minLen: 0, maxLen: 7 }], hint: 'two sorted lists like 1, 2, 4 | 1, 3, 4' },
+  code: `
+ListNode* mergeTwoLists(ListNode* a, ListNode* b) {
+    ListNode dummy;
+    ListNode* tail = &dummy;                 //@init
+    while (a && b) {
+        if (a->val <= b->val) { tail->next = a; a = a->next; }   //@a
+        else                  { tail->next = b; b = b->next; }   //@b
+        tail = tail->next;
+    }
+    tail->next = a ? a : b;                  //@rest
+    return dummy.next;                       //@ret
+}`,
+  run(T, sp) {
+    const A_ = build(T, sp.lists[0], 'a', 0, 1), B_ = build(T, sp.lists[1], 'b', 2.4, 1);
+    T.node('d', 'D', 0, 1.2); T.s('d', 'target');
+    let a = A_[0] ?? null, b = B_[0] ?? null, tail = 'd', m = 0; T.p('a', a); T.p('b', b); T.p('tail', tail);
+    T.step('init', 'Top row is list a, bottom row is list b. The merged list grows in the middle row from a dummy node; tail is its last node.');
+    while (a != null && b != null) {
+      const va = +lab(T, a), vb = +lab(T, b), takeA = va <= vb, c = takeA ? a : b;
+      T.est = {}; T.nx(tail, c); T.es(tail, 'cur'); T.at(c, ++m, 1.2); T.s(c, 'done');
+      if (takeA) { a = T.next[a]; T.p('a', a); } else { b = T.next[b]; T.p('b', b); }
+      tail = c; T.p('tail', tail);
+      T.step(takeA ? 'a' : 'b', `${va === vb ? `${va} = ${vb}; ties go to a, which keeps the merge stable.` : `${Math.min(va, vb)} is the smaller head.`} Link it after tail and advance ${takeA ? 'a' : 'b'}.`);
+    }
+    T.est = {}; const rest = a != null ? a : b; T.nx(tail, rest); T.es(tail, 'cur'); T.chain('d', 1.2, 0);
+    for (let c = rest; c != null; c = T.next[c]) T.s(c, 'done');
+    T.step('rest', rest != null ? `${a != null ? 'b' : 'a'} is used up. What's left of ${a != null ? 'a' : 'b'} is already sorted, so attach it in one step.` : 'Both lists are used up.');
+    T.est = {}; const head = T.next.d; T.out.push(arrow(T, head));
+    T.step('ret', `Return dummy.next: ${arrow(T, head)}.`);
+  },
+  idea: 'Both heads are the smallest remaining values of their lists, so the smaller of the two is the smallest overall. Link it, advance that list, repeat. No new nodes are made; only next pointers change.',
+  time: 'O(n + m)', space: 'O(1)',
+  trap: 'Don\'t forget the leftover tail after the loop. Use <= so equal values come from a first, which keeps the merge stable.',
+  vars: ['Merge k sorted lists (below)', 'Sort list (LC 148): merge sort with middle-split and this merge', 'Recursive version: the smaller head\'s next = merge(rest, other)', 'Merge sorted array (LC 88): same idea from the back']
+});
+
+A({
+  id: 'intersection', cat: 'Two or more lists', title: 'Intersection of two lists',
+  blurb: 'Find the node where two lists join. Each pointer walks its own list, then the other one.',
+  spec: { lists: [[4, 1], [5, 6, 1], [8, 4, 5]] },
+  input: { lists: [{ name: 'A only', minLen: 0, maxLen: 5 }, { name: 'B only', minLen: 0, maxLen: 5 }, { name: 'shared', minLen: 0, maxLen: 5 }], hint: 'A only | B only | shared tail, like 4, 1 | 5, 6, 1 | 8, 4, 5 (shared can be empty)' },
+  check: (sp) => !sp.lists[0].length && !sp.lists[2].length ? 'List A needs at least one node.' : !sp.lists[1].length && !sp.lists[2].length ? 'List B needs at least one node.' : null,
+  code: `
+ListNode* getIntersectionNode(ListNode* headA, ListNode* headB) {
+    ListNode *p = headA, *q = headB;
+    while (p != q) {
+        p = p ? p->next : headB;       //@step
+        q = q ? q->next : headA;
+    }
+    return p;                          //@ret   // meeting node, or null
+}`,
+  run(T, sp) {
+    const [ao, bo, sh] = sp.lists, s = Math.max(ao.length, bo.length);
+    const A_ = build(T, ao, 'a', 0, s - ao.length), B_ = build(T, bo, 'b', 1.6, s - bo.length), C_ = build(T, sh, 'c', 0.8, s);
+    if (A_.length && C_.length) T.nx(A_[A_.length - 1], C_[0]);
+    if (B_.length && C_.length) T.nx(B_[B_.length - 1], C_[0]);
+    const hA = A_[0] ?? C_[0], hB = B_[0] ?? C_[0], la = ao.length + sh.length, lb = bo.length + sh.length;
+    let p = hA, q = hB; const mk = () => { T.st = {}; T.s(p, 'cur'); T.s(q, 'stack'); };
+    T.p('p', p); T.p('q', q); T.ax('lengths', [`A: ${la}`, `B: ${lb}`]); mk();
+    T.step(null, `A (top) has ${la} nodes and B (bottom) has ${lb}. If they join, they share a tail (middle). p walks A, q walks B; whoever falls off the end restarts on the other list.`);
+    while (p !== q) {
+      const pw = p == null, qw = q == null;
+      p = pw ? hB : T.next[p]; q = qw ? hA : T.next[q]; T.p('p', p); T.p('q', q); mk();
+      T.step('step', `${pw ? 'p fell off A, so it restarts at headB' : `p → ${lab(T, p)}`}; ${qw ? 'q fell off B, so it restarts at headA' : `q → ${lab(T, q)}`}.`);
+    }
+    T.st = {};
+    if (p == null) { T.out.push('null'); T.step('ret', `Both reach null together after ${la} + ${lb} steps: the lists never meet.`); }
+    else { T.s(p, 'found'); T.out.push(`node ${lab(T, p)}`); T.step('ret', `p and q are on the same node (${lab(T, p)}). Each has walked its own list plus the other's private part, the same distance, so they arrive together.`); }
+  },
+  idea: 'Say A has a private part of length x, B has y, and they share z. p walks x + z then y; q walks y + z then x. Both total x + y + z, so they reach the join together. If there is no join (z = 0), both reach null together instead.',
+  time: 'O(n + m)', space: 'O(1)',
+  trap: 'Compare node addresses, not values. Two different nodes can both hold 1 (as in the sample); only the shared 8 is the same node.',
+  vars: ['Length-difference version: advance the longer list by |la − lb| first, then walk together', 'Hash set of A\'s nodes: O(n) space', 'Lowest common ancestor with parent pointers (LC 1650) is this exact problem']
+});
+
+A({
+  id: 'add-two', cat: 'Two or more lists', title: 'Add two numbers',
+  blurb: 'Each list stores a number with its least significant digit first. Add them digit by digit with a carry.',
+  spec: { lists: [[9, 4, 3], [5, 6, 7]] },
+  input: { lists: [{ name: 'a', min: 0, max: 9, maxLen: 6 }, { name: 'b', min: 0, max: 9, maxLen: 6 }], hint: 'two lists of digits, lowest digit first, like 2, 4, 3 | 5, 6, 4' },
+  code: `
+ListNode* addTwoNumbers(ListNode* a, ListNode* b) {
+    ListNode dummy;
+    ListNode* tail = &dummy;
+    int carry = 0;                                  //@init
+    while (a || b || carry) {
+        int sum = carry;
+        if (a) { sum += a->val; a = a->next; }
+        if (b) { sum += b->val; b = b->next; }
+        carry = sum / 10;                           //@sum
+        tail = tail->next = new ListNode(sum % 10); //@new
+    }
+    return dummy.next;                              //@ret
+}`,
+  run(T, sp) {
+    const [x, y] = sp.lists, A_ = build(T, x, 'a', 0, 0), B_ = build(T, y, 'b', 1.2, 0);
+    T.node('d', 'D', -1, 2.6); T.s('d', 'target');
+    let a = A_[0], b = B_[0], tail = 'd', carry = 0, i = 0; const R = [];
+    T.p('a', a); T.p('b', b); T.p('tail', tail); T.ax('carry', [0]);
+    const num = (d) => d.slice().reverse().join('');
+    T.step('init', `a is ${num(x)} and b is ${num(y)}, stored lowest digit first. That's the order you add by hand, so one left-to-right pass works.`);
+    while (a != null || b != null || carry) {
+      let sum = carry; const parts = carry ? [`carry ${carry}`] : [];
+      T.st = {}; T.s('d', 'target'); R.forEach(r => T.s(r, 'done'));
+      if (a != null) { sum += +lab(T, a); parts.push(lab(T, a)); T.s(a, 'cur'); a = T.next[a]; }
+      if (b != null) { sum += +lab(T, b); parts.push(lab(T, b)); T.s(b, 'cur'); b = T.next[b]; }
+      carry = Math.floor(sum / 10); T.p('a', a); T.p('b', b); T.ax('carry', [carry]);
+      T.step('sum', `${parts.join(' + ')} = ${sum}. Write ${sum % 10}, carry ${carry}.`);
+      const r = T.node('r' + i, sum % 10, i, 2.6); i++; R.push(r);
+      T.est = {}; T.nx(tail, r); T.es(tail, 'cur'); tail = r; T.p('tail', tail); T.s(r, 'found');
+      T.step('new', `Append a new node ${sum % 10} to the result.`);
+    }
+    T.est = {}; T.st = {}; T.s('d', 'target'); R.forEach(r => T.s(r, 'done'));
+    const head = T.next.d, digits = walk(T, head); T.out.push(`${arrow(T, head)}  (${num(digits)})`);
+    T.step('ret', `${num(x)} + ${num(y)} = ${num(digits)}. Return dummy.next.`);
+  },
+  idea: 'Grade-school addition, one column per node. Keep going while either list has digits or a carry is left, so 5 + 5 produces 0 → 1 instead of losing the final carry.',
+  time: 'O(max(n, m))', space: 'O(max(n, m)) for the result',
+  trap: 'The loop condition must include carry. Lists can have different lengths, so check each pointer separately.',
+  vars: ['Add two numbers II (LC 445): most significant digit first, use two stacks or reverse both', 'Plus one linked list (LC 369)', 'Multiply strings (LC 43): the same column-and-carry idea']
+});
+
+A({
+  id: 'merge-k', cat: 'Two or more lists', title: 'Merge k sorted lists (min-heap)',
+  blurb: 'Keep the current head of every list in a min-heap. Pop the smallest, link it, push its successor.',
+  spec: { lists: [[1, 4, 5], [1, 3, 4], [2, 6]] },
+  input: { lists: [{ name: 'list', sorted: true, minLen: 0, maxLen: 4 }], multi: [2, 4], hint: '2 to 4 sorted lists separated by |, like 1, 4, 5 | 1, 3, 4 | 2, 6' },
+  code: `
+ListNode* mergeKLists(vector<ListNode*>& lists) {
+    auto cmp = [](ListNode* x, ListNode* y) { return x->val > y->val; };
+    priority_queue<ListNode*, vector<ListNode*>, decltype(cmp)> pq(cmp);
+    for (ListNode* l : lists) if (l) pq.push(l);       //@init
+    ListNode dummy; ListNode* tail = &dummy;
+    while (!pq.empty()) {
+        ListNode* node = pq.top(); pq.pop();
+        tail = tail->next = node;                      //@link
+        if (node->next) pq.push(node->next);           //@push
+    }
+    return dummy.next;                                 //@ret
+}`,
+  run(T, sp) {
+    const L = sp.lists, k = L.length, my = k + 0.3;
+    const rows = L.map((l, i) => build(T, l, 'l' + i + '_', i, 1));
+    T.node('d', 'D', 0, my); T.s('d', 'target');
+    const heap = [], push = (id) => { heap.push(id); heap.sort((x, y) => +lab(T, x) - +lab(T, y)); };
+    const show = () => T.ax('min-heap', heap.map(id => lab(T, id)));
+    rows.forEach(r => { if (r.length) { push(r[0]); T.s(r[0], 'stack'); } }); show();
+    T.step('init', `Push the head of each of the ${k} lists into a min-heap. The heap always holds the smallest unmerged node of every list.`);
+    let tail = 'd', m = 0; T.p('tail', tail);
+    while (heap.length) {
+      const node = heap.shift(); show();
+      T.est = {}; T.nx(tail, node); T.es(tail, 'cur'); T.at(node, ++m, my); T.s(node, 'done'); tail = node; T.p('tail', tail);
+      T.step('link', `Pop ${lab(T, node)}, the smallest value in the heap, and link it after tail.`);
+      const nx = T.next[node];
+      if (nx != null) { push(nx); T.s(nx, 'stack'); show(); T.step('push', `Its list continues with ${lab(T, nx)}: push that into the heap.`); }
+    }
+    T.est = {}; const head = T.next.d; T.chain('d', my, 0); T.out.push(arrow(T, head));
+    T.step('ret', `Heap is empty. Return dummy.next: ${arrow(T, head)}.`);
+  },
+  idea: 'Merging two lists compares two heads; merging k lists compares k heads. A min-heap of size k finds the smallest head in O(log k), and each node goes in and out of the heap exactly once.',
+  time: 'O(N log k) for N nodes in total', space: 'O(k) for the heap',
+  trap: 'Skip empty lists when filling the heap. Merging the lists one after another into a single result is O(N·k); pairwise divide and conquer also gets O(N log k) without a heap.',
+  vars: ['Divide and conquer: merge lists in pairs, log k rounds', 'Kth smallest element in a sorted matrix (LC 378): same heap of row heads', 'Smallest range covering elements from k lists (LC 632)']
+});
+
+/* ================= UI ================= */
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const NS = 'http://www.w3.org/2000/svg';
+const RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const U = 84, RAD = 18;
+
+const S = { algo: null, frames: [], i: 0, playing: false, timer: null, speed: 1, custom: null };
+const V = { nodes: new Map(), edges: new Map(), disp: new Map(), anim: 0, box: null, last: null };
+function sel(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+
+/* ---------- C++ highlighting ---------- */
+const KW = new Set('if else for while return break continue new struct class const auto true false nullptr this decltype'.split(' '));
+const TY = new Set('void int long bool char string vector stack queue deque map unordered_map unordered_set set pair array priority_queue greater size_t ListNode Node'.split(' '));
+const FN = new Set('max min abs swap push_back pop_back push_front pop_front push pop top front back size empty count insert reverse sort begin end INT_MAX'.split(' '));
+function hl(line) {
+  let code = line, com = '';
+  const ci = line.indexOf('//'); if (ci >= 0) { code = line.slice(0, ci); com = line.slice(ci); }
+  const re = /("[^"]*"|'[^']*')|(\b\d+\b)|([A-Za-z_]\w*)/g; let out = '', last = 0, m;
+  while ((m = re.exec(code))) {
+    out += esc(code.slice(last, m.index)); last = re.lastIndex;
+    if (m[1]) out += `<span class="t-str">${esc(m[1])}</span>`;
+    else if (m[2]) out += `<span class="t-num">${m[2]}</span>`;
+    else { const w = m[3]; out += KW.has(w) ? `<span class="t-kw">${w}</span>` : TY.has(w) ? `<span class="t-ty">${w}</span>` : FN.has(w) ? `<span class="t-fn">${w}</span>` : w; }
+  }
+  out += esc(code.slice(last));
+  if (com) out += `<span class="t-com">${esc(com)}</span>`;
+  return out || ' ';
+}
+
+/* ---------- List rendering ---------- */
+function setupSvg() {
+  const svg = $('#svg'); svg.innerHTML = '';
+  V.gE = sel('g', { class: 'edges' }, svg); V.gN = sel('g', { class: 'nodes' }, svg);
+  V.nodes.clear(); V.edges.clear(); V.disp.clear(); V.box = null;
+}
+// Long links along a row, and every random pointer, curve so they don't run through other nodes.
+// next links bend below the row and random links above it unless an algorithm picks a side.
+function bowOf(e, P, Q) {
+  const dx = Q.x - P.x, dy = Q.y - P.y;
+  if (Math.abs(dy) > 4) return e.rand ? 26 : 0;
+  if (!e.rand && Math.abs(dx) < U * 1.4) return 0;
+  const side = e.side || (e.rand ? -1 : 1);
+  return Math.sign(dx) * side * Math.min(170, 46 + Math.abs(dx) * 0.2);
+}
+function renderGraph(f, animate) {
+  const g = f.g;
+  const tgt = new Map(); for (const id in g.nodes) tgt.set(id, { x: g.nodes[id].x * U, y: g.nodes[id].y * U });
+  for (const [id, el] of V.nodes) if (!tgt.has(id)) { el.remove(); V.nodes.delete(id); V.disp.delete(id); }
+  const fresh = new Set();
+  for (const [id] of tgt) {
+    let el = V.nodes.get(id);
+    if (!el) {
+      el = sel('g', { class: 'nd' }, V.gN); const inner = sel('g', { class: 'in' }, el);
+      sel('circle', { r: RAD + 5, class: 'halo' }, inner); sel('circle', { r: RAD, class: 'body' }, inner);
+      sel('text', { class: 'v', dy: '.35em' }, inner); sel('text', { class: 'tg', y: -RAD - 9 }, inner);
+      sel('line', { class: 'nl', x1: 0, y1: RAD + 1, x2: 0, y2: RAD + 11 }, inner); sel('text', { class: 'nt', y: RAD + 22 }, inner).textContent = 'null';
+      V.nodes.set(id, el); fresh.add(id);
+    }
+    const st = f.st[id] || ''; el.setAttribute('class', 'nd' + (st ? ' s-' + st : '') + (f.nil[id] ? ' nil' : ''));
+    const [, , v, tg] = el.firstChild.childNodes, label = g.nodes[id].label;
+    v.textContent = label; v.setAttribute('class', 'v' + (label.length > 2 ? ' small' : '')); tg.textContent = f.tag[id] || '';
+  }
+  const want = new Map(g.edges.map(e => [e.id, e]));
+  for (const [id, x] of V.edges) if (!want.has(id)) { x.g.remove(); V.edges.delete(id); }
+  for (const [id, e] of want) {
+    let x = V.edges.get(id);
+    if (!x) { const gg = sel('g', {}, V.gE); x = { g: gg, ln: sel('path', { class: 'ln' }, gg), ah: sel('path', { class: 'ah' }, gg) }; V.edges.set(id, x); }
+    x.e = e; const cls = f.est[id] || (e.rand ? 'rand' : '');
+    x.g.setAttribute('class', 'ge' + (cls ? ' e-' + cls : '') + (e.rand && cls !== 'rand' ? ' e-rand-on' : ''));
+  }
+  const from = new Map(); for (const [id, p] of tgt) from.set(id, fresh.has(id) ? p : (V.disp.get(id) || p));
+  const moving = [...tgt].some(([id, p]) => { const a = from.get(id); return Math.abs(a.x - p.x) + Math.abs(a.y - p.y) > .5; });
+  const dur = animate && !RM && moving ? Math.max(160, Math.min(560, 480 / S.speed)) : 0;
+  const box0 = V.box, box1 = fitBox(tgt, g.edges); sizeSvg(box1);
+  cancelAnimationFrame(V.anim); const t0 = performance.now();
+  const tick = (now) => {
+    const t = dur ? Math.min(1, (now - t0) / dur) : 1, k = t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    for (const [id, p] of tgt) { const a = from.get(id); const q = { x: a.x + (p.x - a.x) * k, y: a.y + (p.y - a.y) * k }; V.disp.set(id, q); V.nodes.get(id).setAttribute('transform', `translate(${q.x.toFixed(1)},${q.y.toFixed(1)})`); }
+    for (const [, x] of V.edges) drawEdge(x);
+    const b = box0 ? box0.map((v, i) => v + (box1[i] - v) * k) : box1; V.box = b; $('#svg').setAttribute('viewBox', b.map(v => v.toFixed(1)).join(' '));
+    if (t < 1) V.anim = requestAnimationFrame(tick);
+  };
+  if (dur) V.anim = requestAnimationFrame(tick); else tick(t0);
+}
+function drawEdge(x) {
+  const P = V.disp.get(x.e.u), Q = V.disp.get(x.e.v); if (!P || !Q) return;
+  const f = (v) => v.toFixed(1);
+  if (x.e.u === x.e.v) {
+    const s = x.e.side || (x.e.rand ? -1 : 1), a = 0.5;
+    const sx = P.x - Math.sin(a) * RAD, sy = P.y + s * Math.cos(a) * RAD, ex = P.x + Math.sin(a) * (RAD + 2), ey = P.y + s * Math.cos(a) * (RAD + 2);
+    const c1x = P.x - 34, c1y = P.y + s * 62, c2x = P.x + 34, c2y = P.y + s * 62;
+    let tx = ex - c2x, ty = ey - c2y; const l = Math.hypot(tx, ty) || 1; tx /= l; ty /= l;
+    const ax = ex - tx * 10, ay = ey - ty * 10, px = -ty * 5, py = tx * 5;
+    x.ln.setAttribute('d', `M${f(sx)},${f(sy)} C${f(c1x)},${f(c1y)} ${f(c2x)},${f(c2y)} ${f(ex - tx * 8)},${f(ey - ty * 8)}`);
+    x.ah.setAttribute('d', `M${f(ex)},${f(ey)} L${f(ax + px)},${f(ay + py)} L${f(ax - px)},${f(ay - py)} Z`);
+    return;
+  }
+  const bow = bowOf(x.e, P, Q);
+  const dx = Q.x - P.x, dy = Q.y - P.y, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
+  const cx = (P.x + Q.x) / 2 + nx * bow, cy = (P.y + Q.y) / 2 + ny * bow;
+  const dirTo = (ax, ay, bx, by) => { const l = Math.hypot(bx - ax, by - ay) || 1; return [(bx - ax) / l, (by - ay) / l]; };
+  const [sx0, sy0] = bow ? dirTo(P.x, P.y, cx, cy) : [dx / L, dy / L];
+  const [ex0, ey0] = bow ? dirTo(Q.x, Q.y, cx, cy) : [-dx / L, -dy / L];
+  const sx = P.x + sx0 * RAD, sy = P.y + sy0 * RAD, ex = Q.x + ex0 * (RAD + 2), ey = Q.y + ey0 * (RAD + 2);
+  const tx = -ex0, ty = -ey0, ax = ex - tx * 10, ay = ey - ty * 10, px = -ty * 5, py = tx * 5;
+  x.ah.setAttribute('d', `M${f(ex)},${f(ey)} L${f(ax + px)},${f(ay + py)} L${f(ax - px)},${f(ay - py)} Z`);
+  const lx = ex - tx * 8, ly = ey - ty * 8;
+  x.ln.setAttribute('d', bow ? `M${f(sx)},${f(sy)} Q${f(cx)},${f(cy)} ${f(lx)},${f(ly)}` : `M${f(sx)},${f(sy)} L${f(lx)},${f(ly)}`);
+}
+function fitBox(pos, edges) {
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const p of pos.values()) { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); }
+  x0 -= 56; x1 += 56; y0 -= 48; y1 += 50;
+  for (const e of edges) {
+    const P = pos.get(e.u), Q = pos.get(e.v); if (!P || !Q) continue;
+    let off;
+    if (e.u === e.v) off = (e.side || (e.rand ? -1 : 1)) * 50;
+    else { const b = bowOf(e, P, Q); if (!b) continue; const L = Math.hypot(Q.x - P.x, Q.y - P.y) || 1; off = (Q.x - P.x) / L * b / 2; }
+    const y = (P.y + Q.y) / 2 + off;
+    y0 = Math.min(y0, y - 16); y1 = Math.max(y1, y + 16);
+  }
+  let w = x1 - x0, h = y1 - y0; const minW = 420, minH = 200;
+  if (w < minW) { x0 -= (minW - w) / 2; w = minW; } if (h < minH) { y0 -= (minH - h) / 2; h = minH; }
+  return [x0, y0, w, h];
+}
+function sizeSvg(b) {
+  const svg = $('#svg'); const w = svg.clientWidth || 600; V.last = b;
+  const h = Math.max(180, Math.min(440, window.innerHeight * 0.54, w * b[3] / b[2]));
+  svg.style.height = Math.round(h) + 'px';
+}
+window.addEventListener('resize', () => { if (V.last) sizeSvg(V.last); });
+
+/* ---------- Aux, legend ---------- */
+function renderAux(f) {
+  const blocks = [];
+  if (f.ptrs.length) blocks.push(`<div class="ax"><div class="axn">Pointers<span class="axhint">drawn above their node</span></div><div class="chips">${f.ptrs.map(p => `<span class="chip ptr">${esc(p)}</span>`).join('')}</div></div>`);
+  f.aux.forEach(a => {
+    const chips = a.items.length ? a.items.map(v => `<span class="chip">${esc(v)}</span>`).join('') : '<span class="empty">empty</span>';
+    const hint = a.name === 'min-heap' ? '<span class="axhint">smallest on the left</span>' : '';
+    blocks.push(`<div class="ax"><div class="axn">${esc(a.name)}${hint}</div><div class="chips">${chips}</div></div>`);
+  });
+  if (S.hasOut) blocks.push(`<div class="ax out"><div class="axn">${esc(S.algo.outLabel || 'Result')}</div><div class="chips">${f.out.length ? f.out.map(v => `<span class="chip">${esc(v)}</span>`).join('') : '<span class="empty">not yet</span>'}</div></div>`);
+  $('#aux').innerHTML = blocks.join('');
+}
+const NLEG = { cur: 'Current node', stack: 'In play', done: 'Settled', found: 'Answer or match', bad: 'Removed or mismatch', target: 'Dummy node', ca: 'Group A', cb: 'Group B' };
+const ELEG = { cur: 'Link just changed', path: 'Reversed link', back: 'Link that closes the cycle', rand: 'random pointer' };
+function renderLegend() {
+  const ns = new Set(), es = new Set(); let groups = false, nil = false;
+  S.frames.forEach(f => {
+    Object.values(f.st).forEach(s => /^g\d$/.test(s) ? groups = true : ns.add(s));
+    Object.values(f.est).forEach(e => es.add(e)); f.g.edges.forEach(e => { if (e.rand) es.add('rand'); });
+    if (Object.keys(f.nil).length) nil = true;
+  });
+  const leg = { ...NLEG, ...(S.algo.leg || {}) };
+  const items = Object.keys(NLEG).filter(k => ns.has(k)).map(k => `<span class="lg"><i class="sw sw-${k}"></i>${leg[k]}</span>`);
+  if (groups) items.push(`<span class="lg"><i class="sw sw-groups"></i>${(S.algo.leg && S.algo.leg.g0) || 'One color per group'}</span>`);
+  Object.keys(ELEG).filter(k => es.has(k)).forEach(k => items.push(`<span class="lg"><i class="le le-${k}"></i>${ELEG[k]}</span>`));
+  if (nil) items.push('<span class="lg"><i class="lnil"></i>next is null</span>');
+  $('#legend').innerHTML = items.join('');
+}
+
+/* ---------- Frame display ---------- */
+function show(i, animate) {
+  S.i = Math.max(0, Math.min(S.frames.length - 1, i));
+  const f = S.frames[S.i];
+  renderGraph(f, animate); renderAux(f);
+  $('#narr').textContent = f.msg || '';
+  $('#counter').textContent = `Step ${S.i + 1} of ${S.frames.length}`;
+  $('#scrub').value = S.i;
+  const lines = $('#code').children;
+  for (let k = 0; k < lines.length; k++) lines[k].classList.toggle('hl', k === f.line);
+  if (f.line >= 0) {
+    const ln = lines[f.line], box = $('#code'); const top = ln.offsetTop - box.offsetTop, bottom = top + ln.offsetHeight;
+    if (top < box.scrollTop + 8 || bottom > box.scrollTop + box.clientHeight - 8) box.scrollTop = Math.max(0, top - box.clientHeight / 3);
+  }
+  $('#prev').disabled = S.i === 0; $('#first').disabled = S.i === 0;
+  $('#next').disabled = S.i === S.frames.length - 1; $('#last').disabled = S.i === S.frames.length - 1;
+}
+function setPlaying(on) {
+  S.playing = on; clearTimeout(S.timer);
+  const b = $('#play'); b.setAttribute('aria-label', on ? 'Pause' : 'Play'); b.dataset.state = on ? 'pause' : 'play'; $('#playText').textContent = on ? 'Pause' : 'Play';
+  if (on) schedule();
+}
+function schedule() {
+  clearTimeout(S.timer);
+  S.timer = setTimeout(() => { if (S.i >= S.frames.length - 1) { setPlaying(false); return; } show(S.i + 1, true); if (S.i >= S.frames.length - 1) setPlaying(false); else schedule(); }, 1150 / S.speed);
+}
+function togglePlay() { if (!S.playing && S.i >= S.frames.length - 1) show(0, false); setPlaying(!S.playing); }
+function stepBy(d) { setPlaying(false); show(S.i + d, true); }
+
+/* ---------- Custom input ---------- */
+function specText(a, sp) {
+  let t = sp.lists.map(l => l.join(', ')).join(' | ');
+  for (const k in a.input.params || {}) t += `; ${k} = ${sp[k]}`;
+  return t;
+}
+function parseSpec(a, text) {
+  const I = a.input, P = I.params || {}, [head, ...rest] = text.split(';'), parts = head.split('|');
+  if (I.multi) { if (parts.length < I.multi[0] || parts.length > I.multi[1]) throw new Error(`Enter ${I.multi[0]} to ${I.multi[1]} lists separated by |.`); }
+  else if (parts.length !== I.lists.length) throw new Error(I.lists.length === 1 ? 'Enter one list of values (no |).' : `Enter ${I.lists.length} lists separated by |.`);
+  const lists = parts.map((s, i) => {
+    const L = I.multi ? I.lists[0] : I.lists[i], name = I.multi ? `list ${i + 1}` : L.name;
+    const v = s.split(/[\s,]+/).filter(Boolean).map(t => { if (!/^-?\d+$/.test(t)) throw new Error(`${name}: "${t}" isn't a whole number.`); return +t; });
+    const minLen = L.minLen ?? 1, maxLen = L.maxLen ?? 10, lo = L.min ?? -99, hi = L.max ?? 99;
+    if (v.length < minLen || v.length > maxLen) throw new Error(`${name}: use ${minLen} to ${maxLen} values.`);
+    if (v.some(x => x < lo || x > hi)) throw new Error(`${name}: keep values between ${lo} and ${hi}.`);
+    if (L.sorted && v.some((x, j) => j && x < v[j - 1])) throw new Error(`${name}: must be sorted in ascending order.`);
+    return v;
+  });
+  const sp = { lists };
+  for (const r of rest) {
+    if (!r.trim()) continue;
+    const m = r.trim().match(/^(\w+)\s*=\s*(-?\d+)$/);
+    if (!m) throw new Error(`Can't read "${r.trim()}". Write settings like ${Object.keys(P)[0] || 'k'} = 2.`);
+    if (!(m[1] in P)) throw new Error(Object.keys(P).length ? `Unknown setting "${m[1]}". This one takes ${Object.keys(P).join(' and ')}.` : 'This algorithm takes no settings after the list.');
+    sp[m[1]] = +m[2];
+  }
+  for (const k in P) {
+    if (sp[k] === undefined) throw new Error(`Add "; ${k} = …" after the list.`);
+    if (sp[k] < P[k][0] || sp[k] > P[k][1]) throw new Error(`${k} must be between ${P[k][0]} and ${P[k][1]}.`);
+  }
+  const err = a.check && a.check(sp); if (err) throw new Error(err);
+  return sp;
+}
+
+/* ---------- Algorithm selection ---------- */
+function load(id, custom) {
+  const a = ALGOS.find(x => x.id === id) || ALGOS[0];
+  if (S.algo !== a) S.custom = null;
+  if (custom !== undefined) S.custom = custom;
+  S.algo = a;
+  const sp = S.custom || a.spec;
+  S.frames = framesFor(a, sp);
+  S.hasOut = S.frames.some(f => f.out.length);
+  setPlaying(false); setupSvg();
+  $('#cat').textContent = a.cat; $('#title').textContent = a.title; $('#blurb').textContent = a.blurb;
+  $('#sampleTree').textContent = specText(a, sp);
+  $('#code').innerHTML = a.parsed.lines.map((l, k) => `<div class="cl"><span class="no">${k + 1}</span><span class="tx">${hl(l)}</span></div>`).join('');
+  $('#code').scrollTop = 0;
+  $('#notes').innerHTML = `
+    <div class="note-main"><h3>How it works</h3><p>${esc(a.idea)}</p>${a.trap ? `<h3>Watch out for</h3><p>${esc(a.trap)}</p>` : ''}</div>
+    <div class="note-cost"><h3>Cost</h3><dl><dt>Time</dt><dd>${esc(a.time)}</dd><dt>Space</dt><dd>${esc(a.space)}</dd></dl></div>
+    <div class="note-vars"><h3>Variations to practise</h3><ul>${a.vars.map(v => `<li>${esc(v)}</li>`).join('')}</ul></div>`;
+  $('#treeErr').textContent = ''; $('#treeIn').value = specText(a, sp); $('#customHint').textContent = `(${a.input.hint})`;
+  $('#scrub').max = S.frames.length - 1;
+  renderLegend();
+  document.querySelectorAll('.item').forEach(b => b.setAttribute('aria-current', b.dataset.id === a.id ? 'true' : 'false'));
+  $('#algoSelect').value = a.id;
+  try { history.replaceState(null, '', '#' + a.id); } catch (e) { }
+  show(0, false);
+}
+function buildNav() {
+  const cats = [...new Set(ALGOS.map(a => a.cat))];
+  $('#list').innerHTML = cats.map(c => `<div class="group"><h4>${esc(c)}</h4>${ALGOS.filter(a => a.cat === c).map(a => `<button class="item" data-id="${a.id}" data-q="${esc((a.title + ' ' + a.cat + ' ' + a.blurb).toLowerCase())}">${esc(a.title)}</button>`).join('')}</div>`).join('');
+  $('#algoSelect').innerHTML = cats.map(c => `<optgroup label="${esc(c)}">${ALGOS.filter(a => a.cat === c).map(a => `<option value="${a.id}">${esc(a.title)}</option>`).join('')}</optgroup>`).join('');
+  $('#list').addEventListener('click', e => { const b = e.target.closest('.item'); if (b) { load(b.dataset.id); $('#main').scrollIntoView({ block: 'start', behavior: RM ? 'auto' : 'smooth' }); } });
+  $('#algoSelect').addEventListener('change', e => load(e.target.value));
+  $('#filter').addEventListener('input', e => {
+    const q = e.target.value.trim().toLowerCase();
+    document.querySelectorAll('.group').forEach(g => { let any = false; g.querySelectorAll('.item').forEach(b => { const hit = !q || b.dataset.q.includes(q); b.hidden = !hit; any = any || hit; }); g.hidden = !any; });
+  });
+}
+function init() {
+  buildNav();
+  $('#play').addEventListener('click', togglePlay);
+  $('#prev').addEventListener('click', () => stepBy(-1));
+  $('#next').addEventListener('click', () => stepBy(1));
+  $('#first').addEventListener('click', () => { setPlaying(false); show(0, true); });
+  $('#last').addEventListener('click', () => { setPlaying(false); show(S.frames.length - 1, true); });
+  $('#scrub').addEventListener('input', e => { setPlaying(false); show(+e.target.value, true); });
+  $('#speed').addEventListener('input', e => { S.speed = +e.target.value; $('#speedVal').textContent = S.speed + '×'; if (S.playing) schedule(); });
+  $('#custom').addEventListener('submit', e => {
+    e.preventDefault();
+    try { const sp = parseSpec(S.algo, $('#treeIn').value); $('#treeErr').textContent = ''; load(S.algo.id, sp); }
+    catch (err) { $('#treeErr').textContent = err.message; }
+  });
+  $('#treeReset').addEventListener('click', () => load(S.algo.id, null));
+  $('#copy').addEventListener('click', async () => {
+    const txt = S.algo.parsed.lines.join('\n');
+    try { await navigator.clipboard.writeText(txt); $('#copy').textContent = 'Copied'; }
+    catch (e) { const r = document.createRange(); r.selectNodeContents($('#code')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $('#copy').textContent = 'Selected'; }
+    setTimeout(() => { $('#copy').textContent = 'Copy code'; }, 1400);
+  });
+  document.addEventListener('keydown', e => {
+    if (e.target.closest('input, select, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === ' ' && !e.target.closest('button')) { e.preventDefault(); togglePlay(); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); stepBy(1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); stepBy(-1); }
+  });
+  window.addEventListener('hashchange', () => { const id = location.hash.slice(1); if (id !== S.algo.id && ALGOS.some(a => a.id === id)) load(id); });
+  const h = (location.hash || '').slice(1);
+  load(ALGOS.some(a => a.id === h) ? h : 'reverse');
+}
+init();
+
+</script>
+</body>
+</html>
