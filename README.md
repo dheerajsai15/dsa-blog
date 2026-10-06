@@ -1,29 +1,30 @@
 # dsa.step()
 
-Data structures and algorithms, animated one step at a time next to the C++ that runs them.
+Data structures and algorithms, animated one step at a time next to the C++ that runs them. Topics follow the NeetCode 150 roadmap, with extra patterns from Hello Interview.
 
 Plain static HTML. No framework, no build step.
 
 ```
-index.html          landing page with a card per topic
-trees/index.html    tree algorithms (37 patterns)
-graphs/index.html   graph algorithms (20 patterns)
-lists/index.html    linked lists (18 patterns)
-dp/index.html       dynamic programming (17 problems, recursion → memo → table)
-hashing/index.html  arrays & hashing (11 problems)
-twopointers/index.html  two pointers (10 problems)
-window/index.html   sliding window (10 problems)
-stack/index.html    stack (9 problems)
+index.html              landing page with a card per topic
+hashing/index.html       arrays & hashing (11 problems)
+twopointers/index.html   two pointers (10 problems)
+window/index.html        sliding window (10 problems)
+stack/index.html         stack (9 problems)
 binarysearch/index.html  binary search (9 problems)
-heap/index.html     heap & priority queue (7 problems)
+lists/index.html         linked lists (18 patterns)
+trees/index.html         tree algorithms (37 patterns)
+heap/index.html          heap & priority queue (7 problems)
 backtracking/index.html  backtracking (10 problems)
-greedy/index.html   greedy (9 problems)
-intervals/index.html  intervals (8 problems)
-math/index.html     math & geometry (8 problems)
-shared/theme.css    colors, fonts, light/dark tokens
-shared/theme.js     saved theme + [data-theme-toggle] buttons
-shared/stepper.js   engine for the array-style pages: player, code panel, blocks, custom input
-shared/stepper.css  layout and block styles for those pages
+graphs/index.html        graph algorithms (20 patterns)
+dp/index.html            dynamic programming (17 problems, recursion → memo → table)
+greedy/index.html        greedy (9 problems)
+intervals/index.html     intervals (8 problems)
+math/index.html          math & geometry (8 problems)
+bits/index.html          bit manipulation (7 problems)
+shared/theme.css         colors, fonts, light/dark tokens
+shared/theme.js          saved theme + [data-theme-toggle] buttons
+shared/stepper.js        engine for the array-style pages: player, code panel, blocks, custom input
+shared/stepper.css       layout and block styles for those pages
 ```
 
 ## Run locally

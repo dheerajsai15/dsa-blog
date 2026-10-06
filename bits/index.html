@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bit manipulation, step by step</title>
+<link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+<script src="../shared/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/stepper.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true"><g font-family="monospace" font-size="9" font-weight="700" text-anchor="middle"><rect x="2" y="7" width="9" height="12" rx="2" fill="var(--panel)" stroke="var(--edge)" stroke-width="1.2"/><rect x="12.5" y="7" width="9" height="12" rx="2" fill="var(--wait-bg)" stroke="var(--wait)" stroke-width="1.2"/><rect x="23" y="7" width="9" height="12" rx="2" fill="var(--panel)" stroke="var(--edge)" stroke-width="1.2"/><rect x="33.5" y="7" width="9" height="12" rx="2" fill="var(--wait-bg)" stroke="var(--wait)" stroke-width="1.2"/><rect x="2" y="26" width="9" height="12" rx="2" fill="var(--cur)"/><rect x="12.5" y="26" width="9" height="12" rx="2" fill="var(--panel)" stroke="var(--edge)" stroke-width="1.2"/><rect x="23" y="26" width="9" height="12" rx="2" fill="var(--cur)"/><rect x="33.5" y="26" width="9" height="12" rx="2" fill="var(--panel)" stroke="var(--edge)" stroke-width="1.2"/><text x="6.5" y="16" fill="var(--ink)">0</text><text x="17" y="16" fill="var(--ink)">1</text><text x="27.5" y="16" fill="var(--ink)">0</text><text x="38" y="16" fill="var(--ink)">1</text><text x="6.5" y="35" fill="var(--on)">1</text><text x="17" y="35" fill="var(--ink)">0</text><text x="27.5" y="35" fill="var(--on)">1</text><text x="38" y="35" fill="var(--ink)">0</text></g></svg>
+      <div>
+        <h1>Bit manipulation, step by step</h1>
+        <p>7 interview patterns, each animated next to its C++ code. Press <kbd>Space</kbd> to play or pause, and <kbd>←</kbd> <kbd>→</kbd> to step. Every problem runs on your own input too.</p>
+      </div>
+    </div>
+    <nav class="topnav">
+      <a href="../index.html">← All topics</a>
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="Toggle dark mode">
+        <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+    </nav>
+  </header>
+  <div class="mobile-pick"><label for="algoSelect" class="sr">Problem</label><select id="algoSelect"></select></div>
+
+  <div class="layout">
+    <nav class="side" aria-label="Problems">
+      <input id="filter" type="search" placeholder="Filter, e.g. XOR or reverse" aria-label="Filter problems">
+      <div id="list"></div>
+    </nav>
+
+    <main id="main">
+      <section class="head">
+        <div class="cat" id="cat"></div>
+        <h2 id="title"></h2>
+        <p class="blurb" id="blurb"></p>
+        <div class="sample" id="sample">Sample input: <code id="sampleTree"></code></div>
+      </section>
+
+      <section class="work">
+        <div>
+          <div class="stage" id="stage"><div id="scene" aria-live="off"></div></div>
+          <div class="legend" id="legend"></div>
+
+          <div class="controls">
+            <div class="btns">
+              <button class="ib" id="first" aria-label="Go to first step" title="First step"><svg viewBox="0 0 16 16"><path d="M3 2h2v12H3zM14 2v12L6 8z"/></svg></button>
+              <button class="ib" id="prev" aria-label="Previous step" title="Previous step (←)"><svg viewBox="0 0 16 16"><path d="M12 2v12L3 8z"/></svg></button>
+              <button class="ib" id="play" aria-label="Play" data-state="play" title="Play or pause (Space)"><svg class="i-play" viewBox="0 0 16 16"><path d="M4 2v12l10-6z"/></svg><svg class="i-pause" viewBox="0 0 16 16"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg><span id="playText">Play</span></button>
+              <button class="ib" id="next" aria-label="Next step" title="Next step (→)"><svg viewBox="0 0 16 16"><path d="M4 2v12l9-6z"/></svg></button>
+              <button class="ib" id="last" aria-label="Go to last step" title="Last step"><svg viewBox="0 0 16 16"><path d="M11 2h2v12h-2zM2 2v12l8-6z"/></svg></button>
+            </div>
+            <div class="scrubwrap"><input type="range" id="scrub" min="0" max="0" value="0" aria-label="Step"><span id="counter"></span></div>
+            <label class="speed">Speed <input type="range" id="speed" min="0.5" max="3" step="0.25" value="1"><span id="speedVal">1×</span></label>
+          </div>
+
+          <p class="narr" id="narr" aria-live="polite"></p>
+          <div class="aux" id="aux"></div>
+
+          <form class="custom" id="custom">
+            <label>Try your own input</label>
+            <div id="params"></div>
+            <div class="crow">
+              <button class="tb" type="submit">Run on this input</button>
+              <button class="tb ghost" type="button" id="treeReset">Use the sample</button>
+            </div>
+            <p id="treeErr" role="alert"></p>
+          </form>
+        </div>
+
+        <div class="codebox">
+          <div class="codehead"><span><strong>C++</strong></span><button id="copy" type="button">Copy code</button></div>
+          <pre id="code"></pre>
+          <div class="nodedef">Bits are shown highest first, with the bit position above each cell. Most animations use 8-bit values so every bit fits on screen; the C++ is the real 32-bit solution.</div>
+        </div>
+      </section>
+
+      <section id="notes" aria-label="Interview notes"></section>
+    </main>
+  </div>
+</div>
+<script src="../shared/stepper.js"></script>
+<script>
+const { B } = Stepper, A = Stepper.add;
+const W = 8;
+const bitsOf = (v, w = W) => Array.from({ length: w }, (_, i) => (v >> (w - 1 - i)) & 1);
+const heads = (w = W) => Array.from({ length: w }, (_, i) => w - 1 - i);
+// A row of bits named after its value, e.g. "x = 6". st marks bit positions (0 = lowest bit).
+const bitRow = (name, v, st = {}, o = {}) => B.arr(name, bitsOf(v, o.w), { heads: heads(o.w), st: Object.fromEntries(Object.entries(st).map(([pos, c]) => [(o.w || W) - 1 - pos, c])), sm: true, key: o.key, hint: o.hint });
+const changed = (a, b, cls = 'cur') => { const st = {}; for (let i = 0; i < W; i++) if (((a >> i) & 1) !== ((b >> i) & 1)) st[i] = cls; return st; };
+const ones = (v, cls) => { const st = {}; for (let i = 0; i < W; i++) if ((v >> i) & 1) st[i] = cls; return st; };
+
+A({
+  id: 'single-number', cat: 'XOR', title: 'Single number', lc: 'LeetCode 136',
+  blurb: 'Every value appears twice except one. XOR everything: a ^ a = 0 and a ^ 0 = a, so the pairs cancel and the single value is left.',
+  params: [{ key: 'nums', label: 'nums (0..255)', type: 'ints', min: 0, max: 255, maxLen: 11, def: [4, 1, 2, 1, 2, 7, 4] }],
+  check: (p) => { const c = {}; p.nums.forEach(v => { c[v] = (c[v] || 0) + 1; }); const odd = Object.values(c).filter(x => x % 2).length; return odd !== 1 ? 'Every value should appear twice except exactly one.' : null; },
+  code: `
+int singleNumber(vector<int>& nums) {
+    int x = 0;
+    for (int v : nums) x ^= v;     //@xor   // pairs cancel: a ^ a = 0
+    return x;                      //@ret
+}`,
+  run(T, p) {
+    let x = 0;
+    p.nums.forEach((v, i) => {
+      const before = x; x ^= v;
+      T.step('xor', `x = ${before} ^ ${v} = ${x}. Bits where they differ become 1; bits they share become 0.`, [B.arr('nums', p.nums, { st: { [i]: 'cur' }, ptr: { i } }), bitRow(`v = ${v}`, v, ones(v, 'wait'), { key: 'v' }), bitRow(`x = ${x}`, x, changed(before, x), { key: 'x', hint: 'orange: flipped' })]);
+    });
+    T.out.push(x); T.step('ret', `Every paired value was XORed in twice and cancelled. x = ${x}.`, [B.arr('nums', p.nums, { st: Object.fromEntries(p.nums.map((v, i) => [i, v === x ? 'done' : 'dim'])) }), bitRow(`x = ${x}`, x, ones(x, 'done'), { key: 'x' })]);
+  },
+  leg: { wait: 'Set bit of v', dim: 'Cancelled by its pair' },
+  idea: 'XOR is associative and commutative, x ^ x = 0 and x ^ 0 = x. XORing the whole array therefore pairs up equal values wherever they are and leaves only the unpaired one, in O(1) memory.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'A hash set also works but uses O(n) space, which this problem explicitly asks you to avoid.',
+  vars: ['Missing number (below): XOR indices and values', 'Single number II (LC 137): count each bit mod 3', 'Single number III (LC 260): split by the lowest set bit of the XOR']
+});
+
+A({
+  id: 'missing-number', cat: 'XOR', title: 'Missing number', lc: 'LeetCode 268',
+  blurb: 'The array holds 0..n with one value missing. XOR all indices 0..n with all values: everything present cancels.',
+  params: [{ key: 'nums', label: 'nums (0..n, one missing)', type: 'ints', min: 0, max: 15, maxLen: 12, distinct: true, def: [3, 0, 1, 6, 4, 2] }],
+  check: (p) => p.nums.some(v => v > p.nums.length) ? `Values must be between 0 and n = ${p.nums.length}.` : null,
+  code: `
+int missingNumber(vector<int>& nums) {
+    int x = nums.size();                       // start with n: indices only go to n − 1
+    for (int i = 0; i < nums.size(); i++)
+        x ^= i ^ nums[i];                      //@xor
+    return x;                                  //@ret
+}`,
+  run(T, p) {
+    const a = p.nums, n = a.length; let x = n;
+    T.step(null, `Start with x = n = ${n}. Each index 0..${n - 1} and each value will be XORed in once.`, [B.arr('nums', a), bitRow(`x = ${x}`, x, {}, { key: 'x' })]);
+    a.forEach((v, i) => { const before = x; x ^= i ^ v; T.step('xor', `x ^= index ${i} ^ value ${v}: ${before} → ${x}.`, [B.arr('nums', a, { st: { [i]: 'cur' }, ptr: { i } }), bitRow(`x = ${x}`, x, changed(before, x), { key: 'x' })]); });
+    T.out.push(x); T.step('ret', `Every number in 0..${n} that appears in the array was XORed twice (once as an index or n, once as a value). Only ${x} was XORed once.`, [B.arr('nums', a), bitRow(`x = ${x}`, x, ones(x, 'done'), { key: 'x' })]);
+  },
+  idea: 'The indices 0..n−1 plus n cover every number 0..n exactly once; the values cover all of them except the missing one. XORing both sets cancels every number that appears in both, leaving the missing value. The sum formula n(n + 1)/2 − sum works too.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'Remember the extra n (it has no index of its own). The sum version can overflow for large n in other languages; XOR cannot.',
+  vars: ['Sum formula: n(n+1)/2 − sum(nums)', 'Find all numbers disappeared in an array (LC 448): index marking', 'First missing positive (LC 41): cyclic placement']
+});
+
+A({
+  id: 'one-bits', cat: 'Counting bits', title: 'Number of 1 bits', lc: 'LeetCode 191',
+  blurb: 'n & (n − 1) clears the lowest set bit. Count how many times you can do that before n reaches 0.',
+  params: [{ key: 'n', label: 'n (0..255)', type: 'int', min: 0, max: 255, def: 172 }],
+  code: `
+int hammingWeight(uint32_t n) {
+    int count = 0;
+    while (n) {
+        n &= n - 1;                //@drop   // clears the lowest set bit
+        count++;
+    }
+    return count;                  //@ret
+}`,
+  run(T, p) {
+    let n = p.n, count = 0;
+    T.step(null, `n = ${n}. Subtracting 1 flips the lowest set bit to 0 and every bit below it to 1; AND-ing with n then clears exactly that one bit.`, [bitRow(`n = ${n}`, n, ones(n, 'wait'), { key: 'n' }), B.vars([['count', 0]])]);
+    while (n) {
+      const low = n & -n, before = n; n &= n - 1; count++;
+      T.step('drop', `n − 1 = ${before - 1}; ${before} & ${before - 1} = ${n}. The lowest set bit (value ${low}) is gone. count = ${count}.`, [bitRow(`n = ${before}`, before, { ...ones(before, 'wait'), [Math.log2(low)]: 'bad' }, { key: 'before' }), bitRow(`n − 1 = ${before - 1}`, before - 1, changed(before, before - 1, 'in'), { key: 'minus' }), bitRow(`n & (n − 1) = ${n}`, n, ones(n, 'wait'), { key: 'n' }), B.vars([['count', count, 'done']])]);
+    }
+    T.out.push(count); T.step('ret', `n is 0 after ${count} steps: ${p.n} has ${count} set bits.`, [bitRow(`n = ${p.n}`, p.n, ones(p.n, 'done'), { key: 'n' }), B.vars([['count', count, 'done']])]);
+  },
+  leg: { wait: 'Set bit', bad: 'Lowest set bit (cleared next)', in: 'Flipped by − 1' },
+  idea: 'n − 1 borrows from the lowest set bit: that bit becomes 0 and all zeros below it become 1. So n & (n − 1) differs from n only in that one bit. The loop runs once per set bit instead of once per bit position.',
+  time: 'O(number of set bits)', space: 'O(1)',
+  trap: 'Shifting a signed negative int right keeps the sign bit and never reaches 0; use an unsigned type (the problem gives uint32_t).',
+  vars: ['Power of two (LC 231): n > 0 && (n & (n − 1)) == 0', 'Counting bits (next): reuse earlier answers', 'Hamming distance (LC 461): popcount(x ^ y)']
+});
+
+A({
+  id: 'counting-bits', cat: 'Counting bits', title: 'Counting bits', lc: 'LeetCode 338',
+  blurb: 'The bits of i are the bits of i >> 1 plus its last bit. So dp[i] = dp[i >> 1] + (i & 1), a DP over earlier answers.',
+  params: [{ key: 'n', label: 'n', type: 'int', min: 1, max: 16, def: 10 }],
+  code: `
+vector<int> countBits(int n) {
+    vector<int> dp(n + 1, 0);
+    for (int i = 1; i <= n; i++)
+        dp[i] = dp[i >> 1] + (i & 1);   //@fill   // i without its last bit, plus that bit
+    return dp;
+}`,
+  run(T, p) {
+    const n = p.n, dp = Array(n + 1).fill(null); dp[0] = 0;
+    T.step(null, 'dp[0] = 0: zero has no set bits.', [B.arr('dp', [...dp], { st: { 0: 'done' } })]);
+    for (let i = 1; i <= n; i++) {
+      dp[i] = dp[i >> 1] + (i & 1);
+      T.step('fill', `${i} is ${i.toString(2)} in binary. Dropping its last bit gives ${i >> 1} (${(i >> 1).toString(2) || '0'}), which has dp = ${dp[i >> 1]} ones; the last bit adds ${i & 1}. dp[${i}] = ${dp[i]}.`, [B.arr('dp', [...dp], { st: { [i]: 'cur', [i >> 1]: 'wait' }, ptr: { i } }), bitRow(`i = ${i}`, i, { ...ones(i, 'wait'), 0: 'cur' }, { key: 'i', w: 5 })]);
+    }
+    T.out.push(`[${dp.join(', ')}]`);
+    T.step(null, `All counts for 0..${n} in one pass.`, [B.arr('dp', dp, { st: Object.fromEntries(dp.map((_, i) => [i, 'done'])) })]);
+  },
+  leg: { wait: 'dp[i >> 1], already known', cur: 'Last bit / current' },
+  idea: 'i >> 1 is i with its lowest bit removed, and it is smaller than i, so its count is already in the table. Adding i & 1 restores the removed bit. Each entry costs O(1), so the whole table is O(n) without calling popcount.',
+  time: 'O(n)', space: 'O(n) for the output',
+  trap: 'dp[i] = dp[i & (i − 1)] + 1 is another valid recurrence: drop the lowest set bit instead of the last bit.',
+  vars: ['Number of 1 bits (previous): one number at a time', 'Hello Interview lists this under dynamic programming', 'Total Hamming distance (LC 477): count per bit position']
+});
+
+const RW = 8;
+A({
+  id: 'reverse-bits', cat: 'Shifting', title: 'Reverse bits', lc: 'LeetCode 190',
+  blurb: 'Peel bits off the bottom of n and push them onto the bottom of res. The first bit taken ends up highest.',
+  params: [{ key: 'n', label: 'n (8-bit: 0..255)', type: 'int', min: 0, max: 255, def: 46 }],
+  code: `
+uint32_t reverseBits(uint32_t n) {
+    uint32_t res = 0;
+    for (int i = 0; i < 32; i++) {          // the animation uses 8 bits
+        res = (res << 1) | (n & 1);         //@take   // move n's lowest bit onto res
+        n >>= 1;                            //@shift
+    }
+    return res;
+}`,
+  run(T, p) {
+    let n = p.n, res = 0;
+    T.step(null, `n = ${p.n} = ${bitsOf(p.n, RW).join('')}. The animation uses ${RW} bits; LeetCode's version is the same loop run 32 times.`, [bitRow(`n = ${n}`, n, {}, { key: 'n', w: RW }), bitRow(`res = ${res}`, res, {}, { key: 'res', w: RW })]);
+    for (let i = 0; i < RW; i++) {
+      const b = n & 1; res = ((res << 1) | b) & 255;
+      T.step('take', `Take n's lowest bit (${b}) and append it to res: res = (res << 1) | ${b} = ${res}.`, [bitRow(`n = ${n}`, n, { 0: 'cur' }, { key: 'n', w: RW }), bitRow(`res = ${res}`, res, { 0: 'cur' }, { key: 'res', w: RW })]);
+      n >>= 1;
+      T.step('shift', `Shift n right to expose the next bit: n = ${n}.`, [bitRow(`n = ${n}`, n, {}, { key: 'n', w: RW }), bitRow(`res = ${res}`, res, {}, { key: 'res', w: RW })]);
+    }
+    T.out.push(`${res} (${bitsOf(res, RW).join('')})`);
+    T.step(null, `${bitsOf(p.n, RW).join('')} reversed is ${bitsOf(res, RW).join('')} = ${res}.`, [bitRow(`n = ${p.n}`, p.n, {}, { key: 'n', w: RW }), bitRow(`res = ${res}`, res, ones(res, 'done'), { key: 'res', w: RW })]);
+  },
+  idea: 'Reading n from its lowest bit upward and writing res from its lowest bit while shifting res left makes the first bit read travel all the way to the top. After W iterations, bit i of n sits at bit W − 1 − i of res.',
+  time: 'O(32)', space: 'O(1)',
+  trap: 'Loop all 32 times even when n becomes 0 early: the remaining shifts are what move the earlier bits into place.',
+  vars: ['Divide and conquer: swap halves, then quarters, … with masks (5 steps)', 'Reverse integer (below): the same idea with base 10', 'Cache reversed bytes for repeated calls']
+});
+
+A({
+  id: 'sum-two', cat: 'Shifting', title: 'Sum of two integers (no +)', lc: 'LeetCode 371',
+  blurb: 'a ^ b adds without carrying; (a & b) << 1 is the carry. Repeat with those two until there is no carry left.',
+  params: [{ key: 'a', label: 'a', type: 'int', min: 0, max: 120, def: 45 }, { key: 'b', label: 'b', type: 'int', min: 0, max: 120, def: 27 }],
+  code: `
+int getSum(int a, int b) {
+    while (b != 0) {
+        int carry = (a & b) << 1;          //@carry   // positions where both are 1
+        a = a ^ b;                         //@xor     // add without carrying
+        b = carry;
+    }
+    return a;                              //@ret
+}`,
+  run(T, p) {
+    let a = p.a, b = p.b;
+    T.step(null, `Add ${a} + ${b} using only bit operations.`, [bitRow(`a = ${a}`, a, {}, { key: 'a' }), bitRow(`b = ${b}`, b, {}, { key: 'b' })]);
+    while (b) {
+      const carry = (a & b) << 1;
+      T.step('carry', `Both a and b have a 1 at the orange positions; each produces a carry into the next position: carry = (a & b) << 1 = ${carry}.`, [bitRow(`a = ${a}`, a, ones(a & b, 'cur'), { key: 'a' }), bitRow(`b = ${b}`, b, ones(a & b, 'cur'), { key: 'b' }), bitRow(`carry = ${carry}`, carry, ones(carry, 'wait'), { key: 'c' })]);
+      const x = a ^ b;
+      T.step('xor', `a ^ b = ${x} is the sum ignoring carries. Now add the carry: a = ${x}, b = ${carry}.`, [bitRow(`a = ${x}`, x, ones(x, 'done'), { key: 'a' }), bitRow(`b = ${carry}`, carry, ones(carry, 'wait'), { key: 'b' })]);
+      a = x; b = carry;
+    }
+    T.out.push(a); T.step('ret', `No carry left: ${p.a} + ${p.b} = ${a}.`, [bitRow(`a = ${a}`, a, ones(a, 'done'), { key: 'a' }), bitRow(`b = ${b}`, b, {}, { key: 'b' })]);
+  },
+  leg: { cur: 'Both 1: makes a carry', wait: 'Carry bit', done: 'Partial sum' },
+  idea: 'One-bit addition is: sum bit = a XOR b, carry = a AND b, shifted one place left. Applying that to every bit at once gives a partial sum and a carry word; adding them is the same problem again. The carry moves left each round, so it dies out after at most 32 rounds.',
+  time: 'O(32)', space: 'O(1)',
+  trap: 'In C++ shifting a negative int left is undefined before C++20; cast the carry to unsigned for negative inputs. In Python, mask to 32 bits.',
+  vars: ['Add binary (LC 67): the same carries on a string', 'Multiply with shifts and adds', 'Divide two integers (LC 29): subtract shifted divisors']
+});
+
+A({
+  id: 'reverse-int', cat: 'Shifting', title: 'Reverse integer', lc: 'LeetCode 7',
+  blurb: 'Pop the last digit with % 10, push it onto res with × 10. Check for 32-bit overflow before the multiply.',
+  params: [{ key: 'x', label: 'x (32-bit)', type: 'int', min: -2147483648, max: 2147483647, def: -12340 }],
+  code: `
+int reverse(int x) {
+    int res = 0;
+    while (x != 0) {
+        int d = x % 10;                                          //@digit  // keeps x's sign
+        if (res > INT_MAX / 10 || res < INT_MIN / 10) return 0;  //@overflow
+        res = res * 10 + d;                                      //@push
+        x /= 10;
+    }
+    return res;                                                  //@ret
+}`,
+  run(T, p) {
+    let x = p.x, res = 0; const MAX = 2147483647, MIN = -2147483648;
+    const sc = (extra = {}) => [B.arr('x digits', String(Math.abs(x) || '').split('').map(Number).concat(x ? [] : []), { idx: false, st: extra, hint: x < 0 ? 'negative' : '' }), B.vars([['x', x], ['res', res]])];
+    while (x !== 0) {
+      const d = x % 10, ds = String(Math.abs(x)).length;
+      T.step('digit', `Pop the last digit: ${x} % 10 = ${d}${d < 0 ? ' (C++ keeps the sign)' : ''}.`, sc({ [ds - 1]: 'cur' }));
+      if (res > Math.trunc(MAX / 10) || res < Math.trunc(MIN / 10)) { T.out.push(0); T.step('overflow', `res = ${res} is beyond INT_MAX / 10 or INT_MIN / 10: multiplying by 10 would overflow 32 bits. Return 0.`, sc()); return; }
+      res = res * 10 + d; x = Math.trunc(x / 10);
+      T.step('push', `res = res × 10 + ${d} = ${res}. x = ${x}.`, sc());
+    }
+    T.out.push(res); T.step('ret', `Reversed: ${res}.`, [B.vars([['res', res, 'done']])]);
+  },
+  idea: 'Digits come off the right end of x with % 10 and / 10, and go onto the right end of res with × 10 + d, which reverses their order. Trailing zeros of x become leading zeros of res and simply disappear. The overflow check before multiplying keeps everything inside 32 bits, as the problem requires.',
+  time: 'O(log |x|)', space: 'O(1)',
+  trap: 'Checking for overflow after the multiply is too late in C++ (signed overflow is undefined). Compare against INT_MAX / 10 first.',
+  vars: ['Palindrome number (LC 9): reverse half of the digits', 'String to integer (atoi, LC 8): the same overflow guard', 'Reverse bits: the same pop/push loop in base 2']
+});
+
+Stepper.start('single-number');
+</script>
+</body>
+</html>
