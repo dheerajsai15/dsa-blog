@@ -326,45 +326,51 @@ int maxArea(vector<int>& h) {
 });
 
 A({
-  id: 'trap', cat: 'Opposite ends', title: 'Trapping rain water', lc: 'LeetCode 42',
-  blurb: 'Water above a bar is set by the lower of the tallest walls on each side. Process whichever side has the lower wall.',
-  params: [{ key: 'h', label: 'heights', type: 'ints', min: 0, max: 9, minLen: 1, maxLen: 14, def: [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1] }],
+  id: 'trap', cat: 'Opposite ends', title: 'Trapping rain water', lc: 'LeetCode 42 · Hello Interview',
+  blurb: 'Track the tallest bar each pointer has seen. Whichever side has the smaller max is the bottleneck, so that side can be settled and moved inward.',
+  params: [{ key: 'h', label: 'heights', type: 'ints', min: 0, max: 9, minLen: 1, maxLen: 14, def: [3, 4, 1, 2, 2, 5, 1, 0, 2] }],
   code: `
 int trap(vector<int>& h) {
-    int l = 0, r = h.size() - 1, lmax = 0, rmax = 0, water = 0;
+    if (h.empty()) return 0;
+    int l = 0, r = h.size() - 1;
+    int leftMax = h[l], rightMax = h[r], count = 0;   //@init
     while (l < r) {
-        if (h[l] < h[r]) {                    // the right side has a wall at least this tall
-            lmax = max(lmax, h[l]);
-            water += lmax - h[l];             //@left
+        if (leftMax < rightMax) {             //@pickL   // left side is the bottleneck
             l++;
-        } else {
-            rmax = max(rmax, h[r]);
-            water += rmax - h[r];             //@right
+            if (h[l] >= leftMax) leftMax = h[l];          //@maxL
+            else count += leftMax - h[l];                 //@waterL
+        } else {                              //@pickR   // right side is the bottleneck
             r--;
+            if (h[r] >= rightMax) rightMax = h[r];        //@maxR
+            else count += rightMax - h[r];                //@waterR
         }
     }
-    return water;                             //@ret
+    return count;                             //@ret
 }`,
   run(T, p) {
-    const h = p.h, n = h.length, w = Array(n).fill(0); let l = 0, r = n - 1, lmax = 0, rmax = 0, water = 0; const done = {};
-    const sc = (st) => [B.bars('height', h, { st: { ...done, ...st }, water: [...w], ptr: { l, r } }), B.vars([['lmax', lmax], ['rmax', rmax], ['water', water]])];
+    const h = p.h, n = h.length, w = Array(n).fill(0); let l = 0, r = n - 1, lm = h[0], rm = h[n - 1], lmi = 0, rmi = n - 1, count = 0; const done = { 0: 'done', [n - 1]: 'done' };
+    const sc = (st = {}) => [B.bars('height', h, { st: { ...done, [lmi]: 'path', [rmi]: 'path', ...st }, water: [...w], ptr: { l, r } }), B.vars([['leftMax', lm, lm < rm ? 'cur' : ''], ['rightMax', rm, lm < rm ? '' : 'cur'], ['count', count]])];
+    T.step('init', `l and r start at the ends. leftMax = ${lm} and rightMax = ${rm}: the tallest bars each side has seen (purple). The end bars can't hold water.`, sc());
     while (l < r) {
-      if (h[l] < h[r]) {
-        lmax = Math.max(lmax, h[l]); w[l] = lmax - h[l]; water += w[l];
-        T.step('left', `h[${l}] = ${h[l]} < h[${r}] = ${h[r]}, so the right side is guaranteed a wall of at least ${h[r]}. Only lmax (${lmax}) limits bar ${l}: it holds ${lmax} − ${h[l]} = ${w[l]}.`, sc({ [l]: 'cur' }));
-        done[l] = 'done'; l++;
+      if (lm < rm) {
+        T.step('pickL', `leftMax ${lm} < rightMax ${rm}. Somewhere on the right there is a wall of at least ${rm}, so the next bar on the left is limited only by leftMax. Move l.`, sc());
+        l++;
+        if (h[l] >= lm) { lm = h[l]; lmi = l; done[l] = 'done'; T.step('maxL', `h[${l}] = ${h[l]} ≥ leftMax: no water here, and it becomes the new leftMax.`, sc({ [l]: 'cur' })); }
+        else { w[l] = lm - h[l]; count += w[l]; done[l] = 'done'; T.step('waterL', `h[${l}] = ${h[l]} < leftMax ${lm}: it holds ${lm} − ${h[l]} = ${w[l]}. count = ${count}.`, sc({ [l]: 'cur' })); }
       } else {
-        rmax = Math.max(rmax, h[r]); w[r] = rmax - h[r]; water += w[r];
-        T.step('right', `h[${r}] = ${h[r]} ≤ h[${l}] = ${h[l]}, so the left side is the taller one. Only rmax (${rmax}) limits bar ${r}: it holds ${rmax} − ${h[r]} = ${w[r]}.`, sc({ [r]: 'cur' }));
-        done[r] = 'done'; r--;
+        T.step('pickR', `rightMax ${rm} ≤ leftMax ${lm}. A wall of at least ${lm} exists on the left, so the next bar on the right is limited only by rightMax. Move r.`, sc());
+        r--;
+        if (h[r] >= rm) { rm = h[r]; rmi = r; done[r] = 'done'; T.step('maxR', `h[${r}] = ${h[r]} ≥ rightMax: no water here, and it becomes the new rightMax.`, sc({ [r]: 'cur' })); }
+        else { w[r] = rm - h[r]; count += w[r]; done[r] = 'done'; T.step('waterR', `h[${r}] = ${h[r]} < rightMax ${rm}: it holds ${rm} − ${h[r]} = ${w[r]}. count = ${count}.`, sc({ [r]: 'cur' })); }
       }
     }
-    T.out.push(water); T.step('ret', `Total trapped water: ${water}.`, sc({}));
+    T.out.push(count); T.step('ret', `The pointers met: every bar has been settled. Total water: ${count}.`, sc());
   },
-  idea: 'Water at i is min(tallest to the left, tallest to the right) − h[i]. If h[l] < h[r], the right side is known to have a wall at least h[r] > h[l], so the minimum is decided by lmax alone. That lets the lower side be finalized and moved inward, with O(1) space.',
+  leg: { path: 'Current leftMax / rightMax bar', done: 'Settled' },
+  idea: 'Water above a bar is min(tallest on its left, tallest on its right) − its height. If leftMax < rightMax, the right side is already known to have a wall at least rightMax > leftMax, so for the next bar on the left the minimum is decided by leftMax alone; settle it and move on. The mirror argument applies when rightMax is smaller. Every index is visited once.',
   time: 'O(n)', space: 'O(1)',
-  trap: 'Two prefix arrays (leftMax and rightMax) are easier to explain first and also O(n). A monotonic stack solves it by filling layer by layer.',
-  vars: ['Prefix/suffix max arrays: O(n) space, same formula', 'Monotonic stack version (Stack page idea)', 'Trapping rain water II (LC 407): 2D, use a min-heap from the border', 'Container with most water: only two walls matter']
+  trap: 'Compare the two maxima, not the two current heights; the maxima are what bound the water. Start them at the end bars, and either add water or raise the max, never both.',
+  vars: ['Prefix/suffix max arrays: O(n) space, same formula', 'Comparing h[l] with h[r] instead also works (the classic LeetCode write-up)', 'Monotonic stack version: fill layer by layer', 'Trapping rain water II (LC 407): 2D, use a min-heap from the border', 'Container with most water: only two walls matter']
 });
 
 /* ================= Read and write pointers ================= */
