@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Greedy, step by step</title>
+<link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+<script src="../shared/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/stepper.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true"><g fill="var(--panel)" stroke="var(--edge)" stroke-width="1.4"><rect x="2" y="24" width="8" height="10" rx="2"/><rect x="12" y="24" width="8" height="10" rx="2"/><rect x="26" y="24" width="8" height="10" rx="2"/><rect x="36" y="24" width="8" height="10" rx="2"/></g><rect x="2" y="24" width="8" height="10" rx="2" fill="var(--cur)"/><path d="M6 21C10 8 26 6 30 21" fill="none" stroke="var(--done)" stroke-width="2.2" stroke-linecap="round"/><path d="M26.5 17.5 30 21.5l3-4.5" fill="none" stroke="var(--done)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 39h28" stroke="var(--done)" stroke-width="2" stroke-dasharray="3 2"/></svg>
+      <div>
+        <h1>Greedy, step by step</h1>
+        <p>9 interview patterns, each animated next to its C++ code. Press <kbd>Space</kbd> to play or pause, and <kbd>←</kbd> <kbd>→</kbd> to step. Every problem runs on your own input too.</p>
+      </div>
+    </div>
+    <nav class="topnav">
+      <a href="../index.html">← All topics</a>
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="Toggle dark mode">
+        <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+    </nav>
+  </header>
+  <div class="mobile-pick"><label for="algoSelect" class="sr">Problem</label><select id="algoSelect"></select></div>
+
+  <div class="layout">
+    <nav class="side" aria-label="Problems">
+      <input id="filter" type="search" placeholder="Filter, e.g. jump or gas" aria-label="Filter problems">
+      <div id="list"></div>
+    </nav>
+
+    <main id="main">
+      <section class="head">
+        <div class="cat" id="cat"></div>
+        <h2 id="title"></h2>
+        <p class="blurb" id="blurb"></p>
+        <div class="sample" id="sample">Sample input: <code id="sampleTree"></code></div>
+      </section>
+
+      <section class="work">
+        <div>
+          <div class="stage" id="stage"><div id="scene" aria-live="off"></div></div>
+          <div class="legend" id="legend"></div>
+
+          <div class="controls">
+            <div class="btns">
+              <button class="ib" id="first" aria-label="Go to first step" title="First step"><svg viewBox="0 0 16 16"><path d="M3 2h2v12H3zM14 2v12L6 8z"/></svg></button>
+              <button class="ib" id="prev" aria-label="Previous step" title="Previous step (←)"><svg viewBox="0 0 16 16"><path d="M12 2v12L3 8z"/></svg></button>
+              <button class="ib" id="play" aria-label="Play" data-state="play" title="Play or pause (Space)"><svg class="i-play" viewBox="0 0 16 16"><path d="M4 2v12l10-6z"/></svg><svg class="i-pause" viewBox="0 0 16 16"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg><span id="playText">Play</span></button>
+              <button class="ib" id="next" aria-label="Next step" title="Next step (→)"><svg viewBox="0 0 16 16"><path d="M4 2v12l9-6z"/></svg></button>
+              <button class="ib" id="last" aria-label="Go to last step" title="Last step"><svg viewBox="0 0 16 16"><path d="M11 2h2v12h-2zM2 2v12l8-6z"/></svg></button>
+            </div>
+            <div class="scrubwrap"><input type="range" id="scrub" min="0" max="0" value="0" aria-label="Step"><span id="counter"></span></div>
+            <label class="speed">Speed <input type="range" id="speed" min="0.5" max="3" step="0.25" value="1"><span id="speedVal">1×</span></label>
+          </div>
+
+          <p class="narr" id="narr" aria-live="polite"></p>
+          <div class="aux" id="aux"></div>
+
+          <form class="custom" id="custom">
+            <label>Try your own input</label>
+            <div id="params"></div>
+            <div class="crow">
+              <button class="tb" type="submit">Run on this input</button>
+              <button class="tb ghost" type="button" id="treeReset">Use the sample</button>
+            </div>
+            <p id="treeErr" role="alert"></p>
+          </form>
+        </div>
+
+        <div class="codebox">
+          <div class="codehead"><span><strong>C++</strong></span><button id="copy" type="button">Copy code</button></div>
+          <pre id="code"></pre>
+          <div class="nodedef">Each greedy step commits to the locally best choice. The notes explain why that choice can never be worse than the alternatives, which is the part interviewers ask about.</div>
+        </div>
+      </section>
+
+      <section id="notes" aria-label="Interview notes"></section>
+    </main>
+  </div>
+</div>
+<script src="../shared/stepper.js"></script>
+<script>
+const { B } = Stepper, A = Stepper.add;
+const fill = (from, to, cls, st = {}) => { for (let k = from; k <= to; k++) st[k] = cls; return st; };
+
+/* ================= Running state ================= */
+A({
+  id: 'max-subarray', cat: 'Running state', title: 'Maximum subarray (Kadane)', lc: 'LeetCode 53',
+  blurb: 'Carry a running sum. The moment it goes negative it can only hurt what follows, so drop it and start fresh.',
+  params: [{ key: 'nums', label: 'nums', type: 'ints', min: -20, max: 20, maxLen: 12, def: [-2, 1, -3, 4, -1, 2, 1, -5, 4] }],
+  code: `
+int maxSubArray(vector<int>& nums) {
+    int cur = 0, best = INT_MIN;
+    for (int x : nums) {
+        if (cur < 0) cur = 0;                  //@reset   // a negative prefix only hurts
+        cur += x;                              //@add
+        best = max(best, cur);                 //@best
+    }
+    return best;
+}`,
+  run(T, p) {
+    const a = p.nums; let cur = 0, best = -Infinity, s = 0, bl = 0, br = 0;
+    const sc = (i, wc, extra = []) => [B.arr('nums', a, { win: [s, i, wc], ptr: { i } }), B.vars([['cur', cur, cur < 0 ? 'bad' : ''], ['best', best === -Infinity ? '–' : best, 'done'], ...extra])];
+    a.forEach((x, i) => {
+      if (cur < 0) { T.step('reset', `The running sum is ${cur} < 0. Any subarray continuing it would be better off without it: restart at index ${i}.`, sc(i - 1, 'bad')); cur = 0; s = i; }
+      cur += x; const better = cur > best; if (better) { best = cur; bl = s; br = i; }
+      T.step(better ? 'best' : 'add', `Add ${x}: cur = ${cur}.${better ? ' New best.' : ''}`, sc(i, better ? 'done' : ''));
+    });
+    T.out.push(best);
+    T.step(null, `Best subarray: [${bl}..${br}] with sum ${best}.`, [B.arr('nums', a, { win: [bl, br, 'done'] }), B.vars([['best', best, 'done']])]);
+  },
+  idea: 'The greedy choice: a prefix with a negative sum never helps any subarray that extends it, so discard it. What remains is "best sum of a subarray ending here", updated in O(1) per element. This is the same recurrence as the DP version.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'Initialize best to the first element (or INT_MIN), not 0, so an all-negative array returns its largest element.',
+  vars: ['Maximum product subarray (LC 152): keep both max and min', 'Maximum sum circular subarray (LC 918): total − minimum subarray', 'Best time to buy and sell stock: Kadane on daily differences']
+});
+
+A({
+  id: 'stock-ii', cat: 'Running state', title: 'Best time to buy and sell stock II', lc: 'LeetCode 122',
+  blurb: 'With unlimited transactions, collect every upward step. Any longer trade is just a sum of daily rises.',
+  params: [{ key: 'prices', label: 'prices', type: 'ints', min: 0, max: 12, maxLen: 12, def: [7, 1, 5, 3, 6, 4, 8, 9, 2] }],
+  code: `
+int maxProfit(vector<int>& prices) {
+    int profit = 0;
+    for (int i = 1; i < prices.size(); i++)
+        if (prices[i] > prices[i - 1])
+            profit += prices[i] - prices[i - 1];   //@rise
+    return profit;                                 //@ret
+}`,
+  run(T, p) {
+    const a = p.prices; let profit = 0; const got = {};
+    for (let i = 1; i < a.length; i++) {
+      if (a[i] > a[i - 1]) { profit += a[i] - a[i - 1]; got[i] = got[i - 1] = 'done'; T.step('rise', `Day ${i - 1} → ${i}: ${a[i - 1]} → ${a[i]} rises by ${a[i] - a[i - 1]}. Take it: profit = ${profit}.`, [B.bars('price', a, { st: { ...got, [i - 1]: 'cur', [i]: 'cur' }, ptr: { i } }), B.vars([['profit', profit, 'done']])]); }
+      else T.step('rise', `Day ${i - 1} → ${i}: ${a[i - 1]} → ${a[i]} does not rise. Skip it (stay out of the market).`, [B.bars('price', a, { st: { ...got, [i]: 'dim' }, ptr: { i } }), B.vars([['profit', profit]])]);
+    }
+    T.out.push(profit); T.step('ret', `Total profit: ${profit}.`, [B.bars('price', a, { st: got }), B.vars([['profit', profit, 'done']])]);
+  },
+  leg: { done: 'Part of a collected rise' },
+  idea: 'Buying at a low and selling at a later high earns exactly the sum of the daily increases in between, and skipping a decrease never costs anything. So the maximum is the sum of all positive day-to-day differences.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'This only works because transactions are unlimited and free. With a fee, a cooldown or at most k trades, use the DP state machine (DP page).',
+  vars: ['Best time I (Sliding window page): one transaction', 'With transaction fee (LC 714) / cooldown (LC 309): DP states', 'Best time III / IV (LC 123, 188): limited transactions']
+});
+
+A({
+  id: 'gas-station', cat: 'Running state', title: 'Gas station', lc: 'LeetCode 134',
+  blurb: 'If the tank goes negative between start and i, no station in that stretch can be the start. Restart at i + 1.',
+  params: [{ key: 'gas', label: 'gas', type: 'ints', min: 0, max: 9, minLen: 1, maxLen: 9, def: [1, 2, 3, 4, 5] }, { key: 'cost', label: 'cost', type: 'ints', min: 0, max: 9, minLen: 1, maxLen: 9, def: [3, 4, 5, 1, 2] }],
+  check: (p) => p.gas.length !== p.cost.length ? 'gas and cost need the same length.' : null,
+  code: `
+int canCompleteCircuit(vector<int>& gas, vector<int>& cost) {
+    int total = 0, tank = 0, start = 0;
+    for (int i = 0; i < gas.size(); i++) {
+        int diff = gas[i] - cost[i];
+        total += diff; tank += diff;                  //@add
+        if (tank < 0) { start = i + 1; tank = 0; }    //@reset  // no start in start..i works
+    }
+    return total < 0 ? -1 : start;                    //@ret
+}`,
+  run(T, p) {
+    const n = p.gas.length, diff = p.gas.map((g, i) => g - p.cost[i]); let total = 0, tank = 0, start = 0;
+    const sc = (i, wc) => [B.arr('gas', p.gas), B.arr('cost', p.cost, { idx: false }), B.arr('gas − cost', diff, { idx: false, win: i == null || start > i ? null : [start, i, wc], st: Object.fromEntries(diff.map((d, k) => [k, d < 0 ? 'bad' : ''])), ptr: i == null ? { start: Math.min(start, n - 1) } : { start: Math.min(start, n), i }, pc: { start: 'done', i: 'cur' } }), B.vars([['tank', tank, tank < 0 ? 'bad' : ''], ['total', total]])];
+    for (let i = 0; i < n; i++) {
+      total += diff[i]; tank += diff[i];
+      if (tank < 0) {
+        T.step('add', `At station ${i}: tank = ${tank} < 0. Starting at ${start} fails here.`, sc(i, 'bad'));
+        T.step('reset', `Every station from ${start} to ${i} reaches i with tank ≤ what start had, so all of them fail too. Restart at ${i + 1}.`, sc(i, 'bad')); start = i + 1; tank = 0;
+      } else T.step('add', `At station ${i}: gain ${diff[i]}, tank = ${tank}.`, sc(i, ''));
+    }
+    const ans = total < 0 ? -1 : start; T.out.push(ans);
+    T.step('ret', total < 0 ? `Total gas − cost = ${total} < 0: no start can finish the loop. Return −1.` : `Total ${total} ≥ 0, so the circuit is possible, and ${start} is the only start never ruled out.`, sc(null));
+  },
+  leg: { bad: 'Net loss / failing stretch' },
+  idea: 'Two facts. If the total gas is at least the total cost, some start works. And if starting at s runs dry at i, then every station between s and i also runs dry by i (it arrives with no more gas than s did). So one pass that restarts after each failure finds the start.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'Don\'t simulate a full loop from every start (O(n²)). The single pass relies on checking total < 0 separately.',
+  vars: ['Maximum subarray: the same "drop a losing prefix"', 'Minimum number of refueling stops (LC 871): greedy with a max-heap', 'Jump game: the reach version of this argument']
+});
+
+/* ================= Reach ================= */
+A({
+  id: 'jump-game', cat: 'Reach', title: 'Jump game', lc: 'LeetCode 55',
+  blurb: 'Track the farthest index reachable so far. If you ever stand beyond it, you are stuck.',
+  params: [{ key: 'nums', label: 'max jump at each index', type: 'ints', min: 0, max: 9, maxLen: 12, def: [2, 3, 1, 1, 4, 2, 0, 1] }],
+  code: `
+bool canJump(vector<int>& nums) {
+    int reach = 0;                              // farthest index reachable so far
+    for (int i = 0; i < nums.size(); i++) {
+        if (i > reach) return false;            //@stuck
+        reach = max(reach, i + nums[i]);        //@reach
+    }
+    return true;                                //@ret
+}`,
+  run(T, p) {
+    const a = p.nums, n = a.length; let reach = 0;
+    const sc = (i, wc, st = {}) => [B.arr('nums', a, { win: [0, Math.min(reach, n - 1), wc], st: { ...fill(reach + 1, n - 1, 'dim'), ...st }, ptr: { i } }), B.vars([['reach', reach, reach >= n - 1 ? 'done' : '']])];
+    for (let i = 0; i < n; i++) {
+      if (i > reach) { T.out.push('false'); T.step('stuck', `Index ${i} is beyond the farthest reachable index ${reach}. Stuck: return false.`, sc(i, 'bad', { [i]: 'bad' })); return; }
+      const nr = Math.max(reach, i + a[i]);
+      T.step('reach', `From ${i} you can reach up to ${i} + ${a[i]} = ${i + a[i]}. reach = max(${reach}, ${i + a[i]}) = ${nr}.`, sc(i, '', { [i]: 'cur' }));
+      reach = nr;
+    }
+    T.out.push('true'); T.step('ret', `The last index ${n - 1} is within reach.`, sc(n - 1, 'done', { [n - 1]: 'done' }));
+  },
+  leg: { win: 'Reachable so far', dim: 'Not reachable yet' },
+  idea: 'Every index up to reach can be reached, because jumps can be shorter than the maximum. Scanning left to right and extending reach from each reachable index tells whether the end is ever covered.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'You can return true early once reach ≥ n − 1. The DP or BFS versions work too but are O(n²) in the worst case.',
+  vars: ['Jump game II (next): the minimum number of jumps', 'Jump game III (LC 1306): jumps left or right, BFS', 'Video stitching (LC 1024): the same reach extension on intervals']
+});
+
+A({
+  id: 'jump-game-ii', cat: 'Reach', title: 'Jump game II', lc: 'LeetCode 45',
+  blurb: 'BFS without a queue: the indices reachable with k jumps form a window. The next window ends at the farthest jump from inside it.',
+  params: [{ key: 'nums', label: 'max jump at each index', type: 'ints', min: 0, max: 9, maxLen: 12, def: [2, 3, 1, 1, 4, 2, 1, 3, 1] }],
+  check: (p) => { let reach = 0; for (let i = 0; i < p.nums.length; i++) { if (i > reach) return 'The last index must be reachable for this problem.'; reach = Math.max(reach, i + p.nums[i]); } return null; },
+  code: `
+int jump(vector<int>& nums) {
+    int jumps = 0, end = 0, far = 0;            // [.., end] is reachable with 'jumps' jumps
+    for (int i = 0; i + 1 < nums.size(); i++) {
+        far = max(far, i + nums[i]);            //@far
+        if (i == end) { jumps++; end = far; }   //@jump   // must jump to go past end
+    }
+    return jumps;                               //@ret
+}`,
+  run(T, p) {
+    const a = p.nums, n = a.length, lvl = Array(n).fill(null); let jumps = 0, end = 0, far = 0, start = 0; lvl[0] = 0;
+    const sc = (i, extra = {}) => [B.arr('nums', a, { win: [start, Math.min(end, n - 1)], st: { ...Object.fromEntries(lvl.map((l, k) => [k, l == null ? '' : 'g' + (l % 6)])), ...extra }, ptr: i == null ? { end: Math.min(end, n - 1) } : { i, end: Math.min(end, n - 1), far: Math.min(far, n - 1) }, pc: { i: 'cur', end: 'wait', far: 'path' } }), B.arr('jumps needed', lvl.map(l => l ?? ''), { idx: false }), B.vars([['jumps', jumps]])];
+    T.step(null, 'Index 0 needs 0 jumps. The boxed window is every index reachable with the current number of jumps.', sc(null));
+    for (let i = 0; i + 1 < n; i++) {
+      far = Math.max(far, i + a[i]);
+      T.step('far', `From ${i}, one more jump reaches ${i + a[i]}. far = ${far}.`, sc(i, { [i]: 'cur' }));
+      if (i === end) {
+        jumps++; for (let k = end + 1; k <= Math.min(far, n - 1); k++) lvl[k] = jumps; start = end + 1; end = far;
+        T.step('jump', `i reached the end of this window. Going further needs another jump: jumps = ${jumps}, and the new window ends at far = ${far}.`, sc(i));
+      }
+    }
+    T.out.push(jumps); T.step('ret', `The last index is in window ${jumps}: ${jumps} jump${jumps === 1 ? '' : 's'}.`, sc(null, { [n - 1]: 'done' }));
+  },
+  leg: { g0: 'Same number of jumps', win: 'Current window' },
+  idea: 'Think BFS by levels: level k is every index reachable in exactly k jumps, and these levels are contiguous windows. While scanning one window, track the farthest index any of its cells can jump to; that is where the next window ends. Each window boundary crossed costs one jump.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'Loop to n − 2 (i + 1 < n). Counting a jump when i reaches the last index adds one too many.',
+  vars: ['Jump game (previous): just reachability', 'Minimum number of taps to water a garden (LC 1326)', 'Video stitching (LC 1024)']
+});
+
+A({
+  id: 'partition-labels', cat: 'Reach', title: 'Partition labels', lc: 'LeetCode 763',
+  blurb: 'A part must extend to the last occurrence of every letter inside it. Grow the end; cut when i reaches it.',
+  params: [{ key: 's', label: 's', type: 'str', maxLen: 16, lower: true, def: 'ababcbacadefegde' }],
+  code: `
+vector<int> partitionLabels(string s) {
+    int last[26];
+    for (int i = 0; i < s.size(); i++) last[s[i] - 'a'] = i;   //@last
+    vector<int> res;
+    int start = 0, end = 0;
+    for (int i = 0; i < s.size(); i++) {
+        end = max(end, last[s[i] - 'a']);      //@extend  // must reach every copy of s[i]
+        if (i == end) {
+            res.push_back(end - start + 1);    //@cut
+            start = i + 1;
+        }
+    }
+    return res;
+}`,
+  run(T, p) {
+    const S = p.s.split(''), last = {}; S.forEach((c, i) => { last[c] = i; });
+    const part = Array(S.length).fill(null); let start = 0, end = 0, k = 0;
+    const lm = B.map('last', Object.entries(last).map(([c, i]) => [c, i]), { hint: 'letter → last index' });
+    const sc = (i, wc, extra = {}) => [B.arr('s', S, { win: i == null ? null : [start, end, wc], st: { ...Object.fromEntries(part.map((g, j) => [j, g == null ? '' : 'g' + (g % 6)])), ...extra }, ptr: i == null ? {} : { i, end }, pc: { i: 'cur', end: 'path' } }), lm];
+    T.step('last', 'First pass: record the last index of every letter.', sc(null));
+    S.forEach((c, i) => {
+      const ne = Math.max(end, last[c]);
+      T.step('extend', last[c] > end ? `'${c}' appears again at ${last[c]}, so this part must reach at least there: end = ${ne}.` : `'${c}' last appears at ${last[c]} ≤ end ${end}. Nothing changes.`, sc(i, '', { [i]: 'cur' }));
+      end = ne;
+      if (i === end) { for (let j = start; j <= end; j++) part[j] = k; T.out.push(end - start + 1); T.step('cut', `i = end = ${i}: every letter in [${start}..${end}] has no copies later. Cut a part of size ${end - start + 1}.`, sc(i, 'done')); k++; start = i + 1; end = i + 1; }
+    });
+    T.step(null, `Parts: ${T.out.join(', ')}.`, sc(null));
+  },
+  outLabel: 'Part sizes', leg: { g0: 'One part', win: 'Current part' },
+  idea: 'Once a letter is in a part, all its copies must be too, so the part has to extend to that letter\'s last index. Scanning left to right and pushing end out to the furthest last-index seen means a cut is safe exactly when i catches up with end. Cutting as early as possible maximizes the number of parts.',
+  time: 'O(n)', space: 'O(26)',
+  trap: 'Precompute last[] in a separate first pass; computing it on the fly misses later copies.',
+  vars: ['Merge intervals: each letter is the interval [first, last]', 'Max chunks to make sorted (LC 769): cut when max so far == i', 'Jump game II: the same "extend end" scan']
+});
+
+/* ================= Counting & ranges ================= */
+A({
+  id: 'hand-straights', cat: 'Counting & ranges', title: 'Hand of straights', lc: 'LeetCode 846',
+  blurb: 'The smallest card left must start a group. Use it and the next k − 1 values; if any is missing, it is impossible.',
+  params: [{ key: 'hand', label: 'hand', type: 'ints', min: 0, max: 20, maxLen: 12, def: [1, 2, 3, 6, 2, 3, 4, 7, 8] }, { key: 'k', label: 'group size k', type: 'int', min: 1, max: 6, def: 3 }],
+  code: `
+bool isNStraightHand(vector<int>& hand, int k) {
+    if (hand.size() % k) return false;               //@size
+    map<int, int> cnt;                               // ordered counts
+    for (int x : hand) cnt[x]++;                     //@count
+    for (auto& [x, c] : cnt) {
+        if (c == 0) continue;
+        int need = c;                                // x is the smallest left: it starts 'need' groups
+        for (int v = x; v < x + k; v++) {
+            if (cnt[v] < need) return false;         //@fail
+            cnt[v] -= need;                          //@use
+        }
+    }
+    return true;                                     //@ret
+}`,
+  run(T, p) {
+    const k = p.k, cnt = new Map(); [...p.hand].sort((a, b) => a - b).forEach(x => cnt.set(x, (cnt.get(x) || 0) + 1));
+    const keys = () => [...cnt.keys()].sort((a, b) => a - b), groups = [];
+    const sc = (st = {}) => { const ks = keys(); return [B.arr('count', ks.map(x => cnt.get(x)), { heads: ks, st: Object.fromEntries(ks.map((x, i) => [i, st[x] || (cnt.get(x) ? '' : 'dim')])), hint: 'value above, copies left below' }), B.chips('groups', groups.map(g => `[${g.join(',')}]`))]; };
+    if (p.hand.length % k) { T.out.push('false'); T.step('size', `${p.hand.length} cards can't be split into groups of ${k}.`, sc()); return; }
+    T.step('count', 'Count each card value in order.', sc());
+    for (const x of keys()) {
+      const c = cnt.get(x); if (!c) continue;
+      for (let v = x; v < x + k; v++) {
+        const have = cnt.get(v) || 0;
+        if (have < c) { if (!cnt.has(v)) cnt.set(v, 0); T.out.push('false'); T.step('fail', `${x} is the smallest card left with ${c} cop${c > 1 ? 'ies' : 'y'}, so ${c} group${c > 1 ? 's' : ''} must contain ${v}. Only ${have} left: impossible.`, sc({ [x]: 'cur', [v]: 'bad' })); return; }
+        cnt.set(v, have - c);
+        T.step('use', `${x} must start ${c} group${c > 1 ? 's' : ''}: use ${c} × ${v} (${have} → ${have - c}).`, sc({ [x]: 'cur', [v]: 'done' }));
+      }
+      for (let r = 0; r < c; r++) groups.push(Array.from({ length: k }, (_, j) => x + j));
+    }
+    T.out.push('true'); T.step('ret', `Every card is in a group of ${k} consecutive values.`, sc());
+  },
+  idea: 'The smallest remaining card has no smaller neighbor to join, so it must be the start of a group. That forces the group x, x + 1, …, x + k − 1, used as many times as x has copies. Repeating from the next smallest card either uses every card or finds a gap.',
+  time: 'O(n log n)', space: 'O(n)',
+  trap: 'Process values in increasing order (a sorted map or a sort). Starting groups from an arbitrary card can fail on inputs that do have a valid split.',
+  vars: ['Divide array in sets of K consecutive numbers (LC 1296): the same problem', 'Split array into consecutive subsequences (LC 659): groups of length ≥ 3', 'Task scheduler (Heap page): also greedy on counts']
+});
+
+const parseTrip = (s) => s.split(',').map(t => t.trim()).filter(Boolean).map(t => t.split(/\s+/).map(Number));
+A({
+  id: 'merge-triplets', cat: 'Counting & ranges', title: 'Merge triplets to form target', lc: 'LeetCode 1899',
+  blurb: 'Merging takes the max in each position, so never use a triplet that exceeds the target anywhere. Among the rest, check each target value is hit.',
+  params: [{ key: 'trip', label: 'triplets', type: 'str', keepSpaces: true, chars: '0-9 ,', charsHint: 'numbers, triplets separated by commas', maxLen: 80, def: '2 5 3, 1 8 4, 1 7 5, 3 2 5, 2 7 1' }, { key: 'target', label: 'target (3 numbers)', type: 'ints', min: 0, max: 99, minLen: 3, maxLen: 3, def: [2, 7, 5] }],
+  check: (p) => { const t = parseTrip(p.trip); if (!t.length || t.length > 8) return 'Give 1 to 8 triplets.'; if (t.some(x => x.length !== 3 || x.some(v => !Number.isInteger(v) || v > 99))) return 'Each triplet needs exactly 3 numbers from 0 to 99.'; return null; },
+  code: `
+bool mergeTriplets(vector<vector<int>>& triplets, vector<int>& target) {
+    bool got[3] = {false, false, false};
+    for (auto& t : triplets) {
+        if (t[0] > target[0] || t[1] > target[1] || t[2] > target[2])
+            continue;                                   //@skip   // would overshoot forever
+        for (int k = 0; k < 3; k++)
+            if (t[k] == target[k]) got[k] = true;       //@use
+    }
+    return got[0] && got[1] && got[2];                  //@ret
+}`,
+  run(T, p) {
+    const tr = parseTrip(p.trip), tg = p.target, got = [false, false, false], st = {};
+    const sc = (extra = {}) => [B.grid('triplets', tr, { st: { ...st, ...extra }, cols: ['a', 'b', 'c'] }), B.arr('target', tg, { heads: ['a', 'b', 'c'], st: Object.fromEntries(got.map((g, k) => [k, g ? 'done' : ''])) })];
+    tr.forEach((t, r) => {
+      if (t.some((v, k) => v > tg[k])) { const k = t.findIndex((v, kk) => v > tg[kk]); for (let c = 0; c < 3; c++) st[r + ',' + c] = 'dim'; T.step('skip', `[${t}] has ${t[k]} > ${tg[k]} in position ${'abc'[k]}. Merging takes the max, so it would overshoot forever: never use it.`, sc({ [r + ',' + k]: 'bad' })); return; }
+      const hits = []; t.forEach((v, k) => { if (v === tg[k]) { got[k] = true; hits.push(k); st[r + ',' + k] = 'done'; } });
+      T.step('use', `[${t}] never exceeds the target, so merging it is safe.${hits.length ? ` It matches position${hits.length > 1 ? 's' : ''} ${hits.map(k => 'abc'[k]).join(', ')}.` : ' It matches nothing, but does no harm.'}`, sc(Object.fromEntries([0, 1, 2].filter(k => !hits.includes(k)).map(k => [r + ',' + k, 'wait']))));
+    });
+    const ok = got.every(Boolean); T.out.push(String(ok));
+    T.step('ret', ok ? 'Every target position is matched by some safe triplet: merging all safe triplets gives the target.' : `Position ${got.map((g, k) => g ? '' : 'abc'[k]).filter(Boolean).join(', ')} is never matched by a safe triplet.`, sc());
+  },
+  leg: { dim: 'Unsafe triplet', done: 'Matches the target', wait: 'Safe' },
+  idea: 'Merging takes elementwise maxima, so values can only grow. A triplet with any value above the target can never be used. Merging every remaining triplet is harmless (it stays ≤ target everywhere), so the answer is yes exactly when the safe triplets cover each target value.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'Don\'t search over subsets of triplets: the "merge everything safe" argument makes it linear.',
+  vars: ['Bitwise OR of subarrays: also only grows', 'Largest number formed by merging constraints', 'Hand of straights: greedy on the smallest forced choice']
+});
+
+A({
+  id: 'valid-paren-string', cat: 'Counting & ranges', title: 'Valid parenthesis string', lc: 'LeetCode 678',
+  blurb: 'With * as (, ) or empty, track the range [lo, hi] of possible open counts instead of every choice.',
+  params: [{ key: 's', label: 's', type: 'str', chars: '()*', charsHint: 'only ( ) and *', maxLen: 14, def: '(*()*)*)' }],
+  code: `
+bool checkValidString(string s) {
+    int lo = 0, hi = 0;                        // possible number of unmatched '('
+    for (char c : s) {
+        if (c == '(') { lo++; hi++; }          //@open
+        else if (c == ')') { lo--; hi--; }     //@close
+        else { lo--; hi++; }                   //@star    // * could be ), empty or (
+        if (hi < 0) return false;              //@fail    // too many ')' in every case
+        lo = max(lo, 0);                       //@clamp
+    }
+    return lo == 0;                            //@ret
+}`,
+  run(T, p) {
+    const S = p.s.split(''); let lo = 0, hi = 0;
+    const sc = (i, cls = 'cur') => [B.arr('s', S, { st: i == null ? {} : { [i]: cls }, ptr: i == null ? {} : { i } }), B.arr('possible opens', Array.from({ length: Math.max(hi, 0) + 1 }, (_, k) => k), { sm: true, idx: false, st: Object.fromEntries(Array.from({ length: Math.max(hi, 0) + 1 }, (_, k) => [k, k >= Math.max(lo, 0) && k <= hi ? 'wait' : 'dim'])), hint: 'blue: counts still possible' }), B.vars([['lo', lo], ['hi', hi, hi < 0 ? 'bad' : '']])];
+    for (let i = 0; i < S.length; i++) {
+      const c = S[i];
+      if (c === '(') { lo++; hi++; T.step('open', `'(' adds one unmatched open in every case: [${lo}, ${hi}].`, sc(i)); }
+      else if (c === ')') { lo--; hi--; T.step('close', `')' closes one in every case: [${lo}, ${hi}].`, sc(i)); }
+      else { lo--; hi++; T.step('star', `'*' could close one, be empty, or open one: the range widens to [${lo}, ${hi}].`, sc(i)); }
+      if (hi < 0) { T.out.push('false'); T.step('fail', 'hi < 0: even treating every * as ( there are too many ) so far. Invalid.', sc(i, 'bad')); return; }
+      if (lo < 0) { lo = 0; T.step('clamp', 'lo < 0 would mean a negative open count, which is never allowed. Clamp lo to 0 (those choices are discarded).', sc(i)); }
+    }
+    const ok = lo === 0; T.out.push(String(ok));
+    T.step('ret', ok ? 'lo = 0: some choice of the *s leaves no unmatched (. Valid.' : `lo = ${lo}: at least ${lo} ( always stay unmatched. Invalid.`, sc(null));
+  },
+  leg: { wait: 'Possible open count' },
+  idea: 'Every choice for the *s leads to some number of unmatched (. Those numbers always form a contiguous range, so tracking its ends [lo, hi] is enough: ( shifts both up, ) shifts both down, * stretches the range. The string is valid if hi never goes negative and 0 is in the final range.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'Clamp lo at 0 after each step; a negative lo stands for invalid prefixes and must not let later characters "borrow" from them.',
+  vars: ['Valid parentheses (Stack page): no wildcards', 'Two-stack version: indices of ( and *, match ) greedily, then pair leftover ( with later *', 'Minimum add to make parentheses valid (LC 921)']
+});
+
+Stepper.start('jump-game');
+</script>
+</body>
+</html>
