@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Math &amp; geometry, step by step</title>
+<link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+<script src="../shared/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/stepper.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true"><g fill="var(--panel)" stroke="var(--edge)" stroke-width="1.3"><rect x="4" y="4" width="11" height="11" rx="2.5"/><rect x="17.5" y="4" width="11" height="11" rx="2.5"/><rect x="31" y="4" width="11" height="11" rx="2.5"/><rect x="4" y="17.5" width="11" height="11" rx="2.5"/><rect x="17.5" y="17.5" width="11" height="11" rx="2.5"/><rect x="31" y="17.5" width="11" height="11" rx="2.5"/><rect x="4" y="31" width="11" height="11" rx="2.5"/><rect x="17.5" y="31" width="11" height="11" rx="2.5"/><rect x="31" y="31" width="11" height="11" rx="2.5"/></g><path d="M9.5 9.5h27v27h-27V23h13.5" fill="none" stroke="var(--cur)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      <div>
+        <h1>Math &amp; geometry, step by step</h1>
+        <p>8 interview patterns, each animated next to its C++ code. Press <kbd>Space</kbd> to play or pause, and <kbd>←</kbd> <kbd>→</kbd> to step. Every problem runs on your own input too.</p>
+      </div>
+    </div>
+    <nav class="topnav">
+      <a href="../index.html">← All topics</a>
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="Toggle dark mode">
+        <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+    </nav>
+  </header>
+  <div class="mobile-pick"><label for="algoSelect" class="sr">Problem</label><select id="algoSelect"></select></div>
+
+  <div class="layout">
+    <nav class="side" aria-label="Problems">
+      <input id="filter" type="search" placeholder="Filter, e.g. spiral or pow" aria-label="Filter problems">
+      <div id="list"></div>
+    </nav>
+
+    <main id="main">
+      <section class="head">
+        <div class="cat" id="cat"></div>
+        <h2 id="title"></h2>
+        <p class="blurb" id="blurb"></p>
+        <div class="sample" id="sample">Sample input: <code id="sampleTree"></code></div>
+      </section>
+
+      <section class="work">
+        <div>
+          <div class="stage" id="stage"><div id="scene" aria-live="off"></div></div>
+          <div class="legend" id="legend"></div>
+
+          <div class="controls">
+            <div class="btns">
+              <button class="ib" id="first" aria-label="Go to first step" title="First step"><svg viewBox="0 0 16 16"><path d="M3 2h2v12H3zM14 2v12L6 8z"/></svg></button>
+              <button class="ib" id="prev" aria-label="Previous step" title="Previous step (←)"><svg viewBox="0 0 16 16"><path d="M12 2v12L3 8z"/></svg></button>
+              <button class="ib" id="play" aria-label="Play" data-state="play" title="Play or pause (Space)"><svg class="i-play" viewBox="0 0 16 16"><path d="M4 2v12l10-6z"/></svg><svg class="i-pause" viewBox="0 0 16 16"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg><span id="playText">Play</span></button>
+              <button class="ib" id="next" aria-label="Next step" title="Next step (→)"><svg viewBox="0 0 16 16"><path d="M4 2v12l9-6z"/></svg></button>
+              <button class="ib" id="last" aria-label="Go to last step" title="Last step"><svg viewBox="0 0 16 16"><path d="M11 2h2v12h-2zM2 2v12l8-6z"/></svg></button>
+            </div>
+            <div class="scrubwrap"><input type="range" id="scrub" min="0" max="0" value="0" aria-label="Step"><span id="counter"></span></div>
+            <label class="speed">Speed <input type="range" id="speed" min="0.5" max="3" step="0.25" value="1"><span id="speedVal">1×</span></label>
+          </div>
+
+          <p class="narr" id="narr" aria-live="polite"></p>
+          <div class="aux" id="aux"></div>
+
+          <form class="custom" id="custom">
+            <label>Try your own input</label>
+            <div id="params"></div>
+            <div class="crow">
+              <button class="tb" type="submit">Run on this input</button>
+              <button class="tb ghost" type="button" id="treeReset">Use the sample</button>
+            </div>
+            <p id="treeErr" role="alert"></p>
+          </form>
+        </div>
+
+        <div class="codebox">
+          <div class="codehead"><span><strong>C++</strong></span><button id="copy" type="button">Copy code</button></div>
+          <pre id="code"></pre>
+          <div class="nodedef">Matrices are indexed <code>(row, column)</code> from the top-left. Number problems work on digits or bits directly instead of converting to big integers.</div>
+        </div>
+      </section>
+
+      <section id="notes" aria-label="Interview notes"></section>
+    </main>
+  </div>
+</div>
+<script src="../shared/stepper.js"></script>
+<script>
+const { B } = Stepper, A = Stepper.add;
+const cl = (g) => g.map(r => [...r]);
+const num = (v) => Number.isInteger(v) ? String(v) : String(+v.toPrecision(10));
+
+/* ================= Matrices ================= */
+A({
+  id: 'rotate-image', cat: 'Matrices', title: 'Rotate image', lc: 'LeetCode 48',
+  blurb: 'Rotating 90° clockwise = transpose (swap across the main diagonal), then reverse every row. Both steps are in place.',
+  params: [{ key: 'n', label: 'n (matrix is n × n, filled 1..n²)', type: 'int', min: 2, max: 5, def: 4 }],
+  code: `
+void rotate(vector<vector<int>>& m) {
+    int n = m.size();
+    for (int i = 0; i < n; i++)
+        for (int j = i + 1; j < n; j++)
+            swap(m[i][j], m[j][i]);              //@transpose
+    for (auto& row : m)
+        reverse(row.begin(), row.end());          //@reverse
+}`,
+  run(T, p) {
+    const n = p.n, m = Array.from({ length: n }, (_, r) => Array.from({ length: n }, (_, c) => r * n + c + 1)), diag = {};
+    for (let i = 0; i < n; i++) diag[i + ',' + i] = 'sh';
+    T.step(null, 'Shaded cells are the main diagonal: transposing leaves them in place.', [B.grid('matrix', cl(m), { st: diag })]);
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) { [m[i][j], m[j][i]] = [m[j][i], m[i][j]]; T.step('transpose', `Swap (${i}, ${j}) ↔ (${j}, ${i}).`, [B.grid('matrix', cl(m), { st: { ...diag, [i + ',' + j]: 'cur', [j + ',' + i]: 'cur' } })]); }
+    T.step('transpose', 'Transposed: row i is now the old column i.', [B.grid('matrix', cl(m), { st: diag })]);
+    for (let r = 0; r < n; r++) { m[r].reverse(); const st = {}; for (let c = 0; c < n; c++) st[r + ',' + c] = 'done'; T.step('reverse', `Reverse row ${r}.`, [B.grid('matrix', cl(m), { st })]); }
+    T.out.push(m.map(r => `[${r.join(' ')}]`).join(' '));
+    T.step(null, 'Rotated 90° clockwise: the old first column (1, ' + (n + 1) + ', …) is now the top row, read right to left.', [B.grid('matrix', cl(m))]);
+  },
+  leg: { sh: 'Main diagonal' },
+  idea: 'Clockwise rotation sends (r, c) to (c, n − 1 − r). Transposing sends (r, c) to (c, r), and reversing each row then sends column r to column n − 1 − r. Composing the two gives the rotation without any extra matrix.',
+  time: 'O(n²)', space: 'O(1)',
+  trap: 'Counter-clockwise is transpose then reverse each column (or reverse rows first, then transpose). Only loop j > i when transposing, or every pair is swapped twice.',
+  vars: ['Rotate by layers: cycle four cells at a time', 'Determine whether a matrix can be obtained by rotation (LC 1886)', 'Spiral matrix (next): walk the layers instead']
+});
+
+A({
+  id: 'spiral', cat: 'Matrices', title: 'Spiral matrix', lc: 'LeetCode 54',
+  blurb: 'Keep four walls: top, bottom, left, right. Walk one side, then move that wall inward.',
+  params: [{ key: 'rows', label: 'rows', type: 'int', min: 1, max: 5, def: 4 }, { key: 'cols', label: 'columns', type: 'int', min: 1, max: 6, def: 5 }],
+  code: `
+vector<int> spiralOrder(vector<vector<int>>& m) {
+    vector<int> res;
+    int top = 0, bot = m.size() - 1, left = 0, right = m[0].size() - 1;
+    while (top <= bot && left <= right) {
+        for (int c = left; c <= right; c++) res.push_back(m[top][c]);   //@top
+        top++;
+        for (int r = top; r <= bot; r++) res.push_back(m[r][right]);    //@right
+        right--;
+        if (top <= bot) {
+            for (int c = right; c >= left; c--) res.push_back(m[bot][c]);   //@bottom
+            bot--;
+        }
+        if (left <= right) {
+            for (int r = bot; r >= top; r--) res.push_back(m[r][left]);     //@left
+            left++;
+        }
+    }
+    return res;
+}`,
+  run(T, p) {
+    const R = p.rows, C = p.cols, m = Array.from({ length: R }, (_, r) => Array.from({ length: C }, (_, c) => r * C + c + 1)), res = [], seen = {};
+    let top = 0, bot = R - 1, left = 0, right = C - 1;
+    const sc = (r, c, mark, msg) => { seen[r + ',' + c] = 'done'; res.push(m[r][c]); T.step(mark, msg, [B.grid('matrix', m, { st: { ...seen, [r + ',' + c]: 'cur' } }), B.vars([['top', top], ['bot', bot], ['left', left], ['right', right]]), B.chips('order', res)]); };
+    while (top <= bot && left <= right) {
+      for (let c = left; c <= right; c++) sc(top, c, 'top', `Top wall, left to right: ${m[top][c]}.`); top++;
+      for (let r = top; r <= bot; r++) sc(r, right, 'right', `Right wall, top to bottom: ${m[r][right]}.`); right--;
+      if (top <= bot) { for (let c = right; c >= left; c--) sc(bot, c, 'bottom', `Bottom wall, right to left: ${m[bot][c]}.`); bot--; }
+      if (left <= right) { for (let r = bot; r >= top; r--) sc(r, left, 'left', `Left wall, bottom to top: ${m[r][left]}.`); left++; }
+    }
+    T.out.push(`[${res.join(', ')}]`);
+    T.step(null, 'Every cell visited exactly once.', [B.grid('matrix', m, { st: seen }), B.chips('order', res)]);
+  },
+  idea: 'Each pass around the outside consumes one layer. After walking a side, that side\'s wall moves inward, so the next side starts one cell later and nothing is visited twice. The two if checks stop a single remaining row or column from being walked back.',
+  time: 'O(R · C)', space: 'O(1) besides the output',
+  trap: 'Without the top ≤ bot and left ≤ right checks before the bottom and left walks, a non-square matrix repeats its middle row or column.',
+  vars: ['Spiral matrix II (LC 59): fill 1..n² in the same order', 'Direction vectors + visited flags: simpler to write, O(R·C) extra space', 'Rotate image: layers again']
+});
+
+A({
+  id: 'set-zeroes', cat: 'Matrices', title: 'Set matrix zeroes', lc: 'LeetCode 73',
+  blurb: 'Use the first row and first column as the "zero this line" markers. Two flags remember whether those edges themselves had a zero.',
+  params: [{ key: 'g', label: 'matrix rows (digits)', type: 'grid', chars: '0-9', charsHint: 'digits only', maxR: 5, maxC: 6, minR: 2, minC: 2, def: ['1234', '5016', '7891', '2340'] }],
+  code: `
+void setZeroes(vector<vector<int>>& m) {
+    int R = m.size(), C = m[0].size();
+    bool row0 = false, col0 = false;
+    for (int c = 0; c < C; c++) if (m[0][c] == 0) row0 = true;
+    for (int r = 0; r < R; r++) if (m[r][0] == 0) col0 = true;       //@edges
+    for (int r = 1; r < R; r++)
+        for (int c = 1; c < C; c++)
+            if (m[r][c] == 0) m[r][0] = m[0][c] = 0;                //@mark   // note it in the margins
+    for (int r = 1; r < R; r++)
+        for (int c = 1; c < C; c++)
+            if (m[r][0] == 0 || m[0][c] == 0) m[r][c] = 0;          //@fill
+    if (row0) for (int c = 0; c < C; c++) m[0][c] = 0;
+    if (col0) for (int r = 0; r < R; r++) m[r][0] = 0;              //@edgesFill
+}`,
+  run(T, p) {
+    const m = p.g.map(r => r.split('').map(Number)), R = m.length, C = m[0].length, margin = {};
+    for (let c = 0; c < C; c++) margin['0,' + c] = 'sh'; for (let r = 0; r < R; r++) margin[r + ',0'] = 'sh';
+    const sc = (st = {}, flags) => [B.grid('matrix', cl(m), { st: { ...margin, ...st } }), B.vars([['row0', String(flags[0])], ['col0', String(flags[1])]])];
+    const row0 = m[0].includes(0), col0 = m.some(r => r[0] === 0), fl = [row0, col0];
+    T.step('edges', `The shaded first row and column will double as markers. First remember whether they already contain a 0: row0 = ${row0}, col0 = ${col0}.`, sc({}, fl));
+    for (let r = 1; r < R; r++) for (let c = 1; c < C; c++) if (m[r][c] === 0) { m[r][0] = 0; m[0][c] = 0; T.step('mark', `(${r}, ${c}) is 0: mark row ${r} at (${r}, 0) and column ${c} at (0, ${c}).`, sc({ [r + ',' + c]: 'bad', [r + ',0']: 'cur', ['0,' + c]: 'cur' }, fl)); }
+    for (let r = 1; r < R; r++) for (let c = 1; c < C; c++) if ((m[r][0] === 0 || m[0][c] === 0) && m[r][c] !== 0) { m[r][c] = 0; T.step('fill', `Row ${r} or column ${c} is marked: (${r}, ${c}) becomes 0.`, sc({ [r + ',' + c]: 'cur', ...(m[r][0] === 0 ? { [r + ',0']: 'wait' } : {}), ...(m[0][c] === 0 ? { ['0,' + c]: 'wait' } : {}) }, fl)); }
+    if (row0) { for (let c = 0; c < C; c++) m[0][c] = 0; T.step('edgesFill', 'row0 was true: zero the whole first row.', sc(Object.fromEntries([...Array(C).keys()].map(c => ['0,' + c, 'cur'])), fl)); }
+    if (col0) { for (let r = 0; r < R; r++) m[r][0] = 0; T.step('edgesFill', 'col0 was true: zero the whole first column.', sc(Object.fromEntries([...Array(R).keys()].map(r => [r + ',0', 'cur'])), fl)); }
+    T.out.push(m.map(r => r.join('')).join(' '));
+    T.step(null, 'Done, with O(1) extra space.', [B.grid('matrix', cl(m))]);
+  },
+  leg: { sh: 'Marker row / column', bad: 'Original zero', wait: 'Marker that triggered it' },
+  idea: 'Zeroing immediately would spread zeros you can no longer tell from original ones. Instead, record "this row / this column must be zeroed" in cell (r, 0) and (0, c), then fill from the markers. The margins themselves are handled last, using two flags saved before they were overwritten.',
+  time: 'O(R · C)', space: 'O(1)',
+  trap: 'Fill the inner cells before zeroing the first row and column, or the markers wipe out information you still need.',
+  vars: ['O(R + C) version: two boolean arrays for rows and columns', 'Game of life (LC 289): encode the next state in spare bits', 'Rotate image: another in-place matrix trick']
+});
+
+/* ================= Number tricks ================= */
+A({
+  id: 'happy', cat: 'Number tricks', title: 'Happy number', lc: 'LeetCode 202',
+  blurb: 'Replacing n by the sum of its squared digits either reaches 1 or loops forever. Floyd\'s slow/fast pointers detect which.',
+  params: [{ key: 'n', label: 'n', type: 'int', min: 1, max: 9999, def: 19 }],
+  code: `
+int next(int n) {
+    int s = 0;
+    while (n) { s += (n % 10) * (n % 10); n /= 10; }
+    return s;
+}
+bool isHappy(int n) {
+    int slow = n, fast = next(n);
+    while (fast != 1 && slow != fast) {
+        slow = next(slow);                       //@move
+        fast = next(next(fast));
+    }
+    return fast == 1;                            //@ret
+}`,
+  run(T, p) {
+    const nx = (v) => String(v).split('').reduce((s, d) => s + d * d, 0), seq = [p.n];
+    const at = (k) => { while (seq.length <= k) seq.push(nx(seq[seq.length - 1])); return seq[k]; };
+    let s = 0, f = 1; at(1);
+    const sc = (msg, mark, extra = {}) => T.step(mark, msg, [B.arr('sequence', seq.slice(0, Math.max(s, f) + 1), { ptr: { slow: s, fast: f }, pc: { slow: 'wait', fast: 'cur' }, st: extra }), B.vars([['slow', at(s)], ['fast', at(f)]])]);
+    sc(`Each number is the sum of the squares of the previous one's digits. slow starts at ${p.n}, fast one step ahead at ${at(1)}.`, null);
+    while (at(f) !== 1 && at(s) !== at(f)) { s++; f += 2; at(f); sc(`slow moves 1 step to ${at(s)}, fast moves 2 to ${at(f)}.`, 'move', { [s]: 'wait', [f]: 'cur' }); }
+    const happy = at(f) === 1; T.out.push(String(happy));
+    sc(happy ? `fast reached 1, and 1 maps to itself: ${p.n} is happy.` : `slow and fast meet at ${at(s)} without hitting 1: the sequence is stuck in a cycle. ${p.n} is not happy.`, 'ret', { [f]: happy ? 'done' : 'bad', [s]: happy ? '' : 'bad' });
+  },
+  idea: 'The digit-square sum of any number with d digits is at most 81·d, so values quickly fall below a few hundred and must eventually repeat. The sequence is a linked list with next() as the pointer, and Floyd\'s cycle detection finds whether it ends at 1 or in a loop, using O(1) memory.',
+  time: 'O(log n) per step, few steps', space: 'O(1)',
+  trap: 'A hash set of seen values is the simpler answer; Floyd is the follow-up when asked for constant space.',
+  vars: ['Linked list cycle (Linked lists page): the same two pointers', 'Find the duplicate number (LC 287)', 'Add digits (LC 258): digital root formula']
+});
+
+A({
+  id: 'plus-one', cat: 'Number tricks', title: 'Plus one', lc: 'LeetCode 66',
+  blurb: 'Add one from the last digit. A 9 becomes 0 and carries; any other digit absorbs the carry and you\'re done.',
+  params: [{ key: 'd', label: 'digits', type: 'ints', min: 0, max: 9, maxLen: 10, def: [1, 2, 9, 9] }],
+  check: (p) => p.d.length > 1 && p.d[0] === 0 ? 'No leading zeros.' : null,
+  code: `
+vector<int> plusOne(vector<int>& d) {
+    for (int i = d.size() - 1; i >= 0; i--) {
+        if (d[i] < 9) { d[i]++; return d; }      //@inc
+        d[i] = 0;                                //@carry   // 9 + 1: write 0 and carry
+    }
+    d.insert(d.begin(), 1);                      //@grow    // every digit was 9
+    return d;
+}`,
+  run(T, p) {
+    const d = [...p.d];
+    for (let i = d.length - 1; i >= 0; i--) {
+      if (d[i] < 9) { d[i]++; T.out.push(`[${d.join(', ')}]`); T.step('inc', `${d[i] - 1} + 1 = ${d[i]}, no carry. Done.`, [B.arr('digits', [...d], { st: { [i]: 'done' }, ptr: { i } })]); return; }
+      d[i] = 0; T.step('carry', `9 + 1 = 10: write 0 and carry 1 to the left.`, [B.arr('digits', [...d], { st: { [i]: 'cur' }, ptr: { i } })]);
+    }
+    d.unshift(1); T.out.push(`[${d.join(', ')}]`);
+    T.step('grow', 'Every digit was 9, so the carry falls off the front: insert a leading 1.', [B.arr('digits', [...d], { st: { 0: 'done' } })]);
+  },
+  idea: 'Only trailing 9s are affected by a carry. Walk from the right, turning 9s into 0s, and stop at the first digit that can absorb the 1. If none can, the number was all 9s and grows by one digit.',
+  time: 'O(n)', space: 'O(1) (O(n) when it grows)',
+  trap: 'Don\'t convert to an integer: the digit array can be longer than any built-in type.',
+  vars: ['Add binary (LC 67)', 'Add two numbers (Linked lists page)', 'Multiply strings (below)']
+});
+
+A({
+  id: 'pow', cat: 'Number tricks', title: 'Pow(x, n)', lc: 'LeetCode 50',
+  blurb: 'Fast exponentiation: square x each step and multiply it into the result when the current bit of n is 1. O(log n) multiplications.',
+  params: [{ key: 'x', label: 'x', type: 'num', min: -10, max: 10, def: 2 }, { key: 'n', label: 'n', type: 'int', min: -20, max: 40, def: 13 }],
+  check: (p) => p.x === 0 && p.n < 0 ? '0 to a negative power is undefined.' : null,
+  code: `
+double myPow(double x, long long n) {
+    if (n < 0) { x = 1 / x; n = -n; }            //@neg
+    double res = 1;
+    while (n) {
+        if (n & 1) res *= x;                     //@odd    // this bit of n is set
+        x *= x;                                  //@square // x, x², x⁴, x⁸, ...
+        n >>= 1;
+    }
+    return res;                                  //@ret
+}`,
+  run(T, p) {
+    let x = p.x, n = p.n, res = 1; const n0 = Math.abs(n), bits = n0.toString(2).split('').reverse();
+    const sc = (k, cls = 'cur') => [B.arr('bits of n', bits, { heads: bits.map((_, i) => `2^${i}`), st: Object.fromEntries(bits.map((b, i) => [i, i < k ? (b === '1' ? 'done' : 'dim') : i === k ? cls : ''])), ptr: k < bits.length ? { bit: k } : {}, hint: 'lowest bit first' }), B.vars([['x', num(x)], ['res', num(res)], ['n', n]])];
+    if (n < 0) { x = 1 / x; n = -n; T.step('neg', `n is negative: x^${p.n} = (1/${p.x})^${n}. Use x = ${num(x)}, n = ${n}.`, sc(0, '')); }
+    else T.step(null, `${n} in binary is ${n0.toString(2)}, so x^${n} is a product of x^(2^i) for each set bit.`, sc(0, ''));
+    let k = 0;
+    while (n) {
+      if (n & 1) { res *= x; T.step('odd', `Bit ${k} is 1: res *= x^${2 ** k} → ${num(res)}.`, sc(k)); }
+      else T.step('odd', `Bit ${k} is 0: skip x^${2 ** k}.`, sc(k, 'dim'));
+      x *= x; n = Math.floor(n / 2); k++;
+      if (n) T.step('square', `Square x: it now holds the original x^${2 ** k} = ${num(x)}.`, sc(k, ''));
+    }
+    T.out.push(num(res)); T.step('ret', `x^${p.n} = ${num(res)} after ${k} squarings instead of ${Math.abs(p.n)} multiplications.`, sc(bits.length));
+  },
+  leg: { done: 'Bit used', dim: 'Bit is 0' },
+  idea: 'Write n in binary. x^n is the product of x^(2^i) over the set bits i, and x^(2^i) comes from squaring the previous one. So walk the bits from lowest to highest, squaring x each step and multiplying it into the result when the bit is 1.',
+  time: 'O(log n)', space: 'O(1)',
+  trap: 'Negating INT_MIN overflows a 32-bit int: take n as long long before flipping its sign.',
+  vars: ['Recursive: x^n = (x^(n/2))² · (x if n is odd)', 'Super pow (LC 372): exponent as a digit array', 'Matrix exponentiation: Fibonacci in O(log n)']
+});
+
+A({
+  id: 'multiply-strings', cat: 'Number tricks', title: 'Multiply strings', lc: 'LeetCode 43',
+  blurb: 'Grade-school multiplication: digit a[i] × digit b[j] lands in positions i + j and i + j + 1 of the result.',
+  params: [{ key: 'a', label: 'a', type: 'str', chars: '0-9', charsHint: 'digits only', maxLen: 4, def: '123' }, { key: 'b', label: 'b', type: 'str', chars: '0-9', charsHint: 'digits only', maxLen: 4, def: '45' }],
+  check: (p) => (p.a.length > 1 && p.a[0] === '0') || (p.b.length > 1 && p.b[0] === '0') ? 'No leading zeros.' : null,
+  code: `
+string multiply(string a, string b) {
+    int m = a.size(), n = b.size();
+    vector<int> pos(m + n, 0);
+    for (int i = m - 1; i >= 0; i--)
+        for (int j = n - 1; j >= 0; j--) {
+            int mul = (a[i] - '0') * (b[j] - '0');
+            int sum = mul + pos[i + j + 1];
+            pos[i + j + 1] = sum % 10;               //@digit
+            pos[i + j] += sum / 10;                  //@carry
+        }
+    string res;
+    for (int d : pos) if (!(res.empty() && d == 0)) res += '0' + d;   //@strip
+    return res.empty() ? "0" : res;
+}`,
+  run(T, p) {
+    const a = p.a.split('').map(Number), b = p.b.split('').map(Number), m = a.length, n = b.length, pos = Array(m + n).fill(0);
+    for (let i = m - 1; i >= 0; i--) for (let j = n - 1; j >= 0; j--) {
+      const mul = a[i] * b[j], sum = mul + pos[i + j + 1]; pos[i + j + 1] = sum % 10; pos[i + j] += Math.floor(sum / 10);
+      T.step('digit', `${a[i]} × ${b[j]} = ${mul}, plus pos[${i + j + 1}] gives ${sum}. Keep ${sum % 10} at ${i + j + 1}, carry ${Math.floor(sum / 10)} to ${i + j}.`, [B.arr('a', a, { ptr: { i }, st: { [i]: 'cur' } }), B.arr('b', b, { ptr: { j }, st: { [j]: 'cur' } }), B.arr('pos', [...pos], { st: { [i + j + 1]: 'cur', [i + j]: 'wait' } })]);
+    }
+    const res = pos.join('').replace(/^0+(?=.)/, '');
+    T.out.push(res);
+    T.step('strip', `Read pos left to right, skipping leading zeros: ${p.a} × ${p.b} = ${res}.`, [B.arr('a', a), B.arr('b', b), B.arr('pos', pos, { st: Object.fromEntries(pos.map((d, k) => [k, k < pos.length - res.length ? 'dim' : 'done'])) })]);
+  },
+  leg: { wait: 'Receives the carry', dim: 'Leading zero' },
+  idea: 'An m-digit number times an n-digit number has at most m + n digits. The product of a[i] and b[j] contributes to place i + j + 1 (counting from the left of the result), with its tens spilling into i + j. Processing from the right lets each position absorb carries as they come.',
+  time: 'O(m · n)', space: 'O(m + n)',
+  trap: 'Don\'t convert to integers: the inputs can be 200 digits. Strip leading zeros, but return "0" if everything was zero.',
+  vars: ['Add strings (LC 415)', 'Karatsuba for very large numbers: O(n^1.58)', 'Plus one: the same carry handling']
+});
+
+/* ================= Geometry ================= */
+const sqPts = (ps) => { const c = new Map(); ps.forEach(([x, y]) => c.set(x + ',' + y, (c.get(x + ',' + y) || 0) + 1)); return c; };
+A({
+  id: 'detect-squares', cat: 'Geometry', title: 'Detect squares', lc: 'LeetCode 2013',
+  blurb: 'Count stored points. For a query point, every stored point on a diagonal fixes one axis-aligned square; multiply the counts at its other two corners.',
+  params: [{ key: 'pts', label: 'added points (x y)', type: 'pts', min: 0, max: 8, maxLen: 10, def: [[1, 1], [5, 1], [1, 5], [1, 1], [6, 3], [3, 3], [3, 5], [5, 3]] }, { key: 'q', label: 'query point', type: 'pts', min: 0, max: 8, minLen: 1, maxLen: 1, def: [[5, 5]] }],
+  code: `
+class DetectSquares {
+    map<pair<int, int>, int> cnt;
+    int get(int x, int y) { auto it = cnt.find({x, y}); return it == cnt.end() ? 0 : it->second; }
+public:
+    void add(vector<int> p) { cnt[{p[0], p[1]}]++; }              //@add
+    int count(vector<int> q) {
+        int x = q[0], y = q[1], res = 0;
+        for (auto& [pt, c] : cnt) {
+            auto [px, py] = pt;
+            if (abs(px - x) != abs(py - y) || px == x) continue;   //@skip   // not a diagonal corner
+            res += c * get(px, y) * get(x, py);                    //@corner
+        }
+        return res;
+    }
+};`,
+  run(T, p) {
+    const pts = p.pts, [qx, qy] = p.q[0], cnt = sqPts(pts), N = 9;
+    const grid = (st) => B.grid('plane', Array.from({ length: N }, (_, r) => Array.from({ length: N }, (_, c) => cnt.get(c + ',' + (N - 1 - r)) || (c === qx && N - 1 - r === qy ? '?' : ''))), { st, small: true, rows: Array.from({ length: N }, (_, r) => N - 1 - r), cols: Array.from({ length: N }, (_, c) => c) });
+    const key = (x, y) => (N - 1 - y) + ',' + x; let res = 0;
+    T.step('add', `${pts.length} points were added; each cell shows how many copies are stored there. The query point (${qx}, ${qy}) is marked ?.`, [grid({ [key(qx, qy)]: 'path' }), B.vars([['count', 0]])]);
+    for (const [k, c] of cnt) {
+      const [px, py] = k.split(',').map(Number);
+      if (Math.abs(px - qx) !== Math.abs(py - qy) || px === qx) { T.step('skip', `(${px}, ${py}) is not diagonal to the query (|dx| ≠ |dy| or dx = 0): it can't be the opposite corner of a square.`, [grid({ [key(qx, qy)]: 'path', [key(px, py)]: 'dim' }), B.vars([['count', res]])]); continue; }
+      const c1 = cnt.get(px + ',' + qy) || 0, c2 = cnt.get(qx + ',' + py) || 0, add = c * c1 * c2; res += add;
+      T.step('corner', `(${px}, ${py}) is diagonal. The other corners are (${px}, ${qy}) ×${c1} and (${qx}, ${py}) ×${c2}: ${c} × ${c1} × ${c2} = ${add} square${add === 1 ? '' : 's'}.`, [grid({ [key(qx, qy)]: 'path', [key(px, py)]: 'cur', [key(px, qy)]: c1 ? 'done' : 'bad', [key(qx, py)]: c2 ? 'done' : 'bad' }), B.vars([['count', res, add ? 'done' : '']])]);
+    }
+    T.out.push(res); T.step(null, `count(${qx}, ${qy}) = ${res}.`, [grid({ [key(qx, qy)]: 'path' }), B.vars([['count', res, 'done']])]);
+  },
+  leg: { path: 'Query point', cur: 'Diagonal corner', done: 'Corner present', bad: 'Corner missing', dim: 'Not diagonal' },
+  idea: 'An axis-aligned square with the query as one corner is fixed by its opposite corner, which must be diagonal (|dx| = |dy| > 0). For each stored point that qualifies, the two remaining corners are known, so their counts multiply into the number of squares. Duplicated points count separately.',
+  time: 'O(1) add, O(distinct points) count', space: 'O(distinct points)',
+  trap: 'Skip dx = 0 (a zero-area "square"), and multiply counts rather than adding them: three duplicated corners give 2 × 2 × 2 squares.',
+  vars: ['Minimum area rectangle (LC 939): pairs of diagonal points', 'Max points on a line (LC 149): slopes as reduced fractions', 'Valid square (LC 593): compare the six pairwise distances']
+});
+
+Stepper.start('spiral');
+</script>
+</body>
+</html>
