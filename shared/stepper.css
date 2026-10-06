@@ -270,3 +270,4 @@ body.still .pt,body.still .win,body.still .rect,body.still .bb,body.still .bw2{t
 #notes .lc{margin-top:14px} #notes .lcp{font-size:.88rem;color:var(--muted)}
 @media (max-width:860px){ .blk{grid-template-columns:minmax(0,1fr);gap:4px} .bn{text-align:left;padding-top:0 !important} }
 .cell.c-sh{background:var(--panel2);border-style:solid}
+.sq.c-sh{background:var(--panel2)}

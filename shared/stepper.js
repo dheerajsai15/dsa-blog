@@ -256,7 +256,8 @@
         bd.textContent = nd.badge ?? ''; tg.textContent = nd.tag ?? '';
       });
       for (const [id, g] of r.state.nodes) if (!keep.has(id)) { g.remove(); r.state.nodes.delete(id); }
-      const xs = b.nodes.map(n => pos[n.id].x), ys = b.nodes.map(n => pos[n.id].y);
+      // bounds (in units) lets a growing tree keep the framing of its final size
+      const xs = b.bounds ? [b.bounds[0] * UX, b.bounds[1] * UX] : b.nodes.map(n => pos[n.id].x), ys = b.bounds ? [0, b.bounds[2] * UY] : b.nodes.map(n => pos[n.id].y);
       const x0 = Math.min(0, ...xs) - RAD - 30, x1 = Math.max(0, ...xs) + RAD + 30, y0 = Math.min(0, ...ys) - RAD - 22, y1 = Math.max(0, ...ys) + RAD + 22;
       const w = Math.max(x1 - x0, 200), h = y1 - y0;
       svg.setAttribute('viewBox', `${(x0 - (w - (x1 - x0)) / 2).toFixed(1)} ${y0.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}`);

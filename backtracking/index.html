@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Backtracking, step by step</title>
+<link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+<script src="../shared/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/stepper.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true"><g stroke="var(--edge)" stroke-width="2"><line x1="23" y1="9" x2="12" y2="22"/><line x1="23" y1="9" x2="34" y2="22"/><line x1="12" y1="22" x2="7" y2="36"/><line x1="12" y1="22" x2="18" y2="36"/></g><line x1="34" y1="22" x2="38" y2="36" stroke="var(--bad)" stroke-width="2" stroke-dasharray="3 2"/><circle cx="23" cy="9" r="5.5" fill="var(--wait-bg)" stroke="var(--wait)" stroke-width="2"/><circle cx="12" cy="22" r="5" fill="var(--wait-bg)" stroke="var(--wait)" stroke-width="2"/><circle cx="34" cy="22" r="5" fill="var(--panel)" stroke="var(--edge)" stroke-width="1.5"/><circle cx="7" cy="36" r="4.5" fill="var(--done)"/><circle cx="18" cy="36" r="4.5" fill="var(--cur)"/><circle cx="38" cy="36" r="4" fill="var(--bad)"/></svg>
+      <div>
+        <h1>Backtracking, step by step</h1>
+        <p>10 interview patterns, each animated next to its C++ code. Press <kbd>Space</kbd> to play or pause, and <kbd>←</kbd> <kbd>→</kbd> to step. Every problem runs on your own input too.</p>
+      </div>
+    </div>
+    <nav class="topnav">
+      <a href="../index.html">← All topics</a>
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="Toggle dark mode">
+        <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+    </nav>
+  </header>
+  <div class="mobile-pick"><label for="algoSelect" class="sr">Problem</label><select id="algoSelect"></select></div>
+
+  <div class="layout">
+    <nav class="side" aria-label="Problems">
+      <input id="filter" type="search" placeholder="Filter, e.g. subsets or queens" aria-label="Filter problems">
+      <div id="list"></div>
+    </nav>
+
+    <main id="main">
+      <section class="head">
+        <div class="cat" id="cat"></div>
+        <h2 id="title"></h2>
+        <p class="blurb" id="blurb"></p>
+        <div class="sample" id="sample">Sample input: <code id="sampleTree"></code></div>
+      </section>
+
+      <section class="work">
+        <div>
+          <div class="stage" id="stage"><div id="scene" aria-live="off"></div></div>
+          <div class="legend" id="legend"></div>
+
+          <div class="controls">
+            <div class="btns">
+              <button class="ib" id="first" aria-label="Go to first step" title="First step"><svg viewBox="0 0 16 16"><path d="M3 2h2v12H3zM14 2v12L6 8z"/></svg></button>
+              <button class="ib" id="prev" aria-label="Previous step" title="Previous step (←)"><svg viewBox="0 0 16 16"><path d="M12 2v12L3 8z"/></svg></button>
+              <button class="ib" id="play" aria-label="Play" data-state="play" title="Play or pause (Space)"><svg class="i-play" viewBox="0 0 16 16"><path d="M4 2v12l10-6z"/></svg><svg class="i-pause" viewBox="0 0 16 16"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg><span id="playText">Play</span></button>
+              <button class="ib" id="next" aria-label="Next step" title="Next step (→)"><svg viewBox="0 0 16 16"><path d="M4 2v12l9-6z"/></svg></button>
+              <button class="ib" id="last" aria-label="Go to last step" title="Last step"><svg viewBox="0 0 16 16"><path d="M11 2h2v12h-2zM2 2v12l8-6z"/></svg></button>
+            </div>
+            <div class="scrubwrap"><input type="range" id="scrub" min="0" max="0" value="0" aria-label="Step"><span id="counter"></span></div>
+            <label class="speed">Speed <input type="range" id="speed" min="0.5" max="3" step="0.25" value="1"><span id="speedVal">1×</span></label>
+          </div>
+
+          <p class="narr" id="narr" aria-live="polite"></p>
+          <div class="aux" id="aux"></div>
+
+          <form class="custom" id="custom">
+            <label>Try your own input</label>
+            <div id="params"></div>
+            <div class="crow">
+              <button class="tb" type="submit">Run on this input</button>
+              <button class="tb ghost" type="button" id="treeReset">Use the sample</button>
+            </div>
+            <p id="treeErr" role="alert"></p>
+          </form>
+        </div>
+
+        <div class="codebox">
+          <div class="codehead"><span><strong>C++</strong></span><button id="copy" type="button">Copy code</button></div>
+          <pre id="code"></pre>
+          <div class="nodedef">Search trees are drawn in full once explored: blue nodes are the current path, green nodes are recorded answers, red nodes are pruned. Every problem follows choose → explore → undo.</div>
+        </div>
+      </section>
+
+      <section id="notes" aria-label="Interview notes"></section>
+    </main>
+  </div>
+</div>
+<script src="../shared/stepper.js"></script>
+<script>
+const { B } = Stepper, A = Stepper.add;
+const BT_LEG = { stack: 'On the current path', done: 'Recorded answer', bad: 'Pruned / skipped' };
+const fmtList = (xs) => `[${xs.join(', ')}]`;
+
+// Records a DFS as frames over its decision tree. The whole tree is laid out once at the end,
+// so nodes keep their place while the search reveals them.
+function Rec(T, name, o = {}) {
+  const R = { parent: {}, label: {}, order: [], st: {}, frames: [] };
+  R.node = (par, label) => { const id = 'n' + R.order.length; R.parent[id] = par; R.label[id] = label; R.order.push(id); return id; };
+  R.mark = (id, cls) => { R.st[id] = cls; };
+  R.frame = (mark, msg, cur, blocks = []) => R.frames.push({ mark, msg, cur, n: R.order.length, st: { ...R.st }, blocks: JSON.parse(JSON.stringify(blocks)), out: [...T.out] });
+  R.flush = () => {
+    const pos = Stepper.layoutTree(R.parent, R.order[0], R.order), all = Object.values(pos);
+    const bounds = [Math.min(...all.map(q => q.x)), Math.max(...all.map(q => q.x)), Math.max(...all.map(q => q.y))];
+    R.frames.forEach(f => {
+      const vis = R.order.slice(0, f.n), path = new Set(); for (let c = f.cur; c != null; c = R.parent[c]) path.add(c);
+      const nodes = vis.map(id => ({ id, label: R.label[id], x: pos[id].x, y: pos[id].y, cls: id === f.cur ? (f.st[id] === 'bad' ? 'bad' : f.st[id] === 'done' ? 'done' : 'cur') : f.st[id] || (path.has(id) ? 'stack' : '') }));
+      const edges = vis.filter(id => R.parent[id] != null).map(id => [R.parent[id], id, path.has(id) ? 'cur' : f.st[id] === 'bad' ? 'dim' : '']);
+      T.out = f.out;
+      T.step(f.mark, f.msg, [B.tree(name, nodes, edges, { ux: o.ux || 38, uy: o.uy || 48, r: o.r || 15, bounds }), ...f.blocks]);
+    });
+  };
+  return R;
+}
+
+/* ================= Subsets & permutations ================= */
+A({
+  id: 'subsets', cat: 'Subsets & permutations', title: 'Subsets', lc: 'LeetCode 78',
+  blurb: 'Every node of the search tree is a subset. From each node, only add elements after the last one chosen, so no subset appears twice.',
+  params: [{ key: 'nums', label: 'nums (distinct)', type: 'ints', min: -9, max: 9, maxLen: 4, distinct: true, def: [1, 2, 3] }],
+  code: `
+vector<vector<int>> res;
+vector<int> path;
+void dfs(vector<int>& nums, int start) {
+    res.push_back(path);                      //@record   // every node is a subset
+    for (int i = start; i < nums.size(); i++) {
+        path.push_back(nums[i]);              //@choose
+        dfs(nums, i + 1);                     // only later elements from here
+        path.pop_back();                      //@undo
+    }
+}
+// subsets(nums): dfs(nums, 0); return res;`,
+  run(T, p) {
+    const a = p.nums, R = Rec(T, 'search tree'), path = [];
+    const bl = (i) => [B.arr('nums', a, { ptr: i == null ? {} : { i } }), B.chips('path', path)];
+    const dfs = (start, id, msg) => {
+      T.out.push(fmtList(path)); R.mark(id, 'done'); R.frame('record', msg + ` Record ${fmtList(path)}.`, id, bl());
+      for (let i = start; i < a.length; i++) {
+        path.push(a[i]); const c = R.node(id, a[i]);
+        dfs(i + 1, c, `Choose ${a[i]}: path = ${fmtList(path)}.`);
+        path.pop(); R.frame('undo', `Undo ${a[i]}: back to ${fmtList(path)}.${i + 1 < a.length ? ` Next try ${a[i + 1]}.` : ''}`, id, bl(i));
+      }
+    };
+    dfs(0, R.node(null, '∅'), 'Start with the empty path.');
+    R.flush();
+  },
+  outLabel: 'Subsets', leg: BT_LEG,
+  idea: 'Choose, explore, undo. The start index makes each subset come out in one canonical order (increasing positions), so {1, 2} is generated from 1 then 2 and never from 2 then 1. There are 2ⁿ nodes, one per subset.',
+  time: 'O(n · 2ⁿ)', space: 'O(n) recursion + the output',
+  trap: 'Push a copy of path into the result. Pushing a reference and then mutating path corrupts every stored subset.',
+  vars: ['Include/exclude version: two branches per element, same 2ⁿ leaves', 'Bitmask enumeration: subset k contains nums[i] when bit i of k is set', 'Subsets II (next): duplicates in the input']
+});
+
+A({
+  id: 'subsets-ii', cat: 'Subsets & permutations', title: 'Subsets II (with duplicates)', lc: 'LeetCode 90',
+  blurb: 'Sort, then at each level skip a value equal to the one just tried there. Equal values may still be chosen at different depths.',
+  params: [{ key: 'nums', label: 'nums', type: 'ints', min: -9, max: 9, maxLen: 5, def: [1, 2, 2] }],
+  code: `
+void dfs(vector<int>& nums, int start) {          // nums is sorted
+    res.push_back(path);                           //@record
+    for (int i = start; i < nums.size(); i++) {
+        if (i > start && nums[i] == nums[i - 1]) continue;   //@skip   // same choice at this level
+        path.push_back(nums[i]);                   //@choose
+        dfs(nums, i + 1);
+        path.pop_back();                           //@undo
+    }
+}`,
+  run(T, p) {
+    const a = [...p.nums].sort((x, y) => x - y), R = Rec(T, 'search tree'), path = [];
+    const bl = (i, cls) => [B.arr('nums (sorted)', a, { st: i == null ? {} : { [i]: cls }, ptr: i == null ? {} : { i } }), B.chips('path', path)];
+    const dfs = (start, id, msg) => {
+      T.out.push(fmtList(path)); R.mark(id, 'done'); R.frame('record', msg + ` Record ${fmtList(path)}.`, id, bl());
+      for (let i = start; i < a.length; i++) {
+        if (i > start && a[i] === a[i - 1]) { const c = R.node(id, a[i]); R.mark(c, 'bad'); R.frame('skip', `nums[${i}] = ${a[i]} equals the value just tried at this level. Choosing it here would rebuild the same subsets: skip.`, c, bl(i, 'bad')); continue; }
+        path.push(a[i]); const c = R.node(id, a[i]);
+        dfs(i + 1, c, `Choose ${a[i]}: path = ${fmtList(path)}.`);
+        path.pop(); R.frame('undo', `Undo ${a[i]}: back to ${fmtList(path)}.`, id, bl(i));
+      }
+    };
+    dfs(0, R.node(null, '∅'), `Sort first: ${fmtList(a)}.`);
+    R.flush();
+  },
+  outLabel: 'Subsets', leg: BT_LEG,
+  idea: 'Duplicates only cause repeats when the same value is picked for the same position in the path. Sorting puts equal values together; skipping nums[i] when it equals nums[i − 1] at the same level removes exactly those repeats, while deeper levels can still take the second copy.',
+  time: 'O(n · 2ⁿ)', space: 'O(n) recursion',
+  trap: 'The condition is i > start, not i > 0. With i > 0 you would also forbid taking the second 2 right after the first one, losing [2, 2].',
+  vars: ['Combination sum II: the same skip rule', 'Permutations II (LC 47): skip if nums[i] == nums[i−1] and the earlier one is unused', '3Sum: the same "skip equal values at one level" idea with pointers']
+});
+
+A({
+  id: 'permutations', cat: 'Subsets & permutations', title: 'Permutations', lc: 'LeetCode 46',
+  blurb: 'At each level pick any element not used yet. A used[] array marks what is already on the path.',
+  params: [{ key: 'nums', label: 'nums (distinct)', type: 'ints', min: -9, max: 9, maxLen: 3, distinct: true, def: [1, 2, 3] }],
+  code: `
+void dfs(vector<int>& nums, vector<bool>& used) {
+    if (path.size() == nums.size()) { res.push_back(path); return; }   //@record
+    for (int i = 0; i < nums.size(); i++) {
+        if (used[i]) continue;
+        used[i] = true; path.push_back(nums[i]);       //@choose
+        dfs(nums, used);
+        used[i] = false; path.pop_back();              //@undo
+    }
+}`,
+  run(T, p) {
+    const a = p.nums, R = Rec(T, 'search tree'), path = [], used = a.map(() => false);
+    const bl = () => [B.arr('nums', a, { st: Object.fromEntries(a.map((_, i) => [i, used[i] ? 'wait' : ''])), hint: 'blue = used' }), B.chips('path', path)];
+    const dfs = (id) => {
+      if (path.length === a.length) { T.out.push(fmtList(path)); R.mark(id, 'done'); R.frame('record', `Path uses every element: record ${fmtList(path)}.`, id, bl()); return; }
+      for (let i = 0; i < a.length; i++) {
+        if (used[i]) continue;
+        used[i] = true; path.push(a[i]); const c = R.node(id, a[i]);
+        R.frame('choose', `${a[i]} is unused: take it. path = ${fmtList(path)}.`, c, bl());
+        dfs(c);
+        used[i] = false; path.pop(); R.frame('undo', `Undo ${a[i]}: mark it unused again.`, id, bl());
+      }
+    };
+    const root = R.node(null, '∅'); R.frame(null, 'Empty path, nothing used.', root, bl()); dfs(root);
+    R.flush();
+  },
+  outLabel: 'Permutations', leg: { ...BT_LEG, wait: 'Used on the current path' },
+  idea: 'A permutation fills n positions; position k can take any element not already on the path. The used[] flags make that check O(1), and undoing a choice resets its flag so sibling branches can use it.',
+  time: 'O(n · n!)', space: 'O(n)',
+  trap: 'Unlike subsets there is no start index: an earlier element can come later in a permutation. Only used[] limits choices.',
+  vars: ['Swap-based version: swap nums[k] with each later element, recurse on k + 1', 'Permutations II (LC 47): duplicates, sort and skip', 'Next permutation (LC 31): the in-place successor without recursion']
+});
+
+/* ================= Combinations ================= */
+A({
+  id: 'combination-sum', cat: 'Combinations', title: 'Combination sum', lc: 'LeetCode 39',
+  blurb: 'Candidates can be reused, so recurse with the same start index. Sorting lets you stop as soon as a candidate overshoots.',
+  params: [{ key: 'c', label: 'candidates (distinct)', type: 'ints', min: 1, max: 10, maxLen: 4, distinct: true, def: [2, 3, 6, 7] }, { key: 'target', label: 'target', type: 'int', min: 1, max: 10, def: 7 }],
+  code: `
+void dfs(vector<int>& c, int start, int remain) {      // c is sorted
+    if (remain == 0) { res.push_back(path); return; }   //@record
+    for (int i = start; i < c.size(); i++) {
+        if (c[i] > remain) break;                       //@prune   // the rest are even bigger
+        path.push_back(c[i]);                           //@choose
+        dfs(c, i, remain - c[i]);                       // i, not i + 1: reuse allowed
+        path.pop_back();                                //@undo
+    }
+}`,
+  run(T, p) {
+    const c = [...p.c].sort((x, y) => x - y), R = Rec(T, 'search tree'), path = [];
+    const bl = (rem, i, cls) => [B.arr('candidates', c, { st: i == null ? {} : { [i]: cls }, ptr: i == null ? {} : { i } }), B.chips('path', path), B.vars([['remain', rem]])];
+    const dfs = (start, rem, id) => {
+      if (rem === 0) { T.out.push(fmtList(path)); R.mark(id, 'done'); R.frame('record', `remain = 0: ${path.join(' + ')} = ${p.target}. Record it.`, id, bl(rem)); return; }
+      for (let i = start; i < c.length; i++) {
+        if (c[i] > rem) { const x = R.node(id, c[i]); R.mark(x, 'bad'); R.frame('prune', `${c[i]} > remain ${rem}. Every later candidate is bigger too: stop this loop.`, x, bl(rem, i, 'bad')); break; }
+        path.push(c[i]); const x = R.node(id, c[i]);
+        R.frame('choose', `Take ${c[i]}: remain ${rem} − ${c[i]} = ${rem - c[i]}. It may be taken again below.`, x, bl(rem - c[i], i, 'cur'));
+        dfs(i, rem - c[i], x);
+        path.pop(); R.frame('undo', `Undo ${c[i]}.`, id, bl(rem));
+      }
+    };
+    const root = R.node(null, p.target); R.frame(null, `Find combinations summing to ${p.target}. The root is labeled with the target; nodes are the candidate taken.`, root, bl(p.target)); dfs(0, p.target, root);
+    R.flush();
+  },
+  outLabel: 'Combinations', leg: BT_LEG,
+  idea: 'Passing i (not i + 1) lets the same candidate be used repeatedly, while never going back to smaller indices keeps each combination in non-decreasing order, so [2, 2, 3] is found once and [3, 2, 2] never.',
+  time: 'Exponential: O(n^(target / min))', space: 'O(target / min) recursion',
+  trap: 'Without sorting, replace break with continue: a too-big candidate does not say anything about later ones.',
+  vars: ['Combination sum II (next): each candidate once, input has duplicates', 'Combination sum III (LC 216): k numbers from 1..9', 'Coin change II counts these combinations with DP instead of listing them']
+});
+
+A({
+  id: 'combination-sum-ii', cat: 'Combinations', title: 'Combination sum II', lc: 'LeetCode 40',
+  blurb: 'Each number is used at most once and the input has duplicates: recurse with i + 1, and skip equal values at the same level.',
+  params: [{ key: 'c', label: 'candidates', type: 'ints', min: 1, max: 10, maxLen: 6, def: [2, 5, 2, 1, 2] }, { key: 'target', label: 'target', type: 'int', min: 1, max: 12, def: 5 }],
+  code: `
+void dfs(vector<int>& c, int start, int remain) {      // c is sorted
+    if (remain == 0) { res.push_back(path); return; }   //@record
+    for (int i = start; i < c.size(); i++) {
+        if (i > start && c[i] == c[i - 1]) continue;   //@skip   // same value at this level
+        if (c[i] > remain) break;                       //@prune
+        path.push_back(c[i]);                           //@choose
+        dfs(c, i + 1, remain - c[i]);                   // each number used once
+        path.pop_back();                                //@undo
+    }
+}`,
+  run(T, p) {
+    const c = [...p.c].sort((x, y) => x - y), R = Rec(T, 'search tree'), path = [];
+    const bl = (rem, i, cls) => [B.arr('candidates (sorted)', c, { st: i == null ? {} : { [i]: cls }, ptr: i == null ? {} : { i } }), B.chips('path', path), B.vars([['remain', rem]])];
+    const dfs = (start, rem, id) => {
+      if (rem === 0) { T.out.push(fmtList(path)); R.mark(id, 'done'); R.frame('record', `remain = 0: record ${fmtList(path)}.`, id, bl(rem)); return; }
+      for (let i = start; i < c.length; i++) {
+        if (i > start && c[i] === c[i - 1]) { const x = R.node(id, c[i]); R.mark(x, 'bad'); R.frame('skip', `${c[i]} was just tried at this level: skip the duplicate.`, x, bl(rem, i, 'bad')); continue; }
+        if (c[i] > rem) { const x = R.node(id, c[i]); R.mark(x, 'bad'); R.frame('prune', `${c[i]} > remain ${rem}: stop.`, x, bl(rem, i, 'bad')); break; }
+        path.push(c[i]); const x = R.node(id, c[i]);
+        R.frame('choose', `Take ${c[i]} (index ${i}): remain = ${rem - c[i]}. Later picks start at index ${i + 1}.`, x, bl(rem - c[i], i, 'cur'));
+        dfs(i + 1, rem - c[i], x);
+        path.pop(); R.frame('undo', `Undo ${c[i]}.`, id, bl(rem));
+      }
+    };
+    const root = R.node(null, p.target); R.frame(null, `Sorted: ${fmtList(c)}. Target ${p.target}.`, root, bl(p.target)); dfs(0, p.target, root);
+    R.flush();
+  },
+  outLabel: 'Combinations', leg: BT_LEG,
+  idea: 'It is subsets II with a sum filter: i + 1 forbids reusing an element, the level-skip removes duplicate combinations, and the sorted order allows an early break once a value exceeds what remains.',
+  time: 'O(n · 2ⁿ)', space: 'O(n)',
+  trap: 'Apply the duplicate skip before the break, and use i > start so the second copy can still be used deeper in the same path.',
+  vars: ['Subsets II: the same skip rule without a target', 'Combination sum (previous): reuse allowed', 'Partition to K equal sum subsets (LC 698)']
+});
+
+A({
+  id: 'letters', cat: 'Combinations', title: 'Letter combinations of a phone number', lc: 'LeetCode 17',
+  blurb: 'Depth i chooses one letter for digit i. The tree has one level per digit and one branch per letter on the key.',
+  params: [{ key: 'digits', label: 'digits', type: 'str', chars: '2-9', charsHint: 'digits 2 to 9', maxLen: 2, def: '23' }],
+  code: `
+string MAP[] = {"", "", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"};
+void dfs(string& digits, int i) {
+    if (i == digits.size()) { res.push_back(path); return; }   //@record
+    for (char c : MAP[digits[i] - '0']) {
+        path.push_back(c);                                     //@choose
+        dfs(digits, i + 1);
+        path.pop_back();                                       //@undo
+    }
+}`,
+  run(T, p) {
+    const MAP = ['', '', 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqrs', 'tuv', 'wxyz'], d = p.digits.split(''), R = Rec(T, 'search tree', { ux: 30 }); let path = '';
+    const bl = (i) => [B.arr('digits', d, { heads: d.map(x => MAP[+x]), ptr: i == null || i >= d.length ? {} : { i } }), B.vars([['path', `"${path}"`]])];
+    const dfs = (i, id) => {
+      if (i === d.length) { T.out.push(path); R.mark(id, 'done'); R.frame('record', `All ${d.length} digits have a letter: record "${path}".`, id, bl(i)); return; }
+      for (const ch of MAP[+d[i]]) {
+        path += ch; const c = R.node(id, ch);
+        R.frame('choose', `Digit ${d[i]} → '${ch}'. path = "${path}".`, c, bl(i));
+        dfs(i + 1, c);
+        path = path.slice(0, -1); R.frame('undo', `Undo '${ch}'.`, id, bl(i));
+      }
+    };
+    const root = R.node(null, '·'); dfs(0, root);
+    R.flush();
+  },
+  outLabel: 'Combinations', leg: BT_LEG,
+  idea: 'There is no pruning: every path of length n is an answer. Backtracking just enumerates the Cartesian product one letter at a time, building each string in one shared buffer.',
+  time: 'O(n · 4ⁿ)', space: 'O(n)',
+  trap: 'Return an empty list (not [""]) when the input is empty.',
+  vars: ['Iterative BFS: extend every partial string by each letter of the next digit', 'Generalized: Cartesian product of k lists', 'Word search II with a trie prunes the same kind of tree']
+});
+
+/* ================= Partitions & strings ================= */
+A({
+  id: 'palindrome-partition', cat: 'Partitions & strings', title: 'Palindrome partitioning', lc: 'LeetCode 131',
+  blurb: 'Choose the next piece as any palindromic prefix of the rest, then partition what remains.',
+  params: [{ key: 's', label: 's', type: 'str', maxLen: 5, lower: true, def: 'aabb' }],
+  code: `
+bool isPal(string& s, int l, int r) { while (l < r) if (s[l++] != s[r--]) return false; return true; }
+void dfs(string& s, int start) {
+    if (start == s.size()) { res.push_back(parts); return; }   //@record
+    for (int end = start; end < s.size(); end++) {
+        if (!isPal(s, start, end)) continue;                   //@prune
+        parts.push_back(s.substr(start, end - start + 1));     //@choose
+        dfs(s, end + 1);
+        parts.pop_back();                                      //@undo
+    }
+}`,
+  run(T, p) {
+    const s = p.s, S = s.split(''), R = Rec(T, 'search tree', { ux: 44, r: 17 }), parts = [];
+    const isPal = (l, r) => { while (l < r) if (s[l++] !== s[r--]) return false; return true; };
+    const bl = (start, end, cls) => [B.arr('s', S, { win: end == null ? null : [start, end, cls], st: Object.fromEntries(S.map((_, i) => [i, i < start ? 'dim' : ''])), ptr: end == null ? { start } : { start, end } }), B.chips('parts', parts)];
+    const dfs = (start, id) => {
+      if (start === s.length) { T.out.push(parts.join(' | ')); R.mark(id, 'done'); R.frame('record', `The whole string is split into palindromes: record ${parts.join(' | ')}.`, id, bl(start)); return; }
+      for (let end = start; end < s.length; end++) {
+        const piece = s.slice(start, end + 1);
+        if (!isPal(start, end)) { const x = R.node(id, piece); R.mark(x, 'bad'); R.frame('prune', `"${piece}" is not a palindrome: no partition can start with it.`, x, bl(start, end, 'bad')); continue; }
+        parts.push(piece); const x = R.node(id, piece);
+        R.frame('choose', `"${piece}" is a palindrome. Take it and partition the rest.`, x, bl(start, end, 'done'));
+        dfs(end + 1, x);
+        parts.pop(); R.frame('undo', `Undo "${piece}".`, id, bl(start));
+      }
+    };
+    dfs(0, R.node(null, '·'));
+    R.flush();
+  },
+  outLabel: 'Partitions', leg: BT_LEG,
+  idea: 'A partition is a sequence of cuts. The first piece must be a palindromic prefix; after choosing it, the rest is the same problem on a shorter suffix. Non-palindromic prefixes are pruned immediately.',
+  time: 'O(n · 2ⁿ)', space: 'O(n) recursion',
+  trap: 'Precompute isPal[l][r] with DP to avoid re-checking the same substrings; the plain check is fine for interview sizes.',
+  vars: ['Palindrome partitioning II (LC 132): minimum cuts with DP', 'Word break II (LC 140): pieces must be dictionary words', 'Restore IP addresses (LC 93): pieces must be valid octets']
+});
+
+A({
+  id: 'gen-parens', cat: 'Partitions & strings', title: 'Generate parentheses', lc: 'LeetCode 22',
+  blurb: 'Add "(" while some are left; add ")" only when it would close an open one. Every leaf is a valid string.',
+  params: [{ key: 'n', label: 'pairs n', type: 'int', min: 1, max: 3, def: 3 }],
+  code: `
+void dfs(int open, int close, int n) {
+    if (path.size() == 2 * n) { res.push_back(path); return; }   //@record
+    if (open < n) {
+        path.push_back('(');                    //@open
+        dfs(open + 1, close, n);
+        path.pop_back();                        //@undoOpen
+    }
+    if (close < open) {                         // a ')' needs an unmatched '(' before it
+        path.push_back(')');                    //@close
+        dfs(open, close + 1, n);
+        path.pop_back();                        //@undo
+    }
+}`,
+  run(T, p) {
+    const n = p.n, R = Rec(T, 'search tree', { ux: 34 }); let path = '';
+    const bl = (o, c) => [B.vars([['path', `"${path}"`], ['open', o], ['close', c], ['n', n]])];
+    const dfs = (o, c, id) => {
+      if (path.length === 2 * n) { T.out.push(path); R.mark(id, 'done'); R.frame('record', `Length ${2 * n}: record "${path}".`, id, bl(o, c)); return; }
+      if (o < n) { path += '('; const x = R.node(id, '('); R.frame('open', `open ${o} < ${n}: add "(" → "${path}".`, x, bl(o + 1, c)); dfs(o + 1, c, x); path = path.slice(0, -1); R.frame('undoOpen', 'Undo "(".', id, bl(o, c)); }
+      if (c < o) { path += ')'; const x = R.node(id, ')'); R.frame('close', `close ${c} < open ${o}: add ")" → "${path}".`, x, bl(o, c + 1)); dfs(o, c + 1, x); path = path.slice(0, -1); R.frame('undo', 'Undo ")".', id, bl(o, c)); }
+    };
+    dfs(0, 0, R.node(null, '·'));
+    R.flush();
+  },
+  outLabel: 'Valid strings', leg: BT_LEG,
+  idea: 'Instead of generating every string of ( and ) and filtering, only make moves that keep the prefix valid: never more than n opens, and never more closes than opens. Every path that reaches length 2n is then valid by construction.',
+  time: 'O(4ⁿ / √n): the Catalan number of answers', space: 'O(n)',
+  trap: 'The close condition is close < open, not close < n. Using n allows prefixes like "())".',
+  vars: ['Valid parentheses (Stack page): checking instead of generating', 'Remove invalid parentheses (LC 301): BFS or backtracking with counts', 'Catalan structures: binary trees, mountain ranges, triangulations']
+});
+
+/* ================= Grids ================= */
+A({
+  id: 'word-search', cat: 'Grids', title: 'Word search', lc: 'LeetCode 79',
+  blurb: 'From each matching start cell, DFS to neighbors that match the next letter. Mark cells on the current path so none is reused, and unmark on the way back.',
+  params: [{ key: 'board', label: 'board rows', type: 'grid', chars: 'A-Z', charsHint: 'uppercase letters', maxR: 5, maxC: 6, def: ['ABCE', 'SFCS', 'ADEE'] }, { key: 'word', label: 'word', type: 'str', chars: 'A-Z', charsHint: 'uppercase letters', maxLen: 8, def: 'ABCCED' }],
+  code: `
+bool dfs(vector<vector<char>>& b, string& w, int r, int c, int k) {
+    if (k == w.size()) return true;                                  //@found
+    if (r < 0 || c < 0 || r >= b.size() || c >= b[0].size() || b[r][c] != w[k])
+        return false;                                                //@miss
+    char saved = b[r][c];
+    b[r][c] = '#';                                                   //@mark   // on the current path
+    bool ok = dfs(b, w, r + 1, c, k + 1) || dfs(b, w, r - 1, c, k + 1)
+           || dfs(b, w, r, c + 1, k + 1) || dfs(b, w, r, c - 1, k + 1);
+    b[r][c] = saved;                                                 //@undo
+    return ok;
+}
+bool exist(vector<vector<char>>& b, string w) {
+    for (int r = 0; r < b.size(); r++)
+        for (int c = 0; c < b[0].size(); c++)
+            if (dfs(b, w, r, c, 0)) return true;                     //@start
+    return false;                                                    //@none
+}`,
+  run(T, p) {
+    const g = p.board.map(r => r.split('')), Rn = g.length, Cn = g[0].length, w = p.word, path = [], onPath = new Set();
+    const sc = (k, extra = {}) => { const st = {}; path.forEach(([r, c]) => { st[r + ',' + c] = 'wait'; }); return [B.grid('board', g, { st: { ...st, ...extra } }), B.arr('word', w.split(''), { st: Object.fromEntries(w.split('').map((_, i) => [i, i < k ? 'done' : ''])), ptr: k < w.length ? { k } : {} })]; };
+    const D = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    const dfs = (r, c, k) => {
+      if (k === w.length) return true;
+      if (r < 0 || c < 0 || r >= Rn || c >= Cn) return false;
+      if (onPath.has(r + ',' + c)) { T.step('miss', `(${r}, ${c}) is already on the path: it can't be reused.`, sc(k, { [r + ',' + c]: 'bad' })); return false; }
+      if (g[r][c] !== w[k]) { T.step('miss', `(${r}, ${c}) is '${g[r][c]}', not '${w[k]}'. Back up.`, sc(k, { [r + ',' + c]: 'bad' })); return false; }
+      path.push([r, c]); onPath.add(r + ',' + c);
+      T.step('mark', `(${r}, ${c}) = '${w[k]}' matches letter ${k}. Mark it as used and look at its neighbors.`, sc(k + 1, { [r + ',' + c]: 'cur' }));
+      if (k + 1 === w.length) return true;
+      for (const [dr, dc] of D) if (dfs(r + dr, c + dc, k + 1)) return true;
+      path.pop(); onPath.delete(r + ',' + c);
+      T.step('undo', `No neighbor continues the word from (${r}, ${c}). Unmark it and back up.`, sc(k, { [r + ',' + c]: 'dim' }));
+      return false;
+    };
+    for (let r = 0; r < Rn; r++) for (let c = 0; c < Cn; c++) {
+      if (g[r][c] !== w[0]) continue;
+      T.step('start', `(${r}, ${c}) is '${w[0]}', the first letter. Start a search here. (Cells that don't match the first letter fail immediately and are skipped in this animation.)`, sc(0, { [r + ',' + c]: 'cur' }));
+      if (dfs(r, c, 0)) { T.out.push('true'); T.step('found', `All ${w.length} letters matched along the green path.`, [B.grid('board', g, { st: Object.fromEntries(path.map(([a, b]) => [a + ',' + b, 'done'])) }), B.arr('word', w.split(''), { st: Object.fromEntries(w.split('').map((_, i) => [i, 'done'])) })]); return; }
+    }
+    T.out.push('false'); T.step('none', `No starting cell leads to "${w}".`, sc(0));
+  },
+  leg: { wait: 'On the current path', bad: 'Mismatch or reused', dim: 'Backtracked' },
+  idea: 'Each start cell launches a DFS that matches one letter per step. Overwriting the cell with # marks it as used for this path only; restoring it on the way back lets other paths use it. Returning early with || stops at the first full match.',
+  time: 'O(R · C · 3^L) for word length L', space: 'O(L) recursion',
+  trap: 'Restore the cell after exploring, and don\'t use a global visited set that persists across start cells, or valid paths get blocked.',
+  vars: ['Word search II (LC 212): a trie of all words, one DFS per cell', 'Number of islands (Graphs page): flood fill without undo', 'Path with maximum gold (LC 1219): the same mark/unmark DFS']
+});
+
+A({
+  id: 'n-queens', cat: 'Grids', title: 'N-Queens', lc: 'LeetCode 51',
+  blurb: 'Place one queen per row. Three sets (columns, diagonals r + c, anti-diagonals r − c) say in O(1) whether a square is attacked.',
+  params: [{ key: 'n', label: 'n', type: 'int', min: 1, max: 5, def: 4 }],
+  code: `
+void dfs(int r, int n) {
+    if (r == n) { res.push_back(board); return; }              //@record
+    for (int c = 0; c < n; c++) {
+        if (cols[c] || diag[r + c] || anti[r - c + n]) continue;   //@attacked
+        cols[c] = diag[r + c] = anti[r - c + n] = true;
+        board[r][c] = 'Q';                                     //@place
+        dfs(r + 1, n);
+        board[r][c] = '.';
+        cols[c] = diag[r + c] = anti[r - c + n] = false;       //@undo
+    }
+}`,
+  run(T, p) {
+    const n = p.n, q = [], cols = new Set(), dg = new Set(), an = new Set(); let count = 0;
+    const board = () => Array.from({ length: n }, (_, r) => Array.from({ length: n }, (_, c) => q[r] === c ? '♛' : ''));
+    const attacked = (r, c) => cols.has(c) || dg.has(r + c) || an.has(r - c);
+    const sc = (extra = {}) => { const st = {}; for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) { if (q[r] === c) st[r + ',' + c] = 'wait'; else if (r >= q.length && attacked(r, c)) st[r + ',' + c] = 'sh'; } return [B.grid('board', board(), { st: { ...st, ...extra } }), B.vars([['solutions', count]])]; };
+    const dfs = (r) => {
+      if (r === n) { count++; T.out.push(q.map(c => '.'.repeat(c) + 'Q' + '.'.repeat(n - c - 1)).join(' ')); T.step('record', `All ${n} queens placed: solution ${count}.`, sc(Object.fromEntries(q.map((c, rr) => [rr + ',' + c, 'done'])))); return; }
+      for (let c = 0; c < n; c++) {
+        if (attacked(r, c)) { T.step('attacked', `(${r}, ${c}) is attacked (${cols.has(c) ? 'same column' : dg.has(r + c) ? 'same diagonal' : 'same anti-diagonal'}).`, sc({ [r + ',' + c]: 'bad' })); continue; }
+        q.push(c); cols.add(c); dg.add(r + c); an.add(r - c);
+        T.step('place', `Place a queen at (${r}, ${c}). Faded squares below are now attacked.`, sc({ [r + ',' + c]: 'cur' }));
+        dfs(r + 1);
+        q.pop(); cols.delete(c); dg.delete(r + c); an.delete(r - c);
+        T.step('undo', `Remove the queen from (${r}, ${c}) and try the next column in row ${r}.`, sc({ [r + ',' + c]: 'in' }));
+      }
+    };
+    dfs(0);
+    T.step(null, `Search complete: ${count} solution${count === 1 ? '' : 's'} for n = ${n}.`, sc());
+  },
+  outLabel: 'Solutions (row by row)', leg: { wait: 'Queen', sh: 'Attacked square', bad: 'Attacked: skip', done: 'Solution', in: 'Removed (undo)' },
+  idea: 'Placing exactly one queen per row removes row conflicts by construction. Squares on the same diagonal share r + c, and on the same anti-diagonal share r − c, so three boolean arrays answer "is this square attacked?" in O(1). Undoing a placement clears its three flags.',
+  time: 'O(n!)', space: 'O(n)',
+  trap: 'Offset r − c by n (it can be negative) when using an array instead of a set.',
+  vars: ['N-Queens II (LC 52): count only', 'Sudoku solver (LC 37): the same placement with row, column and box sets', 'Bitmask version: columns and diagonals as bits, very fast']
+});
+
+Stepper.start('subsets');
+</script>
+</body>
+</html>
