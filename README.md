@@ -13,6 +13,7 @@ dp/index.html       dynamic programming (17 problems, recursion → memo → tab
 hashing/index.html  arrays & hashing (11 problems)
 twopointers/index.html  two pointers (10 problems)
 window/index.html   sliding window (10 problems)
+stack/index.html    stack (9 problems)
 shared/theme.css    colors, fonts, light/dark tokens
 shared/theme.js     saved theme + [data-theme-toggle] buttons
 shared/stepper.js   engine for the array-style pages: player, code panel, blocks, custom input
