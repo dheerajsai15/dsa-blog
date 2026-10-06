@@ -192,7 +192,7 @@
       const bw = r.el.lastChild, n = b.vals.length, H = b.h || 150;
       const max = Math.max(1, b.max || 0, ...b.vals.map((v, i) => v + ((b.water || [])[i] || 0)));
       if (!r.state.bx) {
-        bw.innerHTML = `<div class="barsb"><div class="rect" hidden></div>${b.vals.map(() => `<div class="bcol"><span class="bv"></span><div class="bst" style="height:${H}px"><div class="bw2"></div><div class="bb"></div></div><span class="ix"></span></div>`).join('')}</div>`;
+        bw.innerHTML = `<div class="barsb${n > 10 ? ' narrow' : ''}"><div class="rect" hidden></div>${b.vals.map(() => `<div class="bcol"><span class="bv"></span><div class="bst" style="height:${H}px"><div class="bw2"></div><div class="bb"></div></div><span class="ix"></span></div>`).join('')}</div>`;
         r.state.bx = bw.firstChild; r.state.cols = [...r.state.bx.querySelectorAll('.bcol')];
       }
       const unit = H / max;
