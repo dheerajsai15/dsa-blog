@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Heap &amp; priority queue, step by step</title>
+<link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+<script src="../shared/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/stepper.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true"><g stroke="var(--edge)" stroke-width="2"><line x1="23" y1="11" x2="12" y2="25"/><line x1="23" y1="11" x2="34" y2="25"/><line x1="12" y1="25" x2="6" y2="38"/><line x1="12" y1="25" x2="18" y2="38"/></g><circle cx="23" cy="10" r="6.5" fill="var(--found)"/><circle cx="12" cy="25" r="5.5" fill="var(--panel)" stroke="var(--wait)" stroke-width="2"/><circle cx="34" cy="25" r="5.5" fill="var(--panel)" stroke="var(--edge)" stroke-width="1.5"/><circle cx="6" cy="38" r="4.5" fill="var(--panel)" stroke="var(--edge)" stroke-width="1.5"/><circle cx="18" cy="38" r="4.5" fill="var(--cur)"/></svg>
+      <div>
+        <h1>Heap &amp; priority queue, step by step</h1>
+        <p>7 interview patterns, each animated next to its C++ code. Press <kbd>Space</kbd> to play or pause, and <kbd>←</kbd> <kbd>→</kbd> to step. Every problem runs on your own input too.</p>
+      </div>
+    </div>
+    <nav class="topnav">
+      <a href="../index.html">← All topics</a>
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="Toggle dark mode">
+        <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+    </nav>
+  </header>
+  <div class="mobile-pick"><label for="algoSelect" class="sr">Problem</label><select id="algoSelect"></select></div>
+
+  <div class="layout">
+    <nav class="side" aria-label="Problems">
+      <input id="filter" type="search" placeholder="Filter, e.g. median or scheduler" aria-label="Filter problems">
+      <div id="list"></div>
+    </nav>
+
+    <main id="main">
+      <section class="head">
+        <div class="cat" id="cat"></div>
+        <h2 id="title"></h2>
+        <p class="blurb" id="blurb"></p>
+        <div class="sample" id="sample">Sample input: <code id="sampleTree"></code></div>
+      </section>
+
+      <section class="work">
+        <div>
+          <div class="stage" id="stage"><div id="scene" aria-live="off"></div></div>
+          <div class="legend" id="legend"></div>
+
+          <div class="controls">
+            <div class="btns">
+              <button class="ib" id="first" aria-label="Go to first step" title="First step"><svg viewBox="0 0 16 16"><path d="M3 2h2v12H3zM14 2v12L6 8z"/></svg></button>
+              <button class="ib" id="prev" aria-label="Previous step" title="Previous step (←)"><svg viewBox="0 0 16 16"><path d="M12 2v12L3 8z"/></svg></button>
+              <button class="ib" id="play" aria-label="Play" data-state="play" title="Play or pause (Space)"><svg class="i-play" viewBox="0 0 16 16"><path d="M4 2v12l10-6z"/></svg><svg class="i-pause" viewBox="0 0 16 16"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg><span id="playText">Play</span></button>
+              <button class="ib" id="next" aria-label="Next step" title="Next step (→)"><svg viewBox="0 0 16 16"><path d="M4 2v12l9-6z"/></svg></button>
+              <button class="ib" id="last" aria-label="Go to last step" title="Last step"><svg viewBox="0 0 16 16"><path d="M11 2h2v12h-2zM2 2v12l8-6z"/></svg></button>
+            </div>
+            <div class="scrubwrap"><input type="range" id="scrub" min="0" max="0" value="0" aria-label="Step"><span id="counter"></span></div>
+            <label class="speed">Speed <input type="range" id="speed" min="0.5" max="3" step="0.25" value="1"><span id="speedVal">1×</span></label>
+          </div>
+
+          <p class="narr" id="narr" aria-live="polite"></p>
+          <div class="aux" id="aux"></div>
+
+          <form class="custom" id="custom">
+            <label>Try your own input</label>
+            <div id="params"></div>
+            <div class="crow">
+              <button class="tb" type="submit">Run on this input</button>
+              <button class="tb ghost" type="button" id="treeReset">Use the sample</button>
+            </div>
+            <p id="treeErr" role="alert"></p>
+          </form>
+        </div>
+
+        <div class="codebox">
+          <div class="codehead"><span><strong>C++</strong></span><button id="copy" type="button">Copy code</button></div>
+          <pre id="code"></pre>
+          <div class="nodedef">C++ <code>priority_queue</code> is a max-heap; pass <code>greater&lt;int&gt;</code> for a min-heap. The tree and its backing array show the same heap: node <code>i</code> has children <code>2i+1</code> and <code>2i+2</code>.</div>
+        </div>
+      </section>
+
+      <section id="notes" aria-label="Interview notes"></section>
+    </main>
+  </div>
+</div>
+<script src="../shared/stepper.js"></script>
+<script>
+const { B } = Stepper, A = Stepper.add;
+
+// A binary heap that reports every structural change, so each sift can become a frame.
+// before(x, y) is true when x belongs above y (smaller for a min-heap, larger for a max-heap).
+class Heap {
+  constructor(before) { this.a = []; this.before = before; }
+  push(x, on = () => {}) {
+    const a = this.a; a.push(x); let i = a.length - 1; on('add', i);
+    while (i > 0) { const p = (i - 1) >> 1; if (!this.before(a[i], a[p])) break; on('up', i, p); [a[i], a[p]] = [a[p], a[i]]; i = p; }
+    on('settle', i);
+  }
+  pop(on = () => {}) {
+    const a = this.a, top = a[0], last = a.pop();
+    if (a.length) {
+      a[0] = last; on('root', 0); let i = 0;
+      for (;;) { const l = 2 * i + 1, r = l + 1; let b = i; if (l < a.length && this.before(a[l], a[b])) b = l; if (r < a.length && this.before(a[r], a[b])) b = r; if (b === i) break; on('down', i, b); [a[i], a[b]] = [a[b], a[i]]; i = b; }
+      on('settle', i);
+    }
+    return top;
+  }
+  get top() { return this.a[0]; }
+  get size() { return this.a.length; }
+}
+// Tree + backing array for a heap. st maps heap index -> state class.
+function heapView(name, h, lab, st = {}, o = {}) {
+  const nodes = h.a.map((v, i) => ({ id: name + i, label: lab(v), ...Stepper.heapPos(i), cls: st[i] || '' }));
+  const edges = h.a.map((_, i) => i ? [name + ((i - 1) >> 1), name + i, st[i] && st[(i - 1) >> 1] ? 'cur' : ''] : null).filter(Boolean);
+  const out = [B.tree(name, nodes, edges, { hint: o.hint, ux: 40, uy: 50 })];
+  if (o.array !== false) out.push(B.arr(name + ' array', h.a.map(lab), { st, sm: true, hint: 'children of i: 2i+1, 2i+2' }));
+  return out;
+}
+const siftMsg = (kind, a, b, lab, dir) => kind === 'up' ? `${lab(a)} ${dir} its parent ${lab(b)}: swap up.` : `${lab(a)} is out of place; its ${dir === '<' ? 'smaller' : 'larger'} child ${lab(b)} moves up.`;
+
+/* ================= Top K ================= */
+A({
+  id: 'kth-stream', cat: 'Top K', title: 'Kth largest element in a stream', lc: 'LeetCode 703',
+  blurb: 'Keep only the k largest values seen, in a min-heap. Its top is the smallest of them: the kth largest overall.',
+  params: [{ key: 'k', label: 'k', type: 'int', min: 1, max: 6, def: 3 }, { key: 'nums', label: 'initial nums', type: 'ints', min: -50, max: 50, minLen: 0, maxLen: 6, def: [4, 5, 8, 2] }, { key: 'adds', label: 'then add', type: 'ints', min: -50, max: 50, maxLen: 6, def: [3, 5, 10, 9, 4] }],
+  check: (p) => p.nums.length + 1 < p.k ? `Start with at least k − 1 = ${p.k - 1} numbers so the first add has an answer.` : null,
+  code: `
+class KthLargest {
+    priority_queue<int, vector<int>, greater<int>> pq;   // min-heap of the k largest
+    int k;
+public:
+    KthLargest(int k, vector<int>& nums) : k(k) {
+        for (int x : nums) add(x);                        //@init
+    }
+    int add(int val) {
+        pq.push(val);                                     //@push
+        if (pq.size() > k) pq.pop();                      //@pop    // drop the smallest
+        return pq.top();                                  //@top    // the kth largest so far
+    }
+};`,
+  run(T, p) {
+    const k = p.k, all = [...p.nums, ...p.adds], h = new Heap((x, y) => x < y), id = (v) => v;
+    const sc = (s, st = {}) => [B.arr('stream', all, { st: Object.fromEntries(all.map((_, i) => [i, i < p.nums.length ? 'wait' : ''])), ptr: s == null ? {} : { val: s }, hint: 'blue: constructor' }), ...heapView('min-heap', h, id, st, { hint: `size ≤ ${k}` })];
+    T.step('init', `The constructor feeds the ${p.nums.length} starting numbers through add(). The heap keeps at most k = ${k}.`, sc(null));
+    all.forEach((v, s) => {
+      const init = s < p.nums.length;
+      h.push(v, (kind, i, j) => {
+        if (kind === 'add') T.step('push', `add(${v}): put it at the end of the heap.`, sc(s, { [i]: 'cur' }));
+        else if (kind === 'up') T.step('push', siftMsg('up', h.a[i], h.a[j], id, '<'), sc(s, { [i]: 'cur', [j]: 'wait' }));
+      });
+      if (h.size > k) {
+        const small = h.top;
+        T.step('pop', `${h.size} > k: pop the smallest (${small}). It can't be among the k largest any more.`, sc(s, { 0: 'bad' }));
+        h.pop((kind, i, j) => { if (kind === 'down') T.step('pop', siftMsg('down', h.a[i], h.a[j], id, '<'), sc(s, { [i]: 'cur', [j]: 'wait' })); });
+      }
+      if (!init || s === p.nums.length - 1) {
+        if (!init) T.out.push(h.size >= k ? h.top : '–');
+        T.step('top', h.size >= k ? `${init ? 'After the constructor, the' : 'The'} top ${h.top} is the ${k}${k === 1 ? 'st' : k === 2 ? 'nd' : k === 3 ? 'rd' : 'th'} largest so far.${init ? '' : ` add(${v}) returns ${h.top}.`}` : `Only ${h.size} numbers so far.`, sc(s, { 0: 'found' }));
+      }
+    });
+  },
+  outLabel: 'add() returns', leg: { wait: 'Constructor input / compared', bad: 'Evicted', found: 'kth largest' },
+  idea: 'The kth largest is the smallest member of the top k. A min-heap of size k keeps exactly those k values with the smallest one on top. A new value enters, and if the heap grows past k the smallest is evicted.',
+  time: 'O(log k) per add', space: 'O(k)',
+  trap: 'Use a min-heap (greater<int>), not the default max-heap: the element you need to evict and to report is the smallest of the k.',
+  vars: ['Kth largest element in an array (next): heap or quickselect', 'Top K frequent elements: a size-k heap over counts', 'Find median from data stream: two heaps (Design section)']
+});
+
+A({
+  id: 'kth-largest', cat: 'Top K', title: 'Kth largest element (quickselect)', lc: 'LeetCode 215',
+  blurb: 'Partition around a pivot like quicksort, but only recurse into the side that holds the answer. Average O(n).',
+  params: [{ key: 'nums', label: 'nums', type: 'ints', min: -50, max: 50, maxLen: 10, def: [3, 2, 1, 5, 6, 4, 9, 7] }, { key: 'k', label: 'k', type: 'int', min: 1, max: 10, def: 3 }],
+  check: (p) => p.k > p.nums.length ? `k can be at most ${p.nums.length}.` : null,
+  code: `
+int findKthLargest(vector<int>& nums, int k) {
+    int target = nums.size() - k, lo = 0, hi = nums.size() - 1;   // index in sorted order
+    while (true) {
+        int pivot = nums[hi], p = lo;                     //@pivot
+        for (int i = lo; i < hi; i++)
+            if (nums[i] < pivot) swap(nums[i], nums[p++]);   //@scan   // smaller ones go left of p
+        swap(nums[p], nums[hi]);                          //@place  // pivot lands in its sorted spot
+        if (p == target) return nums[p];                  //@hit
+        if (p < target) lo = p + 1;                       //@right
+        else hi = p - 1;                                  //@left
+    }
+}`,
+  run(T, p) {
+    const a = [...p.nums], n = a.length, target = n - p.k; let lo = 0, hi = n - 1;
+    const sc = (st, ptr) => [B.arr('nums', [...a], { st: { ...Object.fromEntries(a.map((_, i) => [i, i < lo || i > hi ? 'dim' : ''])), ...st }, ptr, pc: { i: 'cur', p: 'wait', target: 'target' } }), B.vars([['target index', `${target} (n − k)`]])];
+    for (;;) {
+      const pivot = a[hi]; let pp = lo;
+      T.step('pivot', `Range ${lo}..${hi}. Pivot = nums[${hi}] = ${pivot}. Values smaller than it will be gathered left of p.`, sc({ [hi]: 'path' }, { p: pp, target }));
+      for (let i = lo; i < hi; i++) {
+        if (a[i] < pivot) { [a[i], a[pp]] = [a[pp], a[i]]; pp++; T.step('scan', `${a[pp - 1]} < ${pivot}: swap it to slot ${pp - 1}, p = ${pp}.`, sc({ [hi]: 'path', [pp - 1]: 'cur' }, { i, p: pp })); }
+        else T.step('scan', `${a[i]} ≥ ${pivot}: leave it.`, sc({ [hi]: 'path', [i]: 'in' }, { i, p: pp }));
+      }
+      [a[pp], a[hi]] = [a[hi], a[pp]];
+      T.step('place', `Swap the pivot into slot ${pp}. Everything left is smaller, everything right is not: ${pivot} is exactly where sorting would put it.`, sc({ [pp]: 'found' }, { p: pp, target }));
+      if (pp === target) { T.out.push(a[pp]); T.step('hit', `The pivot landed on index ${target} = n − k: it is the ${p.k}th largest, ${a[pp]}.`, sc({ [pp]: 'done' }, { target })); return; }
+      if (pp < target) { T.step('right', `${pp} < ${target}: the answer is right of the pivot. lo = ${pp + 1}.`, sc({ [pp]: 'found' }, { p: pp, target })); lo = pp + 1; }
+      else { T.step('left', `${pp} > ${target}: the answer is left of the pivot. hi = ${pp - 1}.`, sc({ [pp]: 'found' }, { p: pp, target })); hi = pp - 1; }
+    }
+  },
+  leg: { path: 'Pivot', found: 'Pivot in its final spot', in: 'Not smaller than pivot' },
+  idea: 'After one partition the pivot is at its final sorted index p. If p is the index we want (n − k) we are done; otherwise only one side can contain it, so the other side is never touched again. That halves the work on average: n + n/2 + n/4 + … = O(n).',
+  time: 'O(n) average, O(n²) worst', space: 'O(1)',
+  trap: 'A fixed pivot on sorted input hits the O(n²) worst case; pick a random pivot in practice. The size-k min-heap (previous problem) is O(n log k) and never degrades.',
+  vars: ['Size-k min-heap: O(n log k), simpler to get right', 'Kth smallest: target = k − 1', 'Wiggle sort II (LC 324): quickselect the median first', 'Sort colors: three-way partitioning']
+});
+
+A({
+  id: 'k-closest-points', cat: 'Top K', title: 'K closest points to origin', lc: 'LeetCode 973',
+  blurb: 'Keep a max-heap of the k closest by squared distance. A new point closer than the top evicts it.',
+  params: [{ key: 'pts', label: 'points (x y)', type: 'pts', min: -9, max: 9, maxLen: 8, def: [[3, 3], [5, -1], [-2, 4], [1, 1], [-1, -3], [4, 0], [0, 2]] }, { key: 'k', label: 'k', type: 'int', min: 1, max: 8, def: 3 }],
+  check: (p) => p.k > p.pts.length ? `k can be at most ${p.pts.length}.` : null,
+  code: `
+vector<vector<int>> kClosest(vector<vector<int>>& pts, int k) {
+    priority_queue<pair<int, int>> pq;              // (dist², index): max-heap of the k closest
+    for (int i = 0; i < pts.size(); i++) {
+        int d = pts[i][0] * pts[i][0] + pts[i][1] * pts[i][1];   // no sqrt needed
+        pq.push({d, i});                            //@push
+        if (pq.size() > k) pq.pop();                //@pop    // drop the farthest
+    }
+    vector<vector<int>> res;
+    while (!pq.empty()) { res.push_back(pts[pq.top().second]); pq.pop(); }   //@ret
+    return res;
+}`,
+  run(T, p) {
+    const P = p.pts, k = p.k, d = P.map(([x, y]) => x * x + y * y), h = new Heap((x, y) => d[x] > d[y]), lab = (i) => d[i], kept = () => new Set(h.a);
+    const sc = (cur, st = {}) => [B.arr('points', P.map(([x, y]) => `${x},${y}`), { heads: d.map(v => `d²=${v}`), st: Object.fromEntries(P.map((_, i) => [i, i === cur ? 'cur' : kept().has(i) ? 'wait' : i < (cur ?? P.length) ? 'dim' : ''])) }), ...heapView('max-heap', h, lab, st, { hint: `d², size ≤ ${k}` })];
+    P.forEach((pt, i) => {
+      h.push(i, (kind, a, b) => {
+        if (kind === 'add') T.step('push', `(${pt}) has d² = ${pt[0]}² + ${pt[1]}² = ${d[i]}. Push it.`, sc(i, { [a]: 'cur' }));
+        else if (kind === 'up') T.step('push', siftMsg('up', h.a[a], h.a[b], lab, '>'), sc(i, { [a]: 'cur', [b]: 'wait' }));
+      });
+      if (h.size > k) {
+        const far = h.top; T.step('pop', `More than ${k} points kept. The top is the farthest (d² = ${d[far]}): pop it.`, sc(i, { 0: 'bad' }));
+        h.pop((kind, a, b) => { if (kind === 'down') T.step('pop', siftMsg('down', h.a[a], h.a[b], lab, '>'), sc(i, { [a]: 'cur', [b]: 'wait' })); });
+      }
+    });
+    const res = [...h.a].sort((x, y) => d[x] - d[y]); res.forEach(i => T.out.push(`(${P[i]})`));
+    T.step('ret', `The heap holds the ${k} closest points.`, [B.arr('points', P.map(([x, y]) => `${x},${y}`), { heads: d.map(v => `d²=${v}`), st: Object.fromEntries(P.map((_, i) => [i, kept().has(i) ? 'done' : 'dim'])) }), ...heapView('max-heap', h, lab, Object.fromEntries(h.a.map((_, i) => [i, 'done'])), { hint: `d², size ≤ ${k}` })]);
+  },
+  leg: { wait: 'Currently kept', dim: 'Evicted' },
+  idea: 'To keep the k smallest distances, evict the largest whenever there are k + 1, which means the heap must expose its largest: a max-heap. Comparing squared distances avoids sqrt and floating point.',
+  time: 'O(n log k)', space: 'O(k)',
+  trap: 'Use a max-heap here (the opposite of kth largest). Quickselect on distance also works in O(n) average.',
+  vars: ['Kth largest element (min-heap of size k, previous)', 'Find K closest elements (Binary search page)', 'Closest points with ties broken by index: add the index to the pair']
+});
+
+/* ================= Simulation ================= */
+A({
+  id: 'last-stone', cat: 'Simulation', title: 'Last stone weight', lc: 'LeetCode 1046',
+  blurb: 'Repeatedly smash the two heaviest stones. A max-heap hands you the two heaviest in O(log n).',
+  params: [{ key: 'stones', label: 'stones', type: 'ints', min: 1, max: 30, maxLen: 8, def: [2, 7, 4, 1, 8, 1] }],
+  code: `
+int lastStoneWeight(vector<int>& stones) {
+    priority_queue<int> pq(stones.begin(), stones.end());   //@build   // max-heap
+    while (pq.size() > 1) {
+        int y = pq.top(); pq.pop();
+        int x = pq.top(); pq.pop();                          //@take    // the two heaviest
+        if (y != x) pq.push(y - x);                          //@smash
+    }
+    return pq.empty() ? 0 : pq.top();                        //@ret
+}`,
+  run(T, p) {
+    const h = new Heap((x, y) => x > y), id = (v) => v;
+    p.stones.forEach(v => h.push(v));
+    const sc = (st = {}, extra = []) => [...heapView('max-heap', h, id, st), ...extra];
+    T.step('build', `Heapify all ${p.stones.length} stones. The heaviest is always on top.`, sc({ 0: 'found' }));
+    while (h.size > 1) {
+      const y = h.pop(); T.step('take', `Pop the heaviest: y = ${y}.`, sc({}, [B.chips('smashing', [{ t: y, cls: 'cur' }])]));
+      const x = h.pop(); T.step('take', `Pop the next heaviest: x = ${x}.`, sc({}, [B.chips('smashing', [{ t: y, cls: 'cur' }, { t: x, cls: 'cur' }])]));
+      if (y !== x) {
+        h.push(y - x, (kind, i, j) => { if (kind === 'add') T.step('smash', `${y} − ${x} = ${y - x} survives: push it back.`, sc({ [i]: 'cur' })); else if (kind === 'up') T.step('smash', siftMsg('up', h.a[i], h.a[j], id, '>'), sc({ [i]: 'cur', [j]: 'wait' })); });
+      } else T.step('smash', `Both weigh ${y}: both are destroyed.`, sc({}, [B.chips('smashing', [{ t: y, cls: 'bad' }, { t: x, cls: 'bad' }])]));
+    }
+    const ans = h.size ? h.top : 0; T.out.push(ans);
+    T.step('ret', h.size ? `One stone is left: ${ans}.` : 'No stones left: 0.', sc({ 0: 'done' }));
+  },
+  idea: 'Every round needs the two largest values and inserts at most one new value. A max-heap does both in O(log n), so the whole simulation is O(n log n) instead of re-sorting each round.',
+  time: 'O(n log n)', space: 'O(n)',
+  trap: 'C++ priority_queue is a max-heap by default; Python heapq is a min-heap, so negate the values there.',
+  vars: ['Last stone weight II (LC 1049): a knapsack in disguise (DP page)', 'Minimum cost to connect sticks (LC 1167): min-heap, always join the two smallest', 'Task scheduler (next)']
+});
+
+A({
+  id: 'task-scheduler', cat: 'Simulation', title: 'Task scheduler', lc: 'LeetCode 621',
+  blurb: 'Each time unit, run the task with the most copies left. Finished tasks wait n units in a cooldown queue before they can run again.',
+  params: [{ key: 'tasks', label: 'tasks', type: 'str', chars: 'A-Z', charsHint: 'uppercase letters', maxLen: 12, def: 'AAABBBCD' }, { key: 'n', label: 'cooldown n', type: 'int', min: 0, max: 4, def: 2 }],
+  code: `
+int leastInterval(vector<char>& tasks, int n) {
+    unordered_map<char, int> cnt;
+    for (char t : tasks) cnt[t]++;
+    priority_queue<int> pq;                          // copies left, most first
+    for (auto& [t, c] : cnt) pq.push(c);             //@build
+    queue<pair<int, int>> cool;                      // (copies left, time it is ready again)
+    int time = 0;
+    while (!pq.empty() || !cool.empty()) {
+        time++;
+        if (!pq.empty()) {
+            int c = pq.top() - 1; pq.pop();          //@run    // run the most frequent task
+            if (c > 0) cool.push({c, time + n});
+        }                                            //@idle   // nothing ready: idle
+        if (!cool.empty() && cool.front().second == time) {
+            pq.push(cool.front().first); cool.pop(); //@ready
+        }
+    }
+    return time;                                     //@ret
+}`,
+  run(T, p) {
+    const cnt = {}; p.tasks.split('').forEach(c => { cnt[c] = (cnt[c] || 0) + 1; });
+    const h = new Heap((x, y) => x[0] > y[0] || (x[0] === y[0] && x[1] < y[1])), lab = ([c, t]) => `${t}${c}`, cool = [], sched = []; let time = 0;
+    Object.entries(cnt).forEach(([t, c]) => h.push([c, t]));
+    const sc = (st = {}) => [...heapView('ready (max-heap)', h, lab, st, { array: false, hint: 'letter + copies left' }), B.chips('cooldown', cool.map(([c, t, at]) => `${t}${c} ready at ${at}`), { kind: 'queue', hint: 'front on the left' }), B.arr('timeline', sched.length ? sched : [''], { heads: sched.map((_, i) => i + 1), idx: !!sched.length, st: sched.length ? { [sched.length - 1]: sched[sched.length - 1] === 'idle' ? 'dim' : 'cur' } : {} }), B.vars([['time', time], ['n', p.n]])];
+    T.step('build', `Count copies: ${Object.entries(cnt).map(([t, c]) => `${t}×${c}`).join(', ')}. Ties are broken alphabetically here; the total time doesn't depend on it.`, sc({ 0: 'found' }));
+    while (h.size || cool.length) {
+      time++;
+      if (h.size) {
+        const [c, t] = h.pop(); sched.push(t);
+        if (c - 1 > 0) cool.push([c - 1, t, time + p.n]);
+        T.step('run', `t = ${time}: run ${t}, the task with the most copies left (${c}).${c - 1 ? ` ${c - 1} left; it cools down until t = ${time + p.n}.` : ' That was its last copy.'}`, sc());
+      } else { sched.push('idle'); T.step('idle', `t = ${time}: every remaining task is cooling down. The CPU idles.`, sc()); }
+      if (cool.length && cool[0][2] === time) { const [c, t] = cool.shift(); h.push([c, t]); T.step('ready', `${t} finished its cooldown: back into the heap with ${c} left.`, sc()); }
+    }
+    T.out.push(time); T.step('ret', `All tasks done after ${time} units (${sched.filter(x => x === 'idle').length} idle).`, sc());
+  },
+  leg: { dim: 'Idle', found: 'Next to run' },
+  idea: 'Running the most frequent available task first spreads the heavy tasks out, which minimizes idling. The heap picks that task; the queue holds tasks in cooldown in the order they become ready, so each check is O(1).',
+  time: 'O(T log 26) for T time units', space: 'O(26)',
+  trap: 'There is also a closed form: (maxCount − 1) · (n + 1) + (number of tasks with maxCount), but never less than the number of tasks. Interviewers like both.',
+  vars: ['Reorganize string (LC 767): n = 1, return the order or "" if impossible', 'Rearrange string k distance apart (LC 358)', 'Single-threaded CPU (LC 1834): a heap keyed on processing time']
+});
+
+/* ================= Design ================= */
+A({
+  id: 'twitter', cat: 'Design', title: 'Design Twitter (news feed)', lc: 'LeetCode 355',
+  blurb: 'Each followed user has a time-sorted tweet list. The feed is a k-way merge: a max-heap holds the newest unread tweet of each list.',
+  params: [{ key: 'me', label: 'my tweet times', type: 'ints', min: 1, max: 99, minLen: 0, maxLen: 5, sorted: true, distinct: true, def: [2, 9, 15] }, { key: 'u1', label: 'followee 1 times', type: 'ints', min: 1, max: 99, minLen: 0, maxLen: 5, sorted: true, distinct: true, def: [1, 4, 11, 13] }, { key: 'u2', label: 'followee 2 times', type: 'ints', min: 1, max: 99, minLen: 0, maxLen: 5, sorted: true, distinct: true, def: [3, 7, 16] }, { key: 'limit', label: 'feed size', type: 'int', min: 1, max: 10, def: 6 }],
+  check: (p) => { const all = [...p.me, ...p.u1, ...p.u2]; return new Set(all).size !== all.length ? 'Use a different time for every tweet.' : null; },
+  code: `
+vector<int> getNewsFeed(int userId) {
+    // tweets[u]: (time, tweetId) in posting order, newest last
+    priority_queue<tuple<int, int, int, int>> pq;          // (time, id, user, index): newest on top
+    for (int u : following[userId])                        // includes userId
+        if (!tweets[u].empty()) {
+            int i = tweets[u].size() - 1;
+            pq.push({tweets[u][i].first, tweets[u][i].second, u, i});   //@seed
+        }
+    vector<int> feed;
+    while (!pq.empty() && feed.size() < 10) {              // 10 in LeetCode
+        auto [t, id, u, i] = pq.top(); pq.pop();
+        feed.push_back(id);                                //@take
+        if (i > 0) pq.push({tweets[u][i - 1].first, tweets[u][i - 1].second, u, i - 1});   //@next
+    }
+    return feed;
+}`,
+  run(T, p) {
+    const lists = [['me', p.me], ['followee 1', p.u1], ['followee 2', p.u2]], idx = lists.map(([, l]) => l.length - 1), feed = [], used = new Set();
+    const h = new Heap((x, y) => x[0] > y[0]), lab = ([t]) => t;
+    const sc = (st = {}, hl) => [...lists.map(([n, l], u) => B.arr(n, l.length ? l : [''], { st: Object.fromEntries(l.map((t, i) => [i, used.has(t) ? 'done' : h.a.some(e => e[0] === t) ? 'wait' : ''])), ptr: l.length && idx[u] >= 0 ? { next: idx[u] } : {}, hint: 'oldest → newest' })), ...heapView('max-heap', h, lab, st, { array: false, hint: 'newest unread per list' }), B.chips('feed', feed.map((t, i) => ({ t: `t${t}`, cls: i === feed.length - 1 && hl ? 'cur' : '' })))];
+    lists.forEach(([n, l], u) => { if (l.length) { h.push([l[idx[u]], u]); T.step('seed', `Seed the heap with the newest tweet of ${n} (t = ${l[idx[u]]}).`, sc()); } });
+    while (h.size && feed.length < p.limit) {
+      const [t, u] = h.pop(); feed.push(t); used.add(t); idx[u]--;
+      T.step('take', `The newest unread tweet overall is t = ${t} from ${lists[u][0]}. Add it to the feed.`, sc({}, true));
+      if (idx[u] >= 0) { h.push([lists[u][1][idx[u]], u]); T.step('next', `${lists[u][0]} has an older tweet (t = ${lists[u][1][idx[u]]}): push it.`, sc()); }
+    }
+    T.out.push(feed.map(t => `t${t}`).join(', ') || 'empty');
+    T.step(null, h.size ? `The feed has ${p.limit} tweets: stop without reading the rest.` : 'Every list is exhausted.', sc());
+  },
+  leg: { wait: 'In the heap', done: 'In the feed' },
+  idea: 'Each user\'s tweets are already sorted by time, so the feed is a merge of sorted lists. Seeding a heap with the newest tweet of each followed user and replacing each popped tweet with the next older one from the same list yields tweets newest first, touching only as many as the feed needs.',
+  time: 'O(f + 10 log f) per feed for f followees', space: 'O(f)',
+  trap: 'A user always sees their own tweets: include them in the merge. Don\'t collect every tweet and sort; that is O(total tweets).',
+  vars: ['Merge k sorted lists (Linked lists page): the same merge', 'Kth smallest element in a sorted matrix (LC 378)', 'Find K pairs with smallest sums (LC 373)']
+});
+
+A({
+  id: 'median-stream', cat: 'Design', title: 'Find median from data stream', lc: 'LeetCode 295',
+  blurb: 'Split the numbers into a smaller half (max-heap) and a larger half (min-heap). The median lives at their tops.',
+  params: [{ key: 'nums', label: 'stream', type: 'ints', min: -50, max: 50, maxLen: 9, def: [5, 15, 1, 3, 8, 7, 9, 10] }],
+  code: `
+class MedianFinder {
+    priority_queue<int> lo;                               // max-heap: the smaller half
+    priority_queue<int, vector<int>, greater<int>> hi;    // min-heap: the larger half
+public:
+    void addNum(int x) {
+        lo.push(x);                                       //@push
+        hi.push(lo.top()); lo.pop();                      //@move     // largest small moves up
+        if (hi.size() > lo.size()) { lo.push(hi.top()); hi.pop(); }   //@balance
+    }
+    double findMedian() {
+        return lo.size() > hi.size() ? lo.top() : (lo.top() + hi.top()) / 2.0;   //@median
+    }
+};`,
+  run(T, p) {
+    const lo = new Heap((x, y) => x > y), hi = new Heap((x, y) => x < y), id = (v) => v;
+    const sc = (k, a = {}, b = {}) => [B.arr('stream', p.nums, { st: k == null ? {} : { [k]: 'cur' }, ptr: k == null ? {} : { x: k } }), ...heapView('lo (max-heap)', lo, id, a, { array: false, hint: 'smaller half' }), ...heapView('hi (min-heap)', hi, id, b, { array: false, hint: 'larger half' })];
+    p.nums.forEach((x, k) => {
+      lo.push(x); T.step('push', `addNum(${x}): push it into lo first.`, sc(k, { 0: lo.top === x ? 'cur' : '' }));
+      const m = lo.pop(); hi.push(m); T.step('move', `Move lo's largest (${m}) to hi. Now every number in lo is ≤ every number in hi.`, sc(k, {}, { 0: hi.top === m ? 'cur' : '' }));
+      if (hi.size > lo.size) { const b = hi.pop(); lo.push(b); T.step('balance', `hi has more numbers than lo: move hi's smallest (${b}) back. lo keeps the extra one when the count is odd.`, sc(k, { 0: lo.top === b ? 'cur' : '' })); }
+      const med = lo.size > hi.size ? lo.top : (lo.top + hi.top) / 2; T.out.push(med);
+      T.step('median', lo.size > hi.size ? `Odd count (${lo.size + hi.size}): the median is lo's top, ${med}.` : `Even count (${lo.size + hi.size}): average the two tops, (${lo.top} + ${hi.top}) / 2 = ${med}.`, sc(k, { 0: 'found' }, lo.size > hi.size ? {} : { 0: 'found' }));
+    });
+  },
+  outLabel: 'Median after each add',
+  idea: 'The median only depends on the middle of the sorted order. A max-heap holds the smaller half and exposes its largest; a min-heap holds the larger half and exposes its smallest. Routing each number through lo then hi keeps the halves ordered, and one rebalance keeps their sizes within 1.',
+  time: 'O(log n) add, O(1) median', space: 'O(n)',
+  trap: 'Always push through one heap into the other before rebalancing; inserting directly by comparing with a top is easy to get wrong when a heap is empty.',
+  vars: ['Sliding window median (LC 480): the same two heaps with lazy deletion', 'IPO (LC 502): two heaps, one by capital and one by profit', 'Median of two sorted arrays (Binary search page): the static version']
+});
+
+Stepper.start('kth-stream');
+</script>
+</body>
+</html>
