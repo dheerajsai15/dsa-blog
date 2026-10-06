@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sliding window, step by step</title>
+<link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+<script src="../shared/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/stepper.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true"><g fill="var(--panel)" stroke="var(--edge)" stroke-width="1.4"><rect x="2" y="17" width="7" height="12" rx="2"/><rect x="10.5" y="17" width="7" height="12" rx="2"/><rect x="19" y="17" width="7" height="12" rx="2"/><rect x="27.5" y="17" width="7" height="12" rx="2"/><rect x="36" y="17" width="7" height="12" rx="2"/></g><rect x="8" y="13" width="28" height="20" rx="5" fill="var(--hl)" stroke="var(--cur)" stroke-width="2" stroke-dasharray="4 3"/><path d="M30 8h7m-2.5-2.5L37 8l-2.5 2.5" fill="none" stroke="var(--cur)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div>
+        <h1>Sliding window, step by step</h1>
+        <p>10 interview patterns, each animated next to its C++ code. Press <kbd>Space</kbd> to play or pause, and <kbd>←</kbd> <kbd>→</kbd> to step. Every problem runs on your own input too.</p>
+      </div>
+    </div>
+    <nav class="topnav">
+      <a href="../index.html">← All topics</a>
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="Toggle dark mode">
+        <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+    </nav>
+  </header>
+  <div class="mobile-pick"><label for="algoSelect" class="sr">Problem</label><select id="algoSelect"></select></div>
+
+  <div class="layout">
+    <nav class="side" aria-label="Problems">
+      <input id="filter" type="search" placeholder="Filter, e.g. substring or deque" aria-label="Filter problems">
+      <div id="list"></div>
+    </nav>
+
+    <main id="main">
+      <section class="head">
+        <div class="cat" id="cat"></div>
+        <h2 id="title"></h2>
+        <p class="blurb" id="blurb"></p>
+        <div class="sample" id="sample">Sample input: <code id="sampleTree"></code></div>
+      </section>
+
+      <section class="work">
+        <div>
+          <div class="stage" id="stage"><div id="scene" aria-live="off"></div></div>
+          <div class="legend" id="legend"></div>
+
+          <div class="controls">
+            <div class="btns">
+              <button class="ib" id="first" aria-label="Go to first step" title="First step"><svg viewBox="0 0 16 16"><path d="M3 2h2v12H3zM14 2v12L6 8z"/></svg></button>
+              <button class="ib" id="prev" aria-label="Previous step" title="Previous step (←)"><svg viewBox="0 0 16 16"><path d="M12 2v12L3 8z"/></svg></button>
+              <button class="ib" id="play" aria-label="Play" data-state="play" title="Play or pause (Space)"><svg class="i-play" viewBox="0 0 16 16"><path d="M4 2v12l10-6z"/></svg><svg class="i-pause" viewBox="0 0 16 16"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg><span id="playText">Play</span></button>
+              <button class="ib" id="next" aria-label="Next step" title="Next step (→)"><svg viewBox="0 0 16 16"><path d="M4 2v12l9-6z"/></svg></button>
+              <button class="ib" id="last" aria-label="Go to last step" title="Last step"><svg viewBox="0 0 16 16"><path d="M11 2h2v12h-2zM2 2v12l8-6z"/></svg></button>
+            </div>
+            <div class="scrubwrap"><input type="range" id="scrub" min="0" max="0" value="0" aria-label="Step"><span id="counter"></span></div>
+            <label class="speed">Speed <input type="range" id="speed" min="0.5" max="3" step="0.25" value="1"><span id="speedVal">1×</span></label>
+          </div>
+
+          <p class="narr" id="narr" aria-live="polite"></p>
+          <div class="aux" id="aux"></div>
+
+          <form class="custom" id="custom">
+            <label>Try your own input</label>
+            <div id="params"></div>
+            <div class="crow">
+              <button class="tb" type="submit">Run on this input</button>
+              <button class="tb ghost" type="button" id="treeReset">Use the sample</button>
+            </div>
+            <p id="treeErr" role="alert"></p>
+          </form>
+        </div>
+
+        <div class="codebox">
+          <div class="codehead"><span><strong>C++</strong></span><button id="copy" type="button">Copy code</button></div>
+          <pre id="code"></pre>
+          <div class="nodedef">The dashed box is the current window. <code>l</code> is its left edge and <code>r</code> its right edge; fixed-size windows only show <code>r</code>.</div>
+        </div>
+      </section>
+
+      <section id="notes" aria-label="Interview notes"></section>
+    </main>
+  </div>
+</div>
+<script src="../shared/stepper.js"></script>
+<script>
+const { B } = Stepper, A = Stepper.add;
+const fill = (from, to, cls, st = {}) => { for (let k = from; k <= to; k++) st[k] = cls; return st; };
+const letters = (...strs) => [...new Set(strs.join('').split(''))].sort();
+
+/* ================= Fixed size ================= */
+A({
+  id: 'max-sum-k', cat: 'Fixed size', title: 'Maximum sum of a subarray of size K', lc: 'Hello Interview · GfG classic',
+  blurb: 'Slide a window of exactly k: add the element entering on the right, subtract the one leaving on the left.',
+  params: [{ key: 'nums', label: 'nums', type: 'ints', min: -20, max: 20, minLen: 1, maxLen: 12, def: [2, 1, 5, 1, 3, 2, 7, 1, 4] }, { key: 'k', label: 'k', type: 'int', min: 1, max: 12, def: 3 }],
+  check: (p) => p.k > p.nums.length ? `k can be at most ${p.nums.length}.` : null,
+  code: `
+int maxSumK(vector<int>& nums, int k) {
+    int sum = 0, best = INT_MIN;
+    for (int r = 0; r < nums.size(); r++) {
+        sum += nums[r];                          //@add
+        if (r >= k) sum -= nums[r - k];          //@drop    // keep exactly k elements
+        if (r >= k - 1) best = max(best, sum);   //@best
+    }
+    return best;
+}`,
+  run(T, p) {
+    const a = p.nums, k = p.k; let sum = 0, best = -Infinity, bestL = 0;
+    const sc = (r, wc, st = {}) => [B.arr('nums', a, { st, win: [Math.max(0, r - k + 1), r, wc], ptr: { r } }), B.vars([['sum', sum], ['best', best === -Infinity ? '–' : best, best === -Infinity ? '' : 'done']])];
+    for (let r = 0; r < a.length; r++) {
+      sum += a[r];
+      if (r < k - 1) { T.step('add', `Add nums[${r}] = ${a[r]}. The window has ${r + 1} of ${k} elements so far.`, sc(r, '', { [r]: 'cur' })); continue; }
+      if (r >= k) { sum -= a[r - k]; T.step('drop', `Add ${a[r]} on the right and drop ${a[r - k]} on the left: sum = ${sum}. No need to re-add the middle.`, sc(r, '', { [r]: 'cur', [r - k]: 'bad' })); }
+      const better = sum > best; if (better) { best = sum; bestL = r - k + 1; }
+      T.step('best', better ? `Window [${r - k + 1}..${r}] sums to ${sum}: new best.` : `Window [${r - k + 1}..${r}] sums to ${sum}, not better than ${best}.`, sc(r, better ? 'done' : '', { [r]: 'cur' }));
+    }
+    T.out.push(best);
+    T.step(null, `Best window: [${bestL}..${bestL + k - 1}] with sum ${best}.`, [B.arr('nums', a, { win: [bestL, bestL + k - 1, 'done'] }), B.vars([['best', best, 'done']])]);
+  },
+  idea: 'Neighboring windows share k − 1 elements. Instead of re-summing each window (O(n·k)), update the running sum by adding the new right element and subtracting the element that just left.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'Only compare once the window is full (r ≥ k − 1). Start best at INT_MIN, not 0, in case every sum is negative.',
+  vars: ['Maximum average subarray I (LC 643)', 'Max points from cards (next): a fixed window on the cards you leave behind', 'Number of sub-arrays of size K with average ≥ threshold (LC 1343)']
+});
+
+A({
+  id: 'cards', cat: 'Fixed size', title: 'Maximum points from cards', lc: 'LeetCode 1423',
+  blurb: 'Taking k cards from the ends leaves n − k contiguous cards behind. Minimize that middle window instead.',
+  params: [{ key: 'cards', label: 'cards', type: 'ints', min: 1, max: 20, minLen: 1, maxLen: 12, def: [1, 2, 3, 4, 5, 6, 1] }, { key: 'k', label: 'k', type: 'int', min: 1, max: 12, def: 3 }],
+  check: (p) => p.k > p.cards.length ? `k can be at most ${p.cards.length}.` : null,
+  code: `
+int maxScore(vector<int>& cards, int k) {
+    int n = cards.size(), w = n - k;                 // cards left in the middle
+    int total = accumulate(cards.begin(), cards.end(), 0);
+    int sum = accumulate(cards.begin(), cards.begin() + w, 0);   //@init
+    int least = sum;
+    for (int r = w; r < n; r++) {
+        sum += cards[r] - cards[r - w];              //@slide
+        least = min(least, sum);
+    }
+    return total - least;                            //@ret
+}`,
+  run(T, p) {
+    const a = p.cards, n = a.length, k = p.k, w = n - k, total = a.reduce((x, y) => x + y, 0);
+    let sum = a.slice(0, w).reduce((x, y) => x + y, 0), least = sum, leastL = 0;
+    const sc = (l, wc) => { const st = {}; for (let i = 0; i < n; i++) if (i < l || i >= l + w) st[i] = 'done'; return [B.arr('cards', a, { st, win: w ? [l, l + w - 1, wc] : null }), B.vars([['total', total], ['middle', sum], ['least', least], ['score', total - sum, 'done']])]; };
+    T.step('init', `Taking ${k} cards from the ends always leaves ${w} cards in a row. Start with the first ${w} as the middle: ${sum}. Green cards are the ones taken.`, sc(0, ''));
+    for (let r = w; r < n; r++) {
+      sum += a[r] - a[r - w]; const better = sum < least; if (better) { least = sum; leastL = r - w + 1; }
+      T.step('slide', `Slide the middle right: +${a[r]} −${a[r - w]} = ${sum}. Taking the rest scores ${total} − ${sum} = ${total - sum}.${better ? ' Best so far.' : ''}`, sc(r - w + 1, better ? 'done' : ''));
+    }
+    T.out.push(total - least);
+    sum = least; T.step('ret', `Leave cards [${leastL}..${leastL + w - 1}] behind: the best score is ${total} − ${least} = ${total - least}.`, sc(leastL, 'done'));
+  },
+  leg: { done: 'Taken from the ends', win: 'Left in the middle' },
+  idea: 'Any choice of i cards from the left and k − i from the right leaves one contiguous block of n − k cards. Maximizing what you take is the same as minimizing that block, which is a plain fixed-size sliding window.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'When k = n the middle window is empty and the answer is the total; the loop above handles it because w = 0.',
+  vars: ['Minimum operations to reduce x to zero (LC 1658): the longest middle with sum total − x', 'Maximum sum of size K (previous)', 'Grumpy bookstore owner (LC 1052): fixed window of extra gain']
+});
+
+A({
+  id: 'distinct-k', cat: 'Fixed size', title: 'Max sum of distinct subarrays of length K', lc: 'LeetCode 2461',
+  blurb: 'A fixed window plus a count map. The window qualifies only when the map has k distinct keys.',
+  params: [{ key: 'nums', label: 'nums', type: 'ints', min: 1, max: 20, minLen: 1, maxLen: 12, def: [1, 5, 4, 2, 9, 9, 9, 3, 1] }, { key: 'k', label: 'k', type: 'int', min: 1, max: 12, def: 3 }],
+  check: (p) => p.k > p.nums.length ? `k can be at most ${p.nums.length}.` : null,
+  code: `
+long long maximumSubarraySum(vector<int>& nums, int k) {
+    unordered_map<int, int> cnt;
+    long long sum = 0, best = 0;
+    for (int r = 0; r < nums.size(); r++) {
+        cnt[nums[r]]++; sum += nums[r];                          //@add
+        if (r >= k) {
+            int x = nums[r - k];
+            if (--cnt[x] == 0) cnt.erase(x);
+            sum -= x;                                            //@drop
+        }
+        if (r >= k - 1 && cnt.size() == k) best = max(best, sum);   //@check
+    }
+    return best;
+}`,
+  run(T, p) {
+    const a = p.nums, k = p.k, cnt = new Map(); let sum = 0, best = 0, bestL = -1;
+    const sc = (r, wc, st = {}) => [B.arr('nums', a, { st, win: [Math.max(0, r - k + 1), r, wc], ptr: { r } }), B.map('cnt', [...cnt].map(([x, c]) => [x, c, c > 1 ? 'bad' : '']), { hint: 'value → count' }), B.vars([['sum', sum], ['distinct', cnt.size], ['best', best, best ? 'done' : '']])];
+    for (let r = 0; r < a.length; r++) {
+      cnt.set(a[r], (cnt.get(a[r]) || 0) + 1); sum += a[r];
+      if (r >= k) { const x = a[r - k]; cnt.set(x, cnt.get(x) - 1); if (!cnt.get(x)) cnt.delete(x); sum -= x; }
+      if (r < k - 1) { T.step('add', `Add ${a[r]}. The window isn't full yet.`, sc(r, '', { [r]: 'cur' })); continue; }
+      if (cnt.size === k) {
+        const better = sum > best; if (better) { best = sum; bestL = r - k + 1; }
+        T.step('check', `Window [${r - k + 1}..${r}] has ${k} distinct values, sum ${sum}.${better ? ' New best.' : ''}`, sc(r, better ? 'done' : '', { [r]: 'cur' }));
+      } else T.step('check', `Window [${r - k + 1}..${r}] has only ${cnt.size} distinct value${cnt.size === 1 ? '' : 's'} (a repeat inside), so it doesn't count.`, sc(r, 'bad', { [r]: 'cur' }));
+    }
+    T.out.push(best);
+    T.step(null, bestL < 0 ? 'No window of distinct values: the answer is 0.' : `Best: [${bestL}..${bestL + k - 1}] with sum ${best}.`, [B.arr('nums', a, { win: bestL < 0 ? null : [bestL, bestL + k - 1, 'done'] }), B.vars([['best', best, 'done']])]);
+  },
+  idea: 'The fixed window gives the sum in O(1) per step. A count map of the window tells whether it is all distinct: that is exactly when the map has k keys. Remove a key when its count hits 0 so the size stays honest.',
+  time: 'O(n)', space: 'O(k)',
+  trap: 'Erase keys whose count drops to 0, or the map size overcounts distinct values.',
+  vars: ['Contains duplicate II (LC 219): a window set of size k', 'Longest substring without repeats: the variable-size version', 'Count of subarrays with at most K distinct (LC 992 helper)']
+});
+
+A({
+  id: 'permutation', cat: 'Fixed size', title: 'Permutation in string', lc: 'LeetCode 567',
+  blurb: 'Does s contain an anagram of p? Slide a window of length |p| over s and compare letter counts.',
+  params: [{ key: 'p', label: 'p', type: 'str', maxLen: 5, lower: true, def: 'ab' }, { key: 's', label: 's', type: 'str', maxLen: 14, lower: true, def: 'eidbaooo' }],
+  code: `
+bool checkInclusion(string p, string s) {
+    if (p.size() > s.size()) return false;
+    int need[26] = {0}, have[26] = {0};
+    for (char c : p) need[c - 'a']++;                          //@need
+    for (int r = 0; r < s.size(); r++) {
+        have[s[r] - 'a']++;                                    //@add
+        if (r >= p.size()) have[s[r - p.size()] - 'a']--;      //@drop
+        if (equal(need, need + 26, have)) return true;         //@check
+    }
+    return false;                                              //@none
+}`,
+  run(T, p) {
+    const P = p.p.split(''), S = p.s.split(''), m = P.length, L = letters(p.p, p.s), need = L.map(c => P.filter(x => x === c).length), have = L.map(() => 0);
+    const diff = () => Object.fromEntries(L.map((_, i) => [i, have[i] === need[i] ? (need[i] ? 'done' : '') : 'bad']));
+    const sc = (r, wc) => [B.arr('s', S, { win: r == null ? null : [Math.max(0, r - m + 1), r, wc], ptr: r == null ? {} : { r } }), B.arr('need', [...need], { heads: L }), B.arr('have', [...have], { heads: L, st: diff(), hint: 'counts in window' })];
+    if (m > S.length) { T.out.push('false'); T.step('none', 'p is longer than s, so no window fits.', sc(null)); return; }
+    T.step('need', `Count the letters of p: ${L.filter((_, i) => need[i]).map(c => `${c}×${need[L.indexOf(c)]}`).join(', ')}.`, sc(null));
+    for (let r = 0; r < S.length; r++) {
+      have[L.indexOf(S[r])]++;
+      if (r >= m) have[L.indexOf(S[r - m])]--;
+      if (r < m - 1) { T.step('add', `Add '${S[r]}'. The window isn't ${m} long yet.`, sc(r, '')); continue; }
+      const ok = L.every((_, i) => have[i] === need[i]);
+      if (ok) { T.out.push('true'); T.step('check', `Window "${S.slice(r - m + 1, r + 1).join('')}" has exactly p's letter counts: it's a permutation of p. Return true.`, sc(r, 'done')); return; }
+      T.step('check', `Window "${S.slice(r - m + 1, r + 1).join('')}": counts differ (red), so slide on.`, sc(r, ''));
+    }
+    T.out.push('false'); T.step('none', 'No window matched.', sc(null));
+  },
+  leg: { bad: 'Count differs', done: 'Count matches' },
+  idea: 'Two strings are permutations of each other when their letter counts match. Every window of length |p| in s gets its counts by adding one letter and removing one, so each window costs O(1) to update and O(26) to compare.',
+  time: 'O(26 · n)', space: 'O(26)',
+  trap: 'Comparing all 26 counts every step is fine; tracking a "matches" counter makes it O(n) if asked.',
+  vars: ['Find all anagrams in a string (LC 438): collect every matching start', 'Minimum window substring: the variable-size version', 'Valid anagram (Arrays & hashing page)']
+});
+
+A({
+  id: 'window-max', cat: 'Fixed size', title: 'Sliding window maximum', lc: 'LeetCode 239',
+  blurb: 'Keep a deque of indices whose values decrease from front to back. The front is always the window maximum.',
+  params: [{ key: 'nums', label: 'nums', type: 'ints', min: -20, max: 20, minLen: 1, maxLen: 12, def: [1, 3, -1, -3, 5, 3, 6, 7] }, { key: 'k', label: 'k', type: 'int', min: 1, max: 12, def: 3 }],
+  check: (p) => p.k > p.nums.length ? `k can be at most ${p.nums.length}.` : null,
+  code: `
+vector<int> maxSlidingWindow(vector<int>& nums, int k) {
+    deque<int> dq;                                    // indices; values decrease front to back
+    vector<int> res;
+    for (int r = 0; r < nums.size(); r++) {
+        while (!dq.empty() && nums[dq.back()] <= nums[r])
+            dq.pop_back();                            //@pop    // can never be a max again
+        dq.push_back(r);                              //@push
+        if (dq.front() <= r - k) dq.pop_front();      //@expire // slid out of the window
+        if (r >= k - 1) res.push_back(nums[dq.front()]);   //@max
+    }
+    return res;
+}`,
+  run(T, p) {
+    const a = p.nums, k = p.k, dq = [], res = [];
+    const sc = (r, st = {}, dst = {}) => [B.arr('nums', a, { st, win: [Math.max(0, r - k + 1), r], ptr: { r } }), B.chips('deque', dq.map((i, j) => ({ t: `${a[i]} @${i}`, cls: dst[i] || (j === 0 ? 'found' : '') })), { hint: 'front on the left' }), B.chips('res', res)];
+    for (let r = 0; r < a.length; r++) {
+      while (dq.length && a[dq[dq.length - 1]] <= a[r]) { const b = dq[dq.length - 1]; T.step('pop', `${a[b]} (index ${b}) ≤ ${a[r]}. It is older and no bigger, so it can never be a window max again. Pop it from the back.`, sc(r, { [r]: 'cur', [b]: 'bad' }, { [b]: 'bad' })); dq.pop(); }
+      dq.push(r); T.step('push', `Push index ${r} (${a[r]}). The deque stays decreasing.`, sc(r, { [r]: 'cur' }, { [r]: 'cur' }));
+      if (dq[0] <= r - k) { const f = dq[0]; T.step('expire', `Front index ${f} is outside the window [${r - k + 1}..${r}]. Pop it from the front.`, sc(r, { [f]: 'bad' }, { [f]: 'bad' })); dq.shift(); }
+      if (r >= k - 1) { res.push(a[dq[0]]); T.step('max', `The front is the max of window [${r - k + 1}..${r}]: ${a[dq[0]]}.`, sc(r, { [dq[0]]: 'found' })); }
+    }
+    T.out.push(`[${res.join(', ')}]`); T.step(null, `Window maxima: [${res.join(', ')}].`, [B.arr('nums', a), B.chips('res', res.map(t => ({ t, cls: 'done' })))]);
+  },
+  leg: { found: 'Window max (deque front)', bad: 'Removed from the deque' },
+  idea: 'When a new value arrives, every older value that is smaller can never be a maximum again, because the new one outlives it. Popping them keeps the deque decreasing, so the front is the max. Each index is pushed and popped at most once.',
+  time: 'O(n)', space: 'O(k)',
+  trap: 'Store indices, not values, so you can tell when the front has slid out of the window.',
+  vars: ['Shortest subarray with sum at least K (LC 862): monotonic deque on prefix sums', 'Jump game VI (LC 1696): deque over DP values', 'Daily temperatures (Stack page): the monotonic stack cousin']
+});
+
+/* ================= Variable size ================= */
+A({
+  id: 'stock', cat: 'Variable size', title: 'Best time to buy and sell stock', lc: 'LeetCode 121',
+  blurb: 'buy marks the cheapest day so far. Each later day is a possible sell; a new low restarts the window.',
+  params: [{ key: 'prices', label: 'prices', type: 'ints', min: 0, max: 12, minLen: 1, maxLen: 12, def: [7, 1, 5, 3, 6, 4, 0, 4] }],
+  code: `
+int maxProfit(vector<int>& prices) {
+    int buy = 0, best = 0;                              // buy = cheapest day so far
+    for (int sell = 1; sell < prices.size(); sell++) {
+        if (prices[sell] < prices[buy]) buy = sell;     //@low
+        else best = max(best, prices[sell] - prices[buy]);   //@profit
+    }
+    return best;
+}`,
+  run(T, p) {
+    const a = p.prices; let buy = 0, best = 0, bb = null;
+    const sc = (sell, st, rect) => [B.bars('price', a, { st, ptr: sell == null ? { buy } : { buy, sell }, pc: { buy: 'done', sell: 'cur' }, rect }), B.vars([['best', best, best ? 'done' : '']])];
+    for (let sell = 1; sell < a.length; sell++) {
+      if (a[sell] < a[buy]) { T.step('low', `${a[sell]} is a new lowest price. Any later sale does better buying here, so move buy to day ${sell}.`, sc(sell, { [buy]: 'dim', [sell]: 'wait' })); buy = sell; continue; }
+      const prof = a[sell] - a[buy], better = prof > best; if (better) { best = prof; bb = [buy, sell]; }
+      T.step('profit', `Buy at ${a[buy]}, sell at ${a[sell]}: profit ${prof}.${better ? ' New best.' : ''}`, sc(sell, { [buy]: 'done', [sell]: 'cur' }, prof ? [buy, sell, a[sell], better ? 'done' : ''] : null));
+    }
+    T.out.push(best);
+    T.step(null, bb ? `Best: buy day ${bb[0]} at ${a[bb[0]]}, sell day ${bb[1]} at ${a[bb[1]]}, profit ${best}.` : 'Prices never rise: profit 0.', sc(null, bb ? { [bb[0]]: 'done', [bb[1]]: 'done' } : {}, bb ? [bb[0], bb[1], a[bb[1]], 'done'] : null));
+  },
+  leg: { wait: 'New lowest price', dim: 'Old buy day' },
+  idea: 'The best sale on day j buys at the minimum price before j. Keep that minimum (buy) as you go: either today is a new minimum, or today is a sale candidate against it. It is a window whose left edge jumps to every new low.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'You must buy before you sell, so the minimum has to come from earlier days, not the whole array.',
+  vars: ['Best time II (LC 122): sum every rise (Greedy page)', 'Best time with cooldown or fee: a state machine (DP page)', 'Maximum subarray: Kadane on day-to-day differences']
+});
+
+A({
+  id: 'longest-substring', cat: 'Variable size', title: 'Longest substring without repeating characters', lc: 'LeetCode 3',
+  blurb: 'Grow the window to the right. When a character repeats inside it, jump the left edge past the earlier copy.',
+  params: [{ key: 's', label: 's', type: 'str', maxLen: 14, lower: true, def: 'abcabcbbad' }],
+  code: `
+int lengthOfLongestSubstring(string s) {
+    unordered_map<char, int> last;            // char -> index of its latest copy
+    int l = 0, best = 0;
+    for (int r = 0; r < s.size(); r++) {
+        if (last.count(s[r]) && last[s[r]] >= l)
+            l = last[s[r]] + 1;               //@jump   // skip past the earlier copy
+        last[s[r]] = r;
+        best = max(best, r - l + 1);          //@grow
+    }
+    return best;
+}`,
+  run(T, p) {
+    const S = p.s.split(''), last = new Map(); let l = 0, best = 0, bl = 0;
+    const sc = (r, wc, st = {}) => [B.arr('s', S, { st, win: [l, r, wc], ptr: { l, r }, pc: { l: 'wait', r: 'cur' } }), B.map('last', [...last].map(([c, i]) => [c, i, i < l ? 'dim' : '']), { hint: 'char → last index' }), B.vars([['best', best, 'done']])];
+    for (let r = 0; r < S.length; r++) {
+      if (last.has(S[r]) && last.get(S[r]) >= l) { const j = last.get(S[r]); T.step('jump', `'${S[r]}' already appears in the window at index ${j}. Move l to ${j + 1} so the window has no repeat.`, sc(r, 'bad', { [j]: 'bad', [r]: 'cur' })); l = j + 1; }
+      last.set(S[r], r); const better = r - l + 1 > best; if (better) { best = r - l + 1; bl = l; }
+      T.step('grow', `Window "${S.slice(l, r + 1).join('')}" has length ${r - l + 1}.${better ? ' New best.' : ''}`, sc(r, better ? 'done' : '', { [r]: 'cur' }));
+    }
+    T.out.push(best);
+    T.step(null, `Longest: "${S.slice(bl, bl + best).join('')}", length ${best}.`, [B.arr('s', S, { win: [bl, bl + best - 1, 'done'] }), B.vars([['best', best, 'done']])]);
+  },
+  leg: { dim: 'Last copy is left of the window' },
+  idea: 'The window [l, r] always holds distinct characters. When s[r] repeats, every window starting at or before its previous copy contains the repeat, so l can jump straight past it. Storing the last index of each character makes the jump O(1).',
+  time: 'O(n)', space: 'O(alphabet)',
+  trap: 'Only jump when the earlier copy is inside the window (last[c] ≥ l). Otherwise l would move backwards.',
+  vars: ['Longest substring with at most K distinct characters (LC 340)', 'Longest repeating character replacement (next)', 'Fruit into baskets (LC 904): at most 2 distinct']
+});
+
+A({
+  id: 'replacement', cat: 'Variable size', title: 'Longest repeating character replacement', lc: 'LeetCode 424',
+  blurb: 'A window is fixable when (length − count of its most common letter) ≤ k. Shrink from the left when it isn\'t.',
+  params: [{ key: 's', label: 's', type: 'str', maxLen: 14, chars: 'A-Z', charsHint: 'uppercase letters only', def: 'AABABBAC' }, { key: 'k', label: 'k', type: 'int', min: 0, max: 10, def: 1 }],
+  code: `
+int characterReplacement(string s, int k) {
+    int cnt[26] = {0}, l = 0, maxf = 0, best = 0;
+    for (int r = 0; r < s.size(); r++) {
+        maxf = max(maxf, ++cnt[s[r] - 'A']);       //@add
+        while (r - l + 1 - maxf > k)               // more than k letters to change
+            cnt[s[l++] - 'A']--;                   //@shrink
+        best = max(best, r - l + 1);               //@best
+    }
+    return best;
+}`,
+  run(T, p) {
+    const S = p.s.split(''), k = p.k, L = letters(p.s), cnt = L.map(() => 0); let l = 0, maxf = 0, best = 0, bl = 0;
+    const sc = (r, wc, st = {}) => [B.arr('s', S, { st, win: [l, r, wc], ptr: { l, r }, pc: { l: 'wait', r: 'cur' } }), B.arr('cnt', [...cnt], { heads: L, st: Object.fromEntries(cnt.map((c, i) => [i, c && c === maxf ? 'found' : ''])), hint: 'counts in window' }), B.vars([['maxf', maxf], ['to change', r - l + 1 - maxf, r - l + 1 - maxf > k ? 'bad' : ''], ['k', k], ['best', best, 'done']])];
+    for (let r = 0; r < S.length; r++) {
+      cnt[L.indexOf(S[r])]++; maxf = Math.max(maxf, cnt[L.indexOf(S[r])]);
+      T.step('add', `Add '${S[r]}'. Most common count maxf = ${maxf}; letters to change = ${r - l + 1} − ${maxf} = ${r - l + 1 - maxf}.`, sc(r, '', { [r]: 'cur' }));
+      while (r - l + 1 - maxf > k) { T.step('shrink', `${r - l + 1 - maxf} changes needed > k = ${k}. Drop '${S[l]}' from the left.`, sc(r, 'bad', { [l]: 'bad' })); cnt[L.indexOf(S[l])]--; l++; }
+      const better = r - l + 1 > best; if (better) { best = r - l + 1; bl = l; }
+      T.step('best', `Window "${S.slice(l, r + 1).join('')}" needs ${r - l + 1 - maxf} change${r - l + 1 - maxf === 1 ? '' : 's'} ≤ ${k}.${better ? ` New best: ${best}.` : ''}`, sc(r, better ? 'done' : ''));
+    }
+    T.out.push(best);
+    T.step(null, `Longest fixable window: "${S.slice(bl, bl + best).join('')}", length ${best}.`, [B.arr('s', S, { win: [bl, bl + best - 1, 'done'] }), B.vars([['best', best, 'done']])]);
+  },
+  leg: { found: 'Most common letter in window' },
+  idea: 'Inside a window, the cheapest fix is to turn everything into its most common letter, which costs length − maxf changes. Grow the window while that is ≤ k; when it isn\'t, slide the left edge. maxf never needs to decrease: a smaller maxf can\'t produce a longer answer.',
+  time: 'O(n)', space: 'O(26)',
+  trap: 'Recomputing maxf exactly after each shrink is not needed. The stale maxf only delays shrinking, never produces a wrong best.',
+  vars: ['Max consecutive ones III (LC 1004): flip at most k zeros', 'Longest substring with at most K distinct', 'Maximize the confusion of an exam (LC 2024)']
+});
+
+A({
+  id: 'min-size', cat: 'Variable size', title: 'Minimum size subarray sum', lc: 'LeetCode 209',
+  blurb: 'Grow until the sum reaches the target, then shrink from the left as long as it stays there.',
+  params: [{ key: 'target', label: 'target', type: 'int', min: 1, max: 100, def: 7 }, { key: 'nums', label: 'nums (positive)', type: 'ints', min: 1, max: 20, minLen: 1, maxLen: 12, def: [2, 3, 1, 2, 4, 3] }],
+  code: `
+int minSubArrayLen(int target, vector<int>& nums) {
+    int l = 0, sum = 0, best = INT_MAX;
+    for (int r = 0; r < nums.size(); r++) {
+        sum += nums[r];                         //@add
+        while (sum >= target) {
+            best = min(best, r - l + 1);        //@best
+            sum -= nums[l++];                   //@shrink
+        }
+    }
+    return best == INT_MAX ? 0 : best;          //@ret
+}`,
+  run(T, p) {
+    const a = p.nums, t = p.target; let l = 0, sum = 0, best = Infinity, bl = -1;
+    const sc = (r, wc, st = {}) => [B.arr('nums', a, { st, win: l <= r ? [l, r, wc] : null, ptr: { l, r }, pc: { l: 'wait', r: 'cur' } }), B.vars([['sum', sum, sum >= t ? 'done' : ''], ['target', t], ['best', best === Infinity ? '∞' : best]])];
+    for (let r = 0; r < a.length; r++) {
+      sum += a[r]; T.step('add', `Add ${a[r]}: sum = ${sum}${sum >= t ? ` ≥ ${t}` : ` < ${t}`}.`, sc(r, '', { [r]: 'cur' }));
+      while (sum >= t) {
+        const better = r - l + 1 < best; if (better) { best = r - l + 1; bl = l; }
+        T.step('best', `[${l}..${r}] reaches ${t} with length ${r - l + 1}.${better ? ' New best.' : ''}`, sc(r, 'done'));
+        sum -= a[l]; T.step('shrink', `Try a shorter window: drop ${a[l]} from the left. sum = ${sum}.`, sc(r, '', { [l]: 'bad' })); l++;
+      }
+    }
+    T.out.push(best === Infinity ? 0 : best);
+    T.step('ret', best === Infinity ? 'No window reaches the target: return 0.' : `Shortest: [${bl}..${bl + best - 1}], length ${best}.`, [B.arr('nums', a, { win: bl < 0 ? null : [bl, bl + best - 1, 'done'] }), B.vars([['best', best === Infinity ? 0 : best, 'done']])]);
+  },
+  idea: 'With positive numbers, extending a window only raises its sum and shrinking only lowers it. So for each r, keep l as far right as possible while the sum still meets the target. Both pointers only move forward: O(n).',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'This only works for non-negative numbers. With negatives, use prefix sums with a monotonic deque (LC 862).',
+  vars: ['Shortest subarray with sum at least K (LC 862): negatives allowed', 'Subarray product less than K (LC 713): count r − l + 1 per r', 'Minimum window substring (next): same grow-then-shrink loop']
+});
+
+A({
+  id: 'min-window', cat: 'Variable size', title: 'Minimum window substring', lc: 'LeetCode 76',
+  blurb: 'Grow until the window covers every needed letter, then shrink while it still does. missing counts letters still owed.',
+  params: [{ key: 's', label: 's', type: 'str', maxLen: 16, chars: 'A-Za-z', def: 'ADOBECODEBANC' }, { key: 't', label: 't', type: 'str', maxLen: 6, chars: 'A-Za-z', def: 'ABC' }],
+  code: `
+string minWindow(string s, string t) {
+    int need[128] = {0};
+    for (char c : t) need[c]++;
+    int missing = t.size(), l = 0, start = 0, len = INT_MAX;  //@init
+    for (int r = 0; r < s.size(); r++) {
+        if (need[s[r]]-- > 0) missing--;          //@add     // s[r] was still owed
+        while (missing == 0) {                    // window covers all of t
+            if (r - l + 1 < len) { start = l; len = r - l + 1; }   //@best
+            if (++need[s[l++]] > 0) missing++;    //@shrink  // gave back an owed letter
+        }
+    }
+    return len == INT_MAX ? "" : s.substr(start, len);   //@ret
+}`,
+  run(T, p) {
+    const S = p.s.split(''), L = letters(p.s, p.t), need = L.map(c => p.t.split('').filter(x => x === c).length);
+    let missing = p.t.length, l = 0, start = 0, len = Infinity;
+    const inT = new Set(p.t.split(''));
+    const sc = (r, wc, st = {}) => [B.arr('s', S, { st: { ...Object.fromEntries(S.map((c, i) => [i, inT.has(c) ? 'in' : ''])), ...st }, win: r == null || l > r ? null : [l, r, wc], ptr: r == null ? {} : { l, r }, pc: { l: 'wait', r: 'cur' } }), B.arr('need', [...need], { heads: L, st: Object.fromEntries(need.map((v, i) => [i, v > 0 ? 'bad' : v < 0 ? 'wait' : ''])), hint: '> 0 owed, < 0 spare' }), B.vars([['missing', missing, missing ? '' : 'done'], ['best', len === Infinity ? '–' : `"${p.s.substr(start, len)}"`]])];
+    T.step('init', `Owe ${p.t.length} letters: ${p.t.split('').join(', ')}. Letters of t are tinted in s.`, sc(null));
+    for (let r = 0; r < S.length; r++) {
+      const k = L.indexOf(S[r]), owed = need[k] > 0; need[k]--; if (owed) missing--;
+      T.step('add', owed ? `'${S[r]}' was owed: missing = ${missing}.` : `'${S[r]}' isn't owed (spare or not in t). need['${S[r]}'] = ${need[k]}.`, sc(r, '', { [r]: 'cur' }));
+      while (missing === 0) {
+        const better = r - l + 1 < len; if (better) { start = l; len = r - l + 1; }
+        T.step('best', `Window "${S.slice(l, r + 1).join('')}" covers t.${better ? ` Shortest so far (${len}).` : ''}`, sc(r, 'done'));
+        const j = L.indexOf(S[l]); need[j]++; const lost = need[j] > 0; if (lost) missing++;
+        T.step('shrink', lost ? `Dropping '${S[l]}' gives back a letter t needs: missing = ${missing}. Grow again.` : `Dropping '${S[l]}' is free (it was spare). Keep shrinking.`, sc(r, lost ? 'bad' : '', { [l]: lost ? 'bad' : 'dim' })); l++;
+      }
+    }
+    const ans = len === Infinity ? '' : p.s.substr(start, len); T.out.push(ans ? `"${ans}"` : '""');
+    T.step('ret', ans ? `Minimum window: "${ans}" (length ${len}).` : 'No window contains all of t.', [B.arr('s', S, { win: ans ? [start, start + len - 1, 'done'] : null }), B.vars([['answer', ans ? `"${ans}"` : '""', 'done']])]);
+  },
+  leg: { in: 'Letter of t', bad: 'Owed letter', wait: 'Spare copies' },
+  idea: 'need[c] counts how many more c the window owes; it can go negative for spare copies. missing is the total still owed, so "the window covers t" is just missing == 0, an O(1) check. Each pointer moves at most n times.',
+  time: 'O(|s| + |t|)', space: 'O(alphabet)',
+  trap: 'Only decrement missing when need[c] was positive before, and only increment it when need[c] becomes positive after; spare copies must not affect it.',
+  vars: ['Permutation in string: the fixed-size version', 'Minimum window subsequence (LC 727): order matters, two passes', 'Smallest range covering elements from K lists (Heap page)']
+});
+
+Stepper.start('longest-substring');
+</script>
+</body>
+</html>

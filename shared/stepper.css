@@ -244,7 +244,7 @@ body.still .pt,body.still .win,body.still .rect,body.still .bb,body.still .bw2{t
 .barsb.narrow .bcol{width:1.75rem}
 .bv{font-size:.72rem;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .bst{position:relative;width:100%}
-.bb{position:absolute;left:0;right:0;bottom:0;background:var(--edge);border-radius:4px 4px 0 0;transition:height .3s,background .25s}
+.bb{position:absolute;left:0;right:0;bottom:0;min-height:3px;background:var(--edge);border-radius:4px 4px 0 0;transition:height .3s,background .25s}
 .bb.c-cur{background:var(--cur) !important} .bb.c-done{background:var(--done) !important} .bb.c-wait{background:var(--wait) !important} .bb.c-found{background:var(--found) !important} .bb.c-bad{background:var(--bad) !important} .bb.c-path{background:var(--path) !important}
 .bw2{position:absolute;left:0;right:0;background:color-mix(in srgb,var(--wait) 45%,transparent);border-radius:3px 3px 0 0;transition:height .3s,bottom .3s}
 .tl{display:flex;flex-direction:column;gap:6px;min-width:420px}
