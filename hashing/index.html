@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Arrays &amp; hashing, step by step</title>
+<link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+<script src="../shared/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/stepper.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true"><rect x="3" y="6" width="12" height="12" rx="3" fill="var(--panel)" stroke="var(--edge)" stroke-width="1.5"/><rect x="17" y="6" width="12" height="12" rx="3" fill="var(--cur)"/><rect x="31" y="6" width="12" height="12" rx="3" fill="var(--panel)" stroke="var(--edge)" stroke-width="1.5"/><path d="M23 20v6" stroke="var(--edge)" stroke-width="2"/><rect x="8" y="28" width="30" height="13" rx="6.5" fill="var(--wait-bg)" stroke="var(--wait)" stroke-width="1.5"/><text x="23" y="37.5" text-anchor="middle" font-size="8" font-weight="700" fill="var(--ink)" font-family="monospace">k→v</text></svg>
+      <div>
+        <h1>Arrays &amp; hashing, step by step</h1>
+        <p>11 interview patterns, each animated next to its C++ code. Press <kbd>Space</kbd> to play or pause, and <kbd>←</kbd> <kbd>→</kbd> to step. Every problem runs on your own input too.</p>
+      </div>
+    </div>
+    <nav class="topnav">
+      <a href="../index.html">← All topics</a>
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="Toggle dark mode">
+        <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+    </nav>
+  </header>
+  <div class="mobile-pick"><label for="algoSelect" class="sr">Problem</label><select id="algoSelect"></select></div>
+
+  <div class="layout">
+    <nav class="side" aria-label="Problems">
+      <input id="filter" type="search" placeholder="Filter, e.g. anagram or prefix" aria-label="Filter problems">
+      <div id="list"></div>
+    </nav>
+
+    <main id="main">
+      <section class="head">
+        <div class="cat" id="cat"></div>
+        <h2 id="title"></h2>
+        <p class="blurb" id="blurb"></p>
+        <div class="sample" id="sample">Sample input: <code id="sampleTree"></code></div>
+      </section>
+
+      <section class="work">
+        <div>
+          <div class="stage" id="stage"><div id="scene" aria-live="off"></div></div>
+          <div class="legend" id="legend"></div>
+
+          <div class="controls">
+            <div class="btns">
+              <button class="ib" id="first" aria-label="Go to first step" title="First step"><svg viewBox="0 0 16 16"><path d="M3 2h2v12H3zM14 2v12L6 8z"/></svg></button>
+              <button class="ib" id="prev" aria-label="Previous step" title="Previous step (←)"><svg viewBox="0 0 16 16"><path d="M12 2v12L3 8z"/></svg></button>
+              <button class="ib" id="play" aria-label="Play" data-state="play" title="Play or pause (Space)"><svg class="i-play" viewBox="0 0 16 16"><path d="M4 2v12l10-6z"/></svg><svg class="i-pause" viewBox="0 0 16 16"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg><span id="playText">Play</span></button>
+              <button class="ib" id="next" aria-label="Next step" title="Next step (→)"><svg viewBox="0 0 16 16"><path d="M4 2v12l9-6z"/></svg></button>
+              <button class="ib" id="last" aria-label="Go to last step" title="Last step"><svg viewBox="0 0 16 16"><path d="M11 2h2v12h-2zM2 2v12l8-6z"/></svg></button>
+            </div>
+            <div class="scrubwrap"><input type="range" id="scrub" min="0" max="0" value="0" aria-label="Step"><span id="counter"></span></div>
+            <label class="speed">Speed <input type="range" id="speed" min="0.5" max="3" step="0.25" value="1"><span id="speedVal">1×</span></label>
+          </div>
+
+          <p class="narr" id="narr" aria-live="polite"></p>
+          <div class="aux" id="aux"></div>
+
+          <form class="custom" id="custom">
+            <label>Try your own input</label>
+            <div id="params"></div>
+            <div class="crow">
+              <button class="tb" type="submit">Run on this input</button>
+              <button class="tb ghost" type="button" id="treeReset">Use the sample</button>
+            </div>
+            <p id="treeErr" role="alert"></p>
+          </form>
+        </div>
+
+        <div class="codebox">
+          <div class="codehead"><span><strong>C++</strong></span><button id="copy" type="button">Copy code</button></div>
+          <pre id="code"></pre>
+          <div class="nodedef">Hash maps and sets are <code>unordered_map</code> / <code>unordered_set</code>: O(1) average lookups. Maps are drawn in insertion order.</div>
+        </div>
+      </section>
+
+      <section id="notes" aria-label="Interview notes"></section>
+    </main>
+  </div>
+</div>
+<script src="../shared/stepper.js"></script>
+<script>
+const { B } = Stepper, A = Stepper.add;
+const range = (n) => Array.from({ length: n }, (_, i) => i);
+const scanned = (i, cls = 'cur', extra = {}) => ({ ...extra, [i]: cls });
+
+/* ================= Hashing ================= */
+A({
+  id: 'contains-dup', cat: 'Hashing', title: 'Contains duplicate', lc: 'LeetCode 217',
+  blurb: 'Does any value appear twice? Remember every value in a hash set and check before adding.',
+  params: [{ key: 'nums', label: 'nums', type: 'ints', min: -99, max: 99, maxLen: 12, def: [4, 7, 1, 9, 3, 7, 2] }],
+  code: `
+bool containsDuplicate(vector<int>& nums) {
+    unordered_set<int> seen;
+    for (int x : nums) {
+        if (seen.count(x)) return true;     //@hit
+        seen.insert(x);                     //@add
+    }
+    return false;                           //@none
+}`,
+  run(T, p) {
+    const a = p.nums, seen = [];
+    for (let i = 0; i < a.length; i++) {
+      if (seen.includes(a[i])) {
+        const j = a.indexOf(a[i]); T.out.push('true');
+        T.step('hit', `${a[i]} is already in the set (it was at index ${j}). Duplicate found, return true.`, [
+          B.arr('nums', a, { st: { [j]: 'bad', [i]: 'bad' }, ptr: { i } }),
+          B.chips('seen', seen.map(v => ({ t: v, cls: v === a[i] ? 'found' : '' })), { hint: 'hash set' })]);
+        return;
+      }
+      seen.push(a[i]);
+      T.step('add', `${a[i]} isn't in the set yet. Add it. Lookups and inserts are O(1) on average.`, [
+        B.arr('nums', a, { st: scanned(i), ptr: { i } }),
+        B.chips('seen', seen.map((v, k) => ({ t: v, cls: k === seen.length - 1 ? 'cur' : '' })), { hint: 'hash set' })]);
+    }
+    T.out.push('false');
+    T.step('none', 'Every value was new, so there are no duplicates.', [B.arr('nums', a, { st: Object.fromEntries(range(a.length).map(k => [k, 'done'])) }), B.chips('seen', seen, { hint: 'hash set' })]);
+  },
+  idea: 'A hash set answers "have I seen this before?" in O(1) on average, so one pass is enough. Checking before inserting lets you stop at the first repeat.',
+  time: 'O(n)', space: 'O(n)',
+  trap: 'Sorting and comparing neighbors also works in O(n log n) with O(1) extra space, which is worth mentioning if memory is tight.',
+  vars: ['Contains duplicate II (LC 219): only within k indices, keep a sliding set of size k', 'Contains duplicate III (LC 220): values within t, use buckets of width t + 1', 'Single number: duplicates come in pairs, XOR cancels them (Bit manipulation)']
+});
+
+A({
+  id: 'anagram', cat: 'Hashing', title: 'Valid anagram', lc: 'LeetCode 242',
+  blurb: 'Two strings are anagrams when every letter appears the same number of times. Count up with one, down with the other.',
+  params: [{ key: 's', label: 's', type: 'str', maxLen: 12, lower: true, def: 'anagram' }, { key: 't', label: 't', type: 'str', maxLen: 12, lower: true, def: 'nagaram' }],
+  code: `
+bool isAnagram(string s, string t) {
+    if (s.size() != t.size()) return false;    //@len
+    int cnt[26] = {0};
+    for (char c : s) cnt[c - 'a']++;            //@inc
+    for (char c : t)
+        if (--cnt[c - 'a'] < 0) return false;   //@dec
+    return true;                                //@ret
+}`,
+  run(T, p) {
+    const s = p.s.split(''), t = p.t.split(''), L = [...new Set([...s, ...t])].sort(), cnt = L.map(() => 0);
+    const sc = (si, ti, cc, cls = 'cur') => [
+      B.arr('s', s, { st: si == null ? {} : { [si]: 'cur' }, ptr: si == null ? {} : { c: si } }),
+      B.arr('t', t, { st: ti == null ? {} : { [ti]: cls }, ptr: ti == null ? {} : { c: ti } }),
+      B.arr('cnt', [...cnt], { heads: L, st: cc == null ? {} : { [cc]: cls }, hint: 'one slot per letter' })];
+    if (s.length !== t.length) { T.out.push('false'); T.step('len', `Lengths differ (${s.length} vs ${t.length}), so they can't be anagrams.`, sc()); return; }
+    T.step('len', 'Same length, so it is worth counting. Only the letters that appear are drawn; the real array has 26 slots.', sc());
+    s.forEach((c, i) => { const k = L.indexOf(c); cnt[k]++; T.step('inc', `'${c}' from s: cnt['${c}'] becomes ${cnt[k]}.`, sc(i, null, k)); });
+    for (let i = 0; i < t.length; i++) {
+      const c = t[i], k = L.indexOf(c); cnt[k]--;
+      if (cnt[k] < 0) { T.out.push('false'); T.step('dec', `'${c}' from t drives cnt['${c}'] to ${cnt[k]}: t has more '${c}'s than s. Not an anagram.`, sc(null, i, k, 'bad')); return; }
+      T.step('dec', `'${c}' from t: cnt['${c}'] drops to ${cnt[k]}.`, sc(null, i, k));
+    }
+    T.out.push('true'); T.step('ret', 'Every count came back to 0: same letters, same amounts.', sc());
+  },
+  idea: 'Counting beats sorting: one array of 26 counters, +1 for each letter of s and −1 for each letter of t. Equal lengths plus no counter ever going negative means every counter ends at exactly 0.',
+  time: 'O(n)', space: 'O(1): 26 counters',
+  trap: 'For Unicode input, swap the 26-slot array for a hash map. Sorting both strings is the O(n log n) fallback.',
+  vars: ['Group anagrams (next): the count or the sorted string becomes a hash key', 'Find all anagrams in a string (LC 438): the same counts in a sliding window', 'Ransom note (LC 383): one-sided counting']
+});
+
+A({
+  id: 'two-sum', cat: 'Hashing', title: 'Two sum', lc: 'LeetCode 1',
+  blurb: 'Find two indices whose values add to the target. For each number, ask the map whether its complement was already seen.',
+  params: [{ key: 'nums', label: 'nums', type: 'ints', min: -99, max: 99, minLen: 2, maxLen: 10, def: [2, 11, 5, 14, 7, 3] }, { key: 'target', label: 'target', type: 'int', min: -200, max: 200, def: 12 }],
+  code: `
+vector<int> twoSum(vector<int>& nums, int target) {
+    unordered_map<int, int> idx;                    // value -> index
+    for (int i = 0; i < nums.size(); i++) {
+        int need = target - nums[i];
+        if (idx.count(need)) return {idx[need], i};  //@hit
+        idx[nums[i]] = i;                            //@add
+    }
+    return {};                                       //@none
+}`,
+  run(T, p) {
+    const a = p.nums, tg = p.target, idx = new Map();
+    const mp = (hl) => B.map('idx', [...idx].map(([v, i]) => [v, i, v === hl ? 'found' : '']), { hint: 'value → index' });
+    for (let i = 0; i < a.length; i++) {
+      const need = tg - a[i];
+      if (idx.has(need)) {
+        const j = idx.get(need); T.out.push(`[${j}, ${i}]`);
+        T.step('hit', `need = ${tg} − ${a[i]} = ${need}, and ${need} is in the map at index ${j}. Return [${j}, ${i}].`, [B.arr('nums', a, { st: { [j]: 'done', [i]: 'done' }, ptr: { i } }), B.vars([['need', need, 'found']]), mp(need)]);
+        return;
+      }
+      idx.set(a[i], i);
+      T.step('add', `need = ${tg} − ${a[i]} = ${need}, not in the map yet. Store ${a[i]} → ${i} for later numbers to find.`, [B.arr('nums', a, { st: { [i]: 'cur' }, ptr: { i } }), B.vars([['need', need]]), mp()]);
+    }
+    T.out.push('none'); T.step('none', 'No pair adds up to the target.', [B.arr('nums', a), mp()]);
+  },
+  idea: 'For each number x, the partner you need is target − x. A hash map from value to index answers "have I already seen it?" in O(1), so one pass finds the pair. Checking before inserting stops a number from pairing with itself.',
+  time: 'O(n)', space: 'O(n)',
+  trap: 'Check the map before inserting the current number, or target = 2·x would match x with itself.',
+  vars: ['Two sum II on a sorted array (Two pointers page): O(1) space', '3Sum: fix one number, two-sum the rest', 'Subarray sum equals K: the same "look up the complement" with prefix sums']
+});
+
+A({
+  id: 'group-anagrams', cat: 'Hashing', title: 'Group anagrams', lc: 'LeetCode 49',
+  blurb: 'Words that are anagrams share the same sorted letters. Use that as the hash key.',
+  params: [{ key: 'strs', label: 'words', type: 'words', maxLen: 8, wordLen: 6, def: ['eat', 'tea', 'tan', 'ate', 'nat', 'bat'] }],
+  code: `
+vector<vector<string>> groupAnagrams(vector<string>& strs) {
+    unordered_map<string, vector<string>> groups;
+    for (string& s : strs) {
+        string key = s;
+        sort(key.begin(), key.end());      //@key    // anagrams share this key
+        groups[key].push_back(s);          //@add
+    }
+    vector<vector<string>> res;
+    for (auto& [key, g] : groups) res.push_back(g);   //@ret
+    return res;
+}`,
+  run(T, p) {
+    const w = p.strs, groups = new Map(), gi = {}, st = {};
+    const mp = (cur) => B.map('groups', [...groups].map(([k, g]) => [k, g.join(', '), k === cur ? 'cur' : 'g' + (gi[k] % 6)]), { hint: 'sorted key → words' });
+    w.forEach((s, i) => {
+      const key = s.split('').sort().join('');
+      T.step('key', `"${s}" sorted is "${key}".`, [B.arr('words', w, { st: { ...st, [i]: 'cur' }, ptr: { s: i } }), B.vars([['key', key, 'cur']]), mp()]);
+      if (!groups.has(key)) { groups.set(key, []); gi[key] = groups.size - 1; }
+      groups.get(key).push(s); st[i] = 'g' + (gi[key] % 6);
+      T.step('add', groups.get(key).length > 1 ? `"${key}" already has a group: "${s}" joins ${groups.get(key).slice(0, -1).map(x => `"${x}"`).join(', ')}.` : `"${key}" is a new key: start a group with "${s}".`, [B.arr('words', w, { st, ptr: { s: i } }), B.vars([['key', key]]), mp(key)]);
+    });
+    groups.forEach(g => T.out.push(`[${g.join(', ')}]`));
+    T.step('ret', `${groups.size} groups. Each map value is one group of anagrams.`, [B.arr('words', w, { st }), mp()]);
+  },
+  idea: 'Two words are anagrams exactly when their sorted letters match, so the sorted word works as a fingerprint. Every word goes into the bucket for its fingerprint.',
+  time: 'O(n · k log k) for n words of length k', space: 'O(n · k)',
+  trap: 'For long words, a 26-count key like "1#0#2#…" avoids the sort and makes it O(n · k). Separate the counts, or "1,11" and "11,1" collide.',
+  vars: ['Valid anagram: the pairwise version', 'Group shifted strings (LC 249): key on the gaps between letters', 'Find duplicate file in system (LC 609): group by content']
+});
+
+A({
+  id: 'top-k', cat: 'Hashing', title: 'Top K frequent elements', lc: 'LeetCode 347',
+  blurb: 'Count with a hash map, then drop each value into a bucket by its count. Read buckets from the highest count down.',
+  params: [{ key: 'nums', label: 'nums', type: 'ints', min: -9, max: 9, maxLen: 12, def: [1, 4, 1, 2, 4, 3, 4, 2, 1, 4, 5] }, { key: 'k', label: 'k', type: 'int', min: 1, max: 6, def: 2 }],
+  check: (p) => p.k > new Set(p.nums).size ? `k can be at most the number of distinct values (${new Set(p.nums).size}).` : null,
+  code: `
+vector<int> topKFrequent(vector<int>& nums, int k) {
+    unordered_map<int, int> cnt;
+    for (int x : nums) cnt[x]++;                       //@count
+    vector<vector<int>> bucket(nums.size() + 1);       // bucket[f]: values seen f times
+    for (auto& [x, f] : cnt) bucket[f].push_back(x);   //@bucket
+    vector<int> res;
+    for (int f = nums.size(); f > 0 && res.size() < k; f--)   //@scan
+        for (int x : bucket[f])
+            if (res.size() < k) res.push_back(x);      //@take
+    return res;
+}`,
+  run(T, p) {
+    const a = p.nums, n = a.length, k = p.k, cnt = new Map(), bucket = Array.from({ length: n + 1 }, () => []), res = [];
+    const bk = (o = {}) => B.arr('bucket', bucket.map(b => b.length ? b.join(',') : ''), { hint: 'index = count', ...o });
+    const mp = (hl) => B.map('cnt', [...cnt].map(([x, f]) => [x, f, x === hl ? 'cur' : '']), { hint: 'value → count' });
+    a.forEach((x, i) => { cnt.set(x, (cnt.get(x) || 0) + 1); T.step('count', `Count ${x}: now ${cnt.get(x)}.`, [B.arr('nums', a, { st: { [i]: 'cur' }, ptr: { i } }), mp(x)]); });
+    for (const [x, f] of cnt) { bucket[f].push(x); T.step('bucket', `${x} appears ${f} time${f > 1 ? 's' : ''}: put it in bucket[${f}].`, [B.arr('nums', a), mp(x), bk({ st: { [f]: 'cur' } })]); }
+    const got = {};
+    for (let f = n; f > 0 && res.length < k; f--) {
+      if (!bucket[f].length) { T.step('scan', `bucket[${f}] is empty.`, [mp(), bk({ st: { ...got, [f]: 'in' }, ptr: { f } }), B.chips('res', res)]); continue; }
+      for (const x of bucket[f]) if (res.length < k) { res.push(x); got[f] = 'done'; T.step('take', `bucket[${f}] has ${x}: take it (${res.length} of ${k}).`, [mp(x), bk({ st: { ...got, [f]: 'cur' }, ptr: { f } }), B.chips('res', res)]); }
+    }
+    T.out.push(`[${res.join(', ')}]`);
+    T.step(null, `Found the ${k} most frequent: ${res.join(', ')}. No sorting needed.`, [mp(), bk({ st: got }), B.chips('res', res.map(t => ({ t, cls: 'done' })))]);
+  },
+  idea: 'A count can never exceed n, so use the count itself as an array index. Bucket f holds every value that appears exactly f times; walking f from n downward meets values in order of frequency. That replaces an O(n log n) sort with O(n).',
+  time: 'O(n)', space: 'O(n)',
+  trap: 'The heap version (a min-heap of size k over the counts) is O(n log k) and is the one to use when the data streams in.',
+  vars: ['Top k frequent words (LC 692): ties broken alphabetically, heap or sort', 'Sort characters by frequency (LC 451): same buckets', 'Kth largest element (Heap page): quickselect or a size-k heap']
+});
+
+A({
+  id: 'longest-consecutive', cat: 'Hashing', title: 'Longest consecutive sequence', lc: 'LeetCode 128',
+  blurb: 'Put every value in a set. Only start counting at numbers whose predecessor is missing, so each run is walked once.',
+  params: [{ key: 'nums', label: 'nums', type: 'ints', min: 0, max: 20, maxLen: 12, def: [9, 4, 15, 1, 3, 2, 10, 11, 8, 12] }],
+  code: `
+int longestConsecutive(vector<int>& nums) {
+    unordered_set<int> s(nums.begin(), nums.end());   //@set
+    int best = 0;
+    for (int x : s) {
+        if (s.count(x - 1)) continue;                  //@skip   // not the start of a run
+        int len = 1;
+        while (s.count(x + len)) len++;                //@grow
+        best = max(best, len);                         //@best
+    }
+    return best;
+}`,
+  run(T, p) {
+    const a = p.nums, set = [...new Set(a)], lo = Math.min(...a), hi = Math.max(...a), has = new Set(a);
+    const line = range(hi - lo + 1).map(k => has.has(lo + k) ? lo + k : '');
+    let best = 0, bestRun = null;
+    const sc = (x, run, msg, mark, st = {}) => {
+      const lst = {}; if (bestRun) for (let v = bestRun[0]; v <= bestRun[1]; v++) lst[v - lo] = 'done';
+      if (run) for (let v = run[0]; v <= run[1]; v++) lst[v - lo] = 'cur';
+      T.step(mark, msg, [B.arr('set', set, { st, ptr: x == null ? {} : { x: set.indexOf(x) }, idx: false, hint: 'iteration order' }), B.arr('number line', line, { heads: line.map((_, k) => lo + k), sm: true, st: lst, idx: true }), B.vars([['best', best, bestRun ? 'done' : '']])]);
+    };
+    sc(null, null, `Put the ${set.length} distinct values in a set. The number line below just makes the gaps visible.`, 'set');
+    for (const x of set) {
+      if (has.has(x - 1)) { sc(x, null, `${x - 1} is in the set, so ${x} is in the middle of a run. Skip it.`, 'skip', { [set.indexOf(x)]: 'dim' }); continue; }
+      let len = 1; sc(x, [x, x], `${x - 1} is missing, so ${x} starts a run. Count upward.`, 'grow', { [set.indexOf(x)]: 'cur' });
+      while (has.has(x + len)) { len++; sc(x, [x, x + len - 1], `${x + len - 1} is in the set: run length ${len}.`, 'grow', { [set.indexOf(x)]: 'cur' }); }
+      if (len > best) { best = len; bestRun = [x, x + len - 1]; }
+      sc(x, null, `${x + len} is missing, so this run has length ${len}. best = ${best}.`, 'best', { [set.indexOf(x)]: 'cur' });
+    }
+    T.out.push(best); sc(null, null, `Longest run: ${bestRun[0]}…${bestRun[1]}, length ${best}.`, null);
+  },
+  leg: { dim: 'Inside a run, skipped' },
+  idea: 'Sorting would be O(n log n). With a set, ask each number "is x − 1 here?" If it is, x is not the start of a run and is skipped. Only run starts walk upward, so every number is visited a constant number of times overall.',
+  time: 'O(n)', space: 'O(n)',
+  trap: 'Without the x − 1 check, every number walks its own run and the worst case becomes O(n²).',
+  vars: ['Union-find over x and x + 1 also works', 'Binary tree longest consecutive sequence (LC 298)', 'Longest increasing subsequence is a different problem: order matters there']
+});
+
+const SUDOKU = ['53..7....', '6..195...', '.98....6.', '8...6...3', '48.8.3..1', '7...2...6', '.6....28.', '...419..5', '....8..79'];
+A({
+  id: 'sudoku', cat: 'Hashing', title: 'Valid Sudoku', lc: 'LeetCode 36',
+  blurb: 'Check every filled cell against three sets: its row, its column and its 3×3 box.',
+  params: [{ key: 'b', label: 'board (9 rows, . for empty)', type: 'grid', chars: '1-9.', charsHint: 'use digits 1 to 9 and . for empty', maxR: 9, maxC: 9, minR: 9, minC: 9, def: SUDOKU }],
+  code: `
+bool isValidSudoku(vector<vector<char>>& b) {
+    bool row[9][9] = {}, col[9][9] = {}, box[9][9] = {};
+    for (int r = 0; r < 9; r++)
+        for (int c = 0; c < 9; c++) {
+            if (b[r][c] == '.') continue;
+            int d = b[r][c] - '1', k = (r / 3) * 3 + c / 3;
+            if (row[r][d] || col[c][d] || box[k][d]) return false;   //@clash
+            row[r][d] = col[c][d] = box[k][d] = true;               //@mark
+        }
+    return true;                                                    //@ret
+}`,
+  run(T, p) {
+    const g = p.b.map(r => r.split('').map(ch => ch === '.' ? '' : ch)), row = range(9).map(() => new Set()), col = range(9).map(() => new Set()), box = range(9).map(() => new Set());
+    const shade = {}; for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if ((Math.floor(r / 3) + Math.floor(c / 3)) % 2) shade[r + ',' + c] = 'sh';
+    const sc = (r, c, extra, sets) => [B.grid('board', g, { st: { ...shade, ...extra }, small: true }), ...(sets || [])];
+    T.step(null, 'Scan row by row. Each filled cell must be new to its row, its column and its 3×3 box.', sc());
+    for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) {
+      const d = g[r][c]; if (!d) continue;
+      const k = Math.floor(r / 3) * 3 + Math.floor(c / 3), hit = row[r].has(d) ? 'row' : col[c].has(d) ? 'column' : box[k].has(d) ? 'box' : null;
+      const sets = [B.chips(`row ${r}`, [...row[r]].map(t => ({ t, cls: t === d ? 'bad' : '' }))), B.chips(`col ${c}`, [...col[c]].map(t => ({ t, cls: t === d ? 'bad' : '' }))), B.chips(`box ${k}`, [...box[k]].map(t => ({ t, cls: t === d ? 'bad' : '' })))];
+      if (hit) {
+        const st = { [r + ',' + c]: 'bad' };
+        for (let rr = 0; rr < 9; rr++) for (let cc = 0; cc < 9; cc++) {
+          if (rr === r && cc === c || g[rr][cc] !== d) continue;
+          const same = hit === 'row' ? rr === r : hit === 'column' ? cc === c : Math.floor(rr / 3) * 3 + Math.floor(cc / 3) === k;
+          if (same && (rr < r || (rr === r && cc < c))) st[rr + ',' + cc] = 'bad';
+        }
+        T.out.push('false'); T.step('clash', `${d} at (${r}, ${c}) is already in its ${hit}. The board is invalid.`, sc(r, c, st, sets)); return;
+      }
+      row[r].add(d); col[c].add(d); box[k].add(d);
+      T.step('mark', `${d} at (${r}, ${c}) is new to row ${r}, column ${c} and box ${k}. Record it in all three.`, sc(r, c, { [r + ',' + c]: 'cur' }, sets));
+    }
+    T.out.push('true'); T.step('ret', 'No repeats anywhere. The board is valid (it may still be unsolvable, which this problem does not ask).', sc());
+  },
+  idea: 'Validity is three independent "no repeats" checks. Keep 9 sets for rows, 9 for columns and 9 for boxes. Box index (r / 3) · 3 + c / 3 numbers the boxes 0 to 8 left to right, top to bottom.',
+  time: 'O(81): constant', space: 'O(81)',
+  trap: 'Only filled cells count. Validity is not solvability: a valid board can still have no solution.',
+  vars: ['Sudoku solver (LC 37): backtracking with the same three sets', 'Encode each fact as a string like "5 in row 0" and use one set', 'Bitmasks: one int per row, column and box']
+});
+
+/* ================= Prefix sums ================= */
+A({
+  id: 'range-sum', cat: 'Prefix sums', title: 'Range sum query (prefix sums)', lc: 'LeetCode 303',
+  blurb: 'Precompute running totals once. Then any range sum is one subtraction: pre[r + 1] − pre[l].',
+  params: [{ key: 'nums', label: 'nums', type: 'ints', min: -20, max: 20, maxLen: 10, def: [-2, 0, 3, -5, 2, -1] }, { key: 'q', label: 'queries l-r', type: 'ivals', min: 0, max: 9, maxLen: 4, def: [[0, 2], [2, 5], [0, 5]] }],
+  check: (p) => p.q.some(([l, r]) => r >= p.nums.length) ? `Query indexes must be below ${p.nums.length}.` : null,
+  code: `
+class NumArray {
+    vector<int> pre;                        // pre[i] = sum of the first i numbers
+public:
+    NumArray(vector<int>& nums) : pre(nums.size() + 1, 0) {
+        for (int i = 0; i < nums.size(); i++)
+            pre[i + 1] = pre[i] + nums[i];  //@build
+    }
+    int sumRange(int l, int r) {
+        return pre[r + 1] - pre[l];         //@query
+    }
+};`,
+  run(T, p) {
+    const a = p.nums, n = a.length, pre = Array(n + 1).fill(null); pre[0] = 0;
+    const sc = (o1 = {}, o2 = {}) => [B.arr('nums', a, o1), B.arr('pre', [...pre], { hint: 'sum of first i', ...o2 })];
+    T.step('build', 'pre[0] = 0: the sum of zero numbers.', sc({}, { st: { 0: 'cur' } }));
+    for (let i = 0; i < n; i++) { pre[i + 1] = pre[i] + a[i]; T.step('build', `pre[${i + 1}] = pre[${i}] + nums[${i}] = ${pre[i]} + ${a[i]} = ${pre[i + 1]}.`, sc({ st: { [i]: 'cur' }, win: [0, i, 'wait'] }, { st: { [i]: 'wait', [i + 1]: 'cur' } })); }
+    p.q.forEach(([l, r]) => {
+      const v = pre[r + 1] - pre[l]; T.out.push(`sum(${l}, ${r}) = ${v}`);
+      T.step('query', `sum(${l}, ${r}) = pre[${r + 1}] − pre[${l}] = ${pre[r + 1]} − ${pre[l]} = ${v}. Everything before ${l} cancels out.`, sc({ win: [l, r, 'done'], ptr: { l, r } }, { st: { [r + 1]: 'done', [l]: 'bad' } }));
+    });
+  },
+  idea: 'pre[r + 1] is the sum of nums[0..r] and pre[l] is the sum of nums[0..l − 1]. Subtracting removes the shared prefix and leaves exactly nums[l..r]. O(n) once, then O(1) per query.',
+  time: 'O(n) build, O(1) per query', space: 'O(n)',
+  trap: 'Use an array one longer than the input with pre[0] = 0, or ranges that start at 0 need a special case.',
+  vars: ['Range sum query 2D (LC 304): pre[r][c] with inclusion–exclusion', 'Subarray sum equals K (below): prefix sums plus a hash map', 'Count vowel strings in ranges (LC 2559): prefix count of matches', 'Difference arrays: the reverse trick for range updates']
+});
+
+A({
+  id: 'product-except-self', cat: 'Prefix sums', title: 'Product of array except self', lc: 'LeetCode 238',
+  blurb: 'Each answer is (product of everything to the left) × (product of everything to the right). Two passes, no division.',
+  params: [{ key: 'nums', label: 'nums', type: 'ints', min: -9, max: 9, minLen: 2, maxLen: 8, def: [2, 3, 4, 5] }],
+  code: `
+vector<int> productExceptSelf(vector<int>& nums) {
+    int n = nums.size();
+    vector<int> res(n, 1);
+    for (int i = 1; i < n; i++)
+        res[i] = res[i - 1] * nums[i - 1];   //@pre    // product of everything left of i
+    int suffix = 1;
+    for (int i = n - 1; i >= 0; i--) {
+        res[i] *= suffix;                    //@suf    // times everything right of i
+        suffix *= nums[i];
+    }
+    return res;                              //@ret
+}`,
+  run(T, p) {
+    const a = p.nums, n = a.length, res = Array(n).fill(1); let suffix = 1;
+    T.step('pre', 'res[0] = 1: nothing is to the left of index 0.', [B.arr('nums', a), B.arr('res', [...res], { st: { 0: 'cur' } })]);
+    for (let i = 1; i < n; i++) { res[i] = res[i - 1] * a[i - 1]; T.step('pre', `res[${i}] = res[${i - 1}] × nums[${i - 1}] = ${res[i]}: the product of nums[0..${i - 1}].`, [B.arr('nums', a, { win: [0, i - 1], ptr: { i } }), B.arr('res', [...res], { st: { [i]: 'cur', [i - 1]: 'wait' } })]); }
+    const done = {};
+    for (let i = n - 1; i >= 0; i--) {
+      const before = res[i]; res[i] *= suffix; done[i] = 'done';
+      T.step('suf', `res[${i}] = ${before} × suffix ${suffix} = ${res[i]}.${i < n - 1 ? ` suffix is the product of nums[${i + 1}..${n - 1}].` : ' Nothing is to the right yet, so suffix is 1.'}`, [B.arr('nums', a, { win: i < n - 1 ? [i + 1, n - 1, 'wait'] : null, ptr: { i } }), B.arr('res', [...res], { st: { ...done, [i]: 'cur' } }), B.vars([['suffix', suffix]])]);
+      suffix *= a[i];
+    }
+    T.out.push(`[${res.join(', ')}]`);
+    T.step('ret', `Done: [${res.join(', ')}].`, [B.arr('nums', a), B.arr('res', res, { st: done }), B.vars([['suffix', suffix]])]);
+  },
+  idea: 'Split "everything except me" into left and right. The first pass writes the left product into res; the second walks backwards with a running suffix product and multiplies it in. The output array doubles as the prefix storage, so extra space is O(1).',
+  time: 'O(n)', space: 'O(1) besides the output',
+  trap: 'Dividing the total product by nums[i] fails on zeros and is usually banned. One zero makes every other answer 0; two zeros make every answer 0.',
+  vars: ['Trapping rain water: left max and right max arrays, the same two-pass shape', 'Candy (LC 135): a left pass and a right pass', 'Maximum product subarray: track max and min products']
+});
+
+A({
+  id: 'subarray-sum-k', cat: 'Prefix sums', title: 'Subarray sum equals K', lc: 'LeetCode 560',
+  blurb: 'A subarray sums to k when two prefix sums differ by k. Count earlier prefix sums in a hash map.',
+  params: [{ key: 'nums', label: 'nums', type: 'ints', min: -9, max: 9, maxLen: 10, def: [1, 2, 1, -1, 3, 1, 2] }, { key: 'k', label: 'k', type: 'int', min: -30, max: 30, def: 3 }],
+  code: `
+int subarraySum(vector<int>& nums, int k) {
+    unordered_map<int, int> seen{{0, 1}};   //@init   // prefix sum -> how many times
+    int sum = 0, count = 0;
+    for (int x : nums) {
+        sum += x;
+        if (seen.count(sum - k)) count += seen[sum - k];   //@match
+        seen[sum]++;                        //@store
+    }
+    return count;                           //@ret
+}`,
+  run(T, p) {
+    const a = p.nums, k = p.k, seen = new Map([[0, 1]]), pre = [0]; let sum = 0, count = 0; const found = [];
+    const mp = (hl, cur) => B.map('seen', [...seen].map(([s, c]) => [s, c, s === hl ? 'found' : s === cur ? 'cur' : '']), { hint: 'prefix sum → times' });
+    T.step('init', 'seen starts with {0: 1}: the empty prefix, so subarrays that start at index 0 can be counted.', [B.arr('nums', a), B.vars([['sum', 0], ['count', 0]]), mp()]);
+    a.forEach((x, i) => {
+      sum += x; pre.push(sum); const need = sum - k, m = seen.get(need) || 0;
+      if (m) {
+        count += m; const starts = []; pre.slice(0, -1).forEach((s, j) => { if (s === need) starts.push(j); });
+        starts.forEach(j => found.push(`[${j}..${i}]`));
+        T.step('match', `sum = ${sum}. need = sum − k = ${need}, seen ${m} time${m > 1 ? 's' : ''}: ${starts.map(j => `nums[${j}..${i}]`).join(' and ')} sum${m > 1 ? '' : 's'} to ${k}. count = ${count}.`, [B.arr('nums', a, { win: [starts[starts.length - 1], i, 'done'], ptr: { i } }), B.vars([['sum', sum], ['need', need, 'found'], ['count', count, 'done']]), mp(need)]);
+      } else T.step('match', `sum = ${sum}. need = ${need} hasn't been seen, so no subarray ending here sums to ${k}.`, [B.arr('nums', a, { st: { [i]: 'cur' }, ptr: { i } }), B.vars([['sum', sum], ['need', need], ['count', count]]), mp()]);
+      seen.set(sum, (seen.get(sum) || 0) + 1);
+      T.step('store', `Record prefix sum ${sum} (now seen ${seen.get(sum)} time${seen.get(sum) > 1 ? 's' : ''}).`, [B.arr('nums', a, { st: { [i]: 'cur' }, ptr: { i } }), B.vars([['sum', sum], ['count', count]]), mp(null, sum)]);
+    });
+    T.out.push(count); found.forEach(f => T.out.push(f));
+    T.step('ret', `${count} subarray${count === 1 ? '' : 's'} sum to ${k}.`, [B.arr('nums', a), B.vars([['sum', sum], ['count', count, 'done']]), mp()]);
+  },
+  idea: 'sum(nums[j..i]) = pre[i + 1] − pre[j]. For it to equal k, an earlier prefix must equal pre[i + 1] − k. Keeping a count of every prefix sum seen so far turns that into one hash lookup per index. Negative numbers are fine, unlike a sliding window.',
+  time: 'O(n)', space: 'O(n)',
+  trap: 'Seed the map with {0: 1}, or subarrays starting at index 0 are missed. Look up before you insert the current sum, or k = 0 counts empty subarrays.',
+  vars: ['Continuous subarray sum (LC 523): store prefix mod k', 'Subarray sums divisible by K (LC 974)', 'Count nice subarrays (LC 1248): prefix count of odd numbers', 'Path sum III (LC 437): the same idea on a tree path']
+});
+
+/* ================= Strings ================= */
+A({
+  id: 'encode-decode', cat: 'Strings', title: 'Encode and decode strings', lc: 'LeetCode 271',
+  blurb: 'Join a list of strings into one so it can be split back exactly, even when the strings contain the delimiter. Prefix each with its length.',
+  params: [{ key: 'w', label: 'strings', type: 'words', chars: 'a-z#', charsHint: 'lowercase letters and #, up to 6 each', wordLen: 6, maxLen: 4, def: ['neet', 'c#de', 'love', 'you'] }],
+  code: `
+string encode(vector<string>& strs) {
+    string out;
+    for (string& s : strs)
+        out += to_string(s.size()) + "#" + s;   //@enc
+    return out;
+}
+vector<string> decode(string& s) {
+    vector<string> res;
+    int i = 0;
+    while (i < s.size()) {
+        int j = i;
+        while (s[j] != '#') j++;                //@len
+        int len = stoi(s.substr(i, j - i));
+        res.push_back(s.substr(j + 1, len));    //@word
+        i = j + 1 + len;                        //@next
+    }
+    return res;
+}`,
+  run(T, p) {
+    const w = p.w; let enc = '';
+    w.forEach((s, k) => {
+      const piece = `${s.length}#${s}`, from = enc.length; enc += piece;
+      T.step('enc', `Append "${piece}": the length ${s.length}, a #, then "${s}" as is.`, [B.chips('strs', w.map((t, j) => ({ t, cls: j === k ? 'cur' : j < k ? 'done' : '' }))), B.arr('encoded', enc.split(''), { sm: true, win: [from, enc.length - 1] })]);
+    });
+    const E = enc.split(''), res = []; let i = 0;
+    T.step(null, `Encoded: "${enc}". Now decode it from scratch.`, [B.arr('encoded', E, { sm: true }), B.chips('res', [])]);
+    while (i < E.length) {
+      let j = i; while (E[j] !== '#') j++;
+      const len = +enc.slice(i, j);
+      T.step('len', `From i = ${i}, read digits up to the first # at j = ${j}: length ${len}.`, [B.arr('encoded', E, { sm: true, win: [i, j, 'wait'], ptr: { i, j } }), B.chips('res', res)]);
+      const word = enc.substr(j + 1, len); res.push(word);
+      T.step('word', `Take exactly ${len} characters after the #: "${word}". Any # inside it is just data.`, [B.arr('encoded', E, { sm: true, win: [j + 1, j + len, 'done'], ptr: { i, j } }), B.chips('res', res.map((t, k) => ({ t, cls: k === res.length - 1 ? 'cur' : '' })))]);
+      i = j + 1 + len;
+      if (i < E.length) T.step('next', `Jump i to ${i}, the start of the next length.`, [B.arr('encoded', E, { sm: true, ptr: { i } }), B.chips('res', res)]);
+    }
+    T.out.push(`[${res.join(', ')}]`);
+    T.step(null, 'Decoded list matches the original exactly.', [B.arr('encoded', E, { sm: true }), B.chips('res', res.map(t => ({ t, cls: 'done' })))]);
+  },
+  idea: 'A plain delimiter breaks as soon as a string contains it. Writing the length first means the decoder never searches inside a string: it reads the number, skips the #, and copies exactly that many characters.',
+  time: 'O(total length)', space: 'O(total length)',
+  trap: 'Only the first # after a length is a separator. Searching for # anywhere else, or splitting on it, breaks on inputs like "c#de".',
+  vars: ['Escaping instead of lengths: double every # and use "#,"-style separators', 'Serialize and deserialize a binary tree (Trees page)', 'Run-length encoding uses the same "count then payload" idea']
+});
+
+Stepper.start('two-sum');
+</script>
+</body>
+</html>

@@ -10,8 +10,11 @@ trees/index.html    tree algorithms (37 patterns)
 graphs/index.html   graph algorithms (20 patterns)
 lists/index.html    linked lists (18 patterns)
 dp/index.html       dynamic programming (17 problems, recursion → memo → table)
+hashing/index.html  arrays & hashing (11 problems)
 shared/theme.css    colors, fonts, light/dark tokens
 shared/theme.js     saved theme + [data-theme-toggle] buttons
+shared/stepper.js   engine for the array-style pages: player, code panel, blocks, custom input
+shared/stepper.css  layout and block styles for those pages
 ```
 
 ## Run locally
@@ -24,10 +27,11 @@ npx serve .
 
 ## Add a topic
 
-1. Create `<topic>/index.html`. Load `../shared/theme.js` in `<head>` and add an `← All topics` link to `../index.html`.
-2. Turn its card on the homepage into a link and swap the "Coming soon" pill for a live one.
+Newer pages are built on `shared/stepper.js`. A page loads `../shared/stepper.css` and `../shared/stepper.js`, registers problems with `Stepper.add({ id, cat, title, code, params, run(T, p) { ... } })` and ends with `Stepper.start('firstId')`. Inside `run`, each `T.step(mark, message, blocks)` records one frame: `mark` names a `//@mark` comment in the C++ and `blocks` (from `Stepper.B`: `arr`, `map`, `chips`, `vars`, `grid`, `bars`, `ivl`, `tree`, `text`) describe the stage.
 
-Now that `trees/`, `graphs/`, `lists/` and `dp/` exist, move what they share (player controls, code panel, tracer) into `shared/`.
+Then turn the topic's card on the homepage into a link and swap the "Coming soon" pill for a live one.
+
+`trees/`, `graphs/`, `lists/` and `dp/` predate the shared engine and still carry their own copies of the player.
 
 ## Deploy
 

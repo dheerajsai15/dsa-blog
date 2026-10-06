@@ -59,6 +59,17 @@ kbd{font-family:var(--mono);font-size:.78em;border:1px solid var(--rule);border-
 .e.done{stroke:var(--done);stroke-width:3.2}
 .e.cur{stroke:var(--cur);stroke-width:3.2}
 .tag{font:600 10.5px var(--mono);text-anchor:middle;dominant-baseline:central}
+.v.wait text{fill:var(--ink)}
+.v.dim{opacity:.32} .v .body,.v{transition:fill .3s,stroke .3s,opacity .3s}
+.v.found .body{fill:var(--found);stroke:var(--found)} .v.found text{fill:var(--found-ink)}
+.v.bad .body{fill:var(--bad);stroke:var(--bad)} .v.bad text{fill:var(--on)}
+.cap{font:600 11px var(--mono);fill:var(--muted);dominant-baseline:central}
+.tick{font:500 9.5px var(--mono);fill:var(--muted);text-anchor:middle;dominant-baseline:central}
+.win,.reach{fill:color-mix(in srgb,var(--cur) 12%,transparent);stroke:var(--cur);stroke-width:1.6;stroke-dasharray:5 4}
+.win.best,.reach.best{fill:color-mix(in srgb,var(--done) 18%,transparent);stroke:var(--done)}
+.queen{font:22px var(--font);text-anchor:middle;dominant-baseline:central;transition:opacity .25s,fill .25s}
+.iv{fill:var(--edge);transition:fill .3s} .iv.cur{fill:var(--cur)} .iv.done{fill:var(--done)}
+.spiral{fill:none;stroke:var(--cur);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round;opacity:.55}
 
 /* topics */
 .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;border-top:1px solid var(--rule);padding-top:28px}
@@ -134,32 +145,53 @@ footer a:hover{text-decoration:underline}
   <section>
     <div class="sec-head">
       <h2>Topics</h2>
-      <span class="meta">4 live · more on the way</span>
+      <span class="meta">5 live · 10 coming · the NeetCode 150 roadmap</span>
     </div>
 
     <div class="grid">
-      <a class="card" href="trees/index.html">
-        <div class="stage"><svg id="cardTree" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
+      <a class="card" href="hashing/index.html">
+        <div class="stage"><svg id="cardHash" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
         <div class="card-b">
-          <div class="card-h"><h3>Trees</h3><span class="pill live">37 patterns</span></div>
-          <p>Traversals, views, bottom-up recursion, BSTs, serialization, heaps, segment trees and tries.</p>
-        </div>
-      </a>
+          <div class="card-h"><h3>Arrays &amp; hashing</h3><span class="pill live">11 problems</span></div>
+          <p>Hash maps, frequency counts and prefix sums: two sum, group anagrams, top-k frequent, longest consecutive sequence.</p>
+        </a>
 
-      <a class="card" href="graphs/index.html">
-        <div class="stage"><svg id="cardGraph" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
-        <div class="card-b">
-          <div class="card-h"><h3>Graphs</h3><span class="pill live">20 patterns</span></div>
-          <p>BFS, DFS, cycles, topological sort, shortest paths, union-find, spanning trees, SCCs and bridges.</p>
-        </div>
-      </a>
+      </div>
 
       <div class="card soon">
-        <div class="stage"><svg id="cardSort" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
+        <div class="stage"><svg id="cardTwo" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
         <div class="card-b">
-          <div class="card-h"><h3>Sorting &amp; searching</h3><span class="pill soon">Coming soon</span></div>
-          <p>Insertion, merge, quick and heap sort, plus binary search and its many variants.</p>
+          <div class="card-h"><h3>Two pointers</h3><span class="pill soon">Coming soon</span></div>
+          <p>Pointers that close in from both ends: valid palindrome, two sum II, 3Sum, container with most water, trapping rain water.</p>
         </div>
+
+      </div>
+
+      <div class="card soon">
+        <div class="stage"><svg id="cardWin" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
+        <div class="card-b">
+          <div class="card-h"><h3>Sliding window</h3><span class="pill soon">Coming soon</span></div>
+          <p>Grow the right edge, shrink the left: longest substring without repeats, character replacement, minimum window substring.</p>
+        </div>
+
+      </div>
+
+      <div class="card soon">
+        <div class="stage"><svg id="cardStack" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
+        <div class="card-b">
+          <div class="card-h"><h3>Stack</h3><span class="pill soon">Coming soon</span></div>
+          <p>Matching, evaluating and monotonic stacks: valid parentheses, min stack, daily temperatures, largest rectangle in a histogram.</p>
+        </div>
+
+      </div>
+
+      <div class="card soon">
+        <div class="stage"><svg id="cardBin" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
+        <div class="card-b">
+          <div class="card-h"><h3>Binary search</h3><span class="pill soon">Coming soon</span></div>
+          <p>Halve the search space: classic search, rotated arrays, searching on the answer, median of two sorted arrays.</p>
+        </div>
+
       </div>
 
       <a class="card" href="lists/index.html">
@@ -168,6 +200,43 @@ footer a:hover{text-decoration:underline}
           <div class="card-h"><h3>Linked lists</h3><span class="pill live">18 patterns</span></div>
           <p>Reversal, fast and slow pointers, cycle detection, dummy heads, rewiring and merging.</p>
         </div>
+
+      </a>
+
+      <a class="card" href="trees/index.html">
+        <div class="stage"><svg id="cardTree" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
+        <div class="card-b">
+          <div class="card-h"><h3>Trees</h3><span class="pill live">37 patterns</span></div>
+          <p>Traversals, views, bottom-up recursion, BSTs, serialization, heaps, segment trees and tries.</p>
+        </div>
+
+      </a>
+
+      <div class="card soon">
+        <div class="stage"><svg id="cardHeap" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
+        <div class="card-b">
+          <div class="card-h"><h3>Heap &amp; priority queue</h3><span class="pill soon">Coming soon</span></div>
+          <p>Top-k with a size-k heap, k closest points, task scheduler, and a running median with two heaps.</p>
+        </div>
+
+      </div>
+
+      <div class="card soon">
+        <div class="stage"><svg id="cardBack" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
+        <div class="card-b">
+          <div class="card-h"><h3>Backtracking</h3><span class="pill soon">Coming soon</span></div>
+          <p>Choose, explore, undo: subsets, permutations, combination sum, word search, palindrome partitioning, N-Queens.</p>
+        </div>
+
+      </div>
+
+      <a class="card" href="graphs/index.html">
+        <div class="stage"><svg id="cardGraph" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
+        <div class="card-b">
+          <div class="card-h"><h3>Graphs</h3><span class="pill live">20 patterns</span></div>
+          <p>BFS, DFS, cycles, topological sort, shortest paths, union-find, spanning trees, SCCs and bridges.</p>
+        </div>
+
       </a>
 
       <a class="card" href="dp/index.html">
@@ -176,7 +245,44 @@ footer a:hover{text-decoration:underline}
           <div class="card-h"><h3>Dynamic programming</h3><span class="pill live">17 problems</span></div>
           <p>Each problem built three ways: plain recursion, memoization, then a bottom-up table. Grids, knapsack, strings and intervals.</p>
         </div>
+
       </a>
+
+      <div class="card soon">
+        <div class="stage"><svg id="cardGreedy" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
+        <div class="card-b">
+          <div class="card-h"><h3>Greedy</h3><span class="pill soon">Coming soon</span></div>
+          <p>Locally best choices that are provably safe: jump game, gas station, hand of straights, partition labels.</p>
+        </div>
+
+      </div>
+
+      <div class="card soon">
+        <div class="stage"><svg id="cardInt" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
+        <div class="card-b">
+          <div class="card-h"><h3>Intervals</h3><span class="pill soon">Coming soon</span></div>
+          <p>Sort by start, then merge, insert or count overlaps: merge intervals, non-overlapping intervals, meeting rooms.</p>
+        </div>
+
+      </div>
+
+      <div class="card soon">
+        <div class="stage"><svg id="cardMath" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
+        <div class="card-b">
+          <div class="card-h"><h3>Math &amp; geometry</h3><span class="pill soon">Coming soon</span></div>
+          <p>Grid walks and number tricks: rotate image, spiral matrix, set matrix zeroes, fast power, multiply strings.</p>
+        </div>
+
+      </div>
+
+      <div class="card soon">
+        <div class="stage"><svg id="cardBits" viewBox="0 0 320 180" aria-hidden="true"></svg></div>
+        <div class="card-b">
+          <div class="card-h"><h3>Bit manipulation</h3><span class="pill soon">Coming soon</span></div>
+          <p>XOR, masks and shifts: single number, counting bits, reverse bits, missing number, sum without +.</p>
+        </div>
+
+      </div>
     </div>
   </section>
 
@@ -325,38 +431,336 @@ function run(target, make, draw, { step = 650, hold = 1600 } = {}) {
   }, { step: 520, hold: 1400 });
 })();
 
-/* ============ card: insertion sort ============ */
+/* ============ shared helpers for the array-style cards ============ */
+// A row of labelled boxes, centered unless x0 is given. Each box uses the .v states (cur, done, wait, ...).
+function cellRow(svg, vals, { y, w = 30, h = 30, gap = 6, x0 } = {}) {
+  const X = x0 ?? (320 - (vals.length * w + (vals.length - 1) * gap)) / 2;
+  return vals.map((v, i) => {
+    const x = X + i * (w + gap), g = el('g', { class: 'v' }, svg);
+    el('rect', { class: 'body', x, y, width: w, height: h, rx: 6 }, g);
+    const t = el('text', { x: x + w / 2, y: y + h / 2 }, g); t.textContent = v;
+    return { g, t, x, w, cx: x + w / 2 };
+  });
+}
+// A named caret that slides along a row. below: caret under y pointing up; otherwise above pointing down.
+function pointer(svg, name, color, y, below = true) {
+  const g = el('g', {}, svg);
+  g.style.transition = 'transform .35s cubic-bezier(.3,.8,.3,1), opacity .3s';
+  const t = el('text', { class: 'tag', x: 0, y: below ? y + 13 : y - 13, fill: color }, g); t.textContent = name;
+  el('path', { d: below ? `M-4 ${y + 5}L0 ${y}L4 ${y + 5}` : `M-4 ${y - 5}L0 ${y}L4 ${y - 5}`, fill: color }, g);
+  return (x) => { g.style.opacity = x == null ? 0 : 1; if (x != null) g.style.transform = `translateX(${x}px)`; };
+}
+function caption(svg, x, y, anchor = 'middle') {
+  const t = el('text', { class: 'cap', x, y, 'text-anchor': anchor }, svg);
+  return (s) => { t.textContent = s; };
+}
+
+/* ============ card: arrays & hashing (two sum with a hash set) ============ */
 (() => {
-  const svg = document.getElementById('cardSort');
-  const N = 9, W = 24, GAP = 8, X0 = (320 - (N * W + (N - 1) * GAP)) / 2, BASE = 156;
-  const bars = [];
-  for (let i = 0; i < N; i++) {
-    const h = 22 + i * 13;
-    const r = el('rect', { width: W, height: h, y: BASE - h, rx: 5 }, svg);
-    r.style.transition = 'transform .35s cubic-bezier(.3,.8,.3,1), fill .3s';
-    bars.push(r);
-  }
-  const place = (arr) => arr.forEach((id, i) => { bars[id].style.transform = `translateX(${X0 + i * (W + GAP)}px)`; });
+  const svg = document.getElementById('cardHash');
+  const A = [2, 11, 5, 14, 7, 3], T = 12;
+  caption(svg, 160, 20)(`two sum · target ${T}`);
+  const cells = cellRow(svg, A, { y: 34, w: 34, h: 34, gap: 8 });
+  const slots = cellRow(svg, A, { y: 108, w: 34, h: 28, gap: 8 });
+  const seenTag = el('text', { class: 'tag', x: cells[0].x - 16, y: 122, fill: 'var(--muted)' }, svg); seenTag.textContent = 'seen';
+  const cap = caption(svg, 160, 162);
   run(svg, () => {
-    const a = [...Array(N).keys()];
-    for (let i = N - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
-    const frames = [{ a: [...a], key: -1, sorted: 1 }];
-    for (let i = 1; i < N; i++) {
-      for (let j = i; j > 0; j--) {
-        frames.push({ a: [...a], key: a[j], cmp: a[j - 1], sorted: i });
-        if (a[j - 1] <= a[j]) break;
-        [a[j - 1], a[j]] = [a[j], a[j - 1]];
-        frames.push({ a: [...a], key: a[j - 1], sorted: i });
-      }
+    const f = [{ i: -1, seen: 0 }], idx = new Map();
+    for (let i = 0; i < A.length; i++) {
+      const need = T - A[i];
+      if (idx.has(need)) { f.push({ i, seen: i, need, hit: idx.get(need) }); f.push({ i, seen: i, need, hit: idx.get(need), done: true }); break; }
+      f.push({ i, seen: i, need }); idx.set(A[i], i); f.push({ i, seen: i + 1, need });
     }
-    frames.push({ a: [...a], key: -1, sorted: N });
-    return frames;
-  }, ({ a, key, cmp, sorted }) => {
-    place(a);
-    a.forEach((id, i) => {
-      bars[id].style.fill = id === key ? 'var(--cur)' : id === cmp ? 'var(--wait)' : i < sorted || sorted === N ? 'var(--done)' : 'var(--edge)';
+    return f;
+  }, ({ i, seen, need, hit, done }) => {
+    cells.forEach((c, k) => setCls(c.g, 'v', done && (k === i || k === hit) ? 'done' : k === i ? 'cur' : ''));
+    slots.forEach((c, k) => { c.g.style.opacity = k < seen ? 1 : 0; setCls(c.g, 'v', k === hit ? 'found' : 'wait'); });
+    cap(i < 0 ? 'scan once, remember what you have seen' : hit != null ? `need ${need}: seen at index ${hit} ✓` : `need ${T} − ${A[i]} = ${String(need).replace('-', '−')}: not seen yet`);
+  }, { step: 700, hold: 1800 });
+})();
+
+/* ============ card: two pointers (pair sum in a sorted array) ============ */
+(() => {
+  const svg = document.getElementById('cardTwo');
+  const A = [1, 3, 4, 6, 8, 11, 14], targets = [14, 17, 10, 20];
+  const title = caption(svg, 160, 26), cap = caption(svg, 160, 150);
+  const cells = cellRow(svg, A, { y: 48, w: 32, h: 32, gap: 8 });
+  const L = pointer(svg, 'L', 'var(--wait)', 86), R = pointer(svg, 'R', 'var(--cur)', 86);
+  let t = -1;
+  run(svg, () => {
+    t = (t + 1) % targets.length; const T = targets[t], f = [];
+    let l = 0, r = A.length - 1;
+    while (l < r) {
+      const s = A[l] + A[r];
+      f.push({ T, l, r, msg: s === T ? `${A[l]} + ${A[r]} = ${T} ✓` : `${A[l]} + ${A[r]} = ${s} ${s < T ? '<' : '>'} ${T} → move ${s < T ? 'L' : 'R'}` });
+      if (s === T) { f.push({ T, l, r, found: true, msg: `${A[l]} + ${A[r]} = ${T} ✓` }); break; }
+      if (s < T) l++; else r--;
+    }
+    return f;
+  }, ({ T, l, r, found, msg }) => {
+    title(`sorted · target ${T}`); cap(msg);
+    cells.forEach((c, k) => setCls(c.g, 'v', found && (k === l || k === r) ? 'done' : k === l || k === r ? 'cur' : k < l || k > r ? 'dim' : ''));
+    L(cells[l].cx); R(cells[r].cx);
+  }, { step: 800, hold: 1500 });
+})();
+
+/* ============ card: sliding window (longest substring without repeats) ============ */
+(() => {
+  const svg = document.getElementById('cardWin');
+  const S = 'abcbdaecbf'.split('');
+  const win = el('rect', { class: 'win', y: 46, height: 40, rx: 9 }, svg);
+  const cells = cellRow(svg, S, { y: 50, w: 26, h: 32, gap: 4 });
+  const L = pointer(svg, 'l', 'var(--wait)', 92), R = pointer(svg, 'r', 'var(--cur)', 92);
+  const title = caption(svg, 160, 28), cap = caption(svg, 160, 150);
+  run(svg, () => {
+    const f = [], seen = new Set(); let l = 0, best = 0, bl = 0;
+    for (let r = 0; r < S.length; r++) {
+      while (seen.has(S[r])) { f.push({ l, r, dup: S[r], best, bl }); seen.delete(S[l]); l++; }
+      seen.add(S[r]); if (r - l + 1 > best) { best = r - l + 1; bl = l; }
+      f.push({ l, r, best, bl });
+    }
+    f.push({ l: bl, r: bl + best - 1, best, bl, end: true });
+    return f;
+  }, ({ l, r, dup, best, end }) => {
+    const a = cells[l], b = cells[r];
+    win.setAttribute('x', a.x - 4); win.setAttribute('width', b.x + b.w - a.x + 8);
+    setCls(win, 'win', end ? 'best' : '');
+    cells.forEach((c, k) => setCls(c.g, 'v', end ? (k >= l && k <= r ? 'done' : 'dim') : dup && k >= l && k < r && S[k] === dup ? 'bad' : k === r ? 'cur' : k >= l && k < r ? 'wait' : ''));
+    L(a.cx); R(b.cx);
+    title(end ? `longest: "${S.slice(l, r + 1).join('')}"` : `window "${S.slice(l, r + 1).join('')}"`);
+    cap(dup ? `'${dup}' repeats → shrink from the left` : `best so far: ${best}`);
+  }, { step: 650, hold: 1800 });
+})();
+
+/* ============ card: stack (valid parentheses) ============ */
+(() => {
+  const svg = document.getElementById('cardStack');
+  const inputs = ['({[]()})[]', '([{}]())(]'], pair = { ')': '(', ']': '[', '}': '{' };
+  const row = el('g', {}, svg), pile = el('g', {}, svg);
+  const cur = pointer(svg, 'i', 'var(--cur)', 58);
+  const base = el('line', { class: 'e', x1: 68, y1: 166, x2: 132, y2: 166 }, svg);
+  const stackTag = el('text', { class: 'tag', x: 60, y: 158, fill: 'var(--muted)', 'text-anchor': 'end' }, svg); stackTag.textContent = 'stack';
+  const cap = caption(svg, 300, 140, 'end');
+  let n = -1, cells = [];
+  run(svg, () => {
+    n = (n + 1) % inputs.length; const s = inputs[n].split('');
+    const f = [{ i: -1, st: [], ok: new Set(), s }], st = [], ok = new Set();
+    for (let i = 0; i < s.length; i++) {
+      if (!pair[s[i]]) { st.push(i); f.push({ i, st: [...st], ok: new Set(ok), msg: `push ${s[i]}` }); continue; }
+      const top = st[st.length - 1];
+      if (top == null || s[top] !== pair[s[i]]) { f.push({ i, st: [...st], ok: new Set(ok), bad: top, msg: `${s[i]} doesn't match → invalid`, end: true }); return f; }
+      f.push({ i, st: [...st], ok: new Set(ok), hit: top, msg: `${s[i]} matches ${s[top]} → pop` });
+      st.pop(); ok.add(i); ok.add(top);
+      f.push({ i, st: [...st], ok: new Set(ok), msg: `pop` });
+    }
+    f.push({ i: -1, st: [], ok, msg: 'stack empty → valid ✓', end: true });
+    return f;
+  }, ({ i, st, ok, hit, bad, msg, s }) => {
+    if (s) { row.innerHTML = ''; cells = cellRow(row, s, { y: 24, w: 24, h: 28, gap: 4 }); }
+    cells.forEach((c, k) => setCls(c.g, 'v', k === bad || (bad != null && k === i) ? 'bad' : k === i || k === hit ? 'cur' : ok.has(k) ? 'done' : st.includes(k) ? 'wait' : ''));
+    cur(i >= 0 ? cells[i].cx : null);
+    pile.innerHTML = '';
+    st.forEach((k, d) => {
+      const g = el('g', { class: 'v ' + (k === hit || k === bad ? 'cur' : 'wait') }, pile);
+      el('rect', { class: 'body', x: 76, y: 140 - d * 26, width: 48, height: 22, rx: 5 }, g);
+      el('text', { x: 100, y: 151 - d * 26 }, g).textContent = cells[k].t.textContent;
     });
-  }, { step: 330, hold: 1500 });
+    cap(msg || 'scan left to right');
+  }, { step: 650, hold: 1700 });
+})();
+
+/* ============ card: binary search ============ */
+(() => {
+  const svg = document.getElementById('cardBin');
+  const A = [2, 5, 8, 12, 16, 23, 38, 45, 56, 72, 91], targets = [45, 8, 91, 30];
+  const title = caption(svg, 160, 22), cap = caption(svg, 160, 160);
+  const cells = cellRow(svg, A, { y: 58, w: 24, h: 30, gap: 4 });
+  const M = pointer(svg, 'mid', 'var(--cur)', 52, false), LO = pointer(svg, 'lo', 'var(--wait)', 94), HI = pointer(svg, 'hi', 'var(--wait)', 94);
+  let t = -1;
+  run(svg, () => {
+    t = (t + 1) % targets.length; const T = targets[t], f = [];
+    let lo = 0, hi = A.length - 1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (A[mid] === T) { f.push({ T, lo, hi, mid, msg: `${A[mid]} = ${T} ✓ found at ${mid}`, found: true }); return f; }
+      f.push({ T, lo, hi, mid, msg: `${A[mid]} ${A[mid] < T ? '<' : '>'} ${T} → ${A[mid] < T ? 'lo = mid + 1' : 'hi = mid − 1'}` });
+      if (A[mid] < T) lo = mid + 1; else hi = mid - 1;
+    }
+    f.push({ T, lo, hi, msg: `lo > hi → ${T} is not here` });
+    return f;
+  }, ({ T, lo, hi, mid, msg, found }) => {
+    title(`find ${T}`); cap(msg);
+    cells.forEach((c, k) => setCls(c.g, 'v', k === mid ? (found ? 'done' : 'cur') : k < lo || k > hi ? 'dim' : ''));
+    M(mid != null ? cells[mid].cx : null);
+    LO(lo < A.length && lo <= hi ? cells[lo].cx : null); HI(hi >= 0 && lo <= hi && hi !== lo ? cells[hi].cx : null);
+  }, { step: 950, hold: 1500 });
+})();
+
+/* ============ card: heap (push into a min-heap, sift up) ============ */
+(() => {
+  const svg = document.getElementById('cardHeap');
+  const P = [[160, 34], [96, 82], [224, 82], [60, 136], [132, 136], [188, 136], [260, 136]];
+  const edges = []; for (let i = 1; i < P.length; i++) edges[i] = el('line', { class: 'e', x1: P[(i - 1) >> 1][0], y1: P[(i - 1) >> 1][1], x2: P[i][0], y2: P[i][1] }, svg);
+  const nodes = P.map(([x, y]) => vertex(svg, x, y, '', 16));
+  const cap = caption(svg, 304, 22, 'end');
+  run(svg, () => {
+    const vals = Array.from({ length: 7 }, () => 1 + Math.floor(Math.random() * 60)), h = [], f = [{ h: [], msg: 'min-heap' }];
+    for (const v of vals) {
+      h.push(v); let i = h.length - 1; f.push({ h: [...h], a: i, msg: `push ${v}` });
+      while (i && h[(i - 1) >> 1] > h[i]) { const p = (i - 1) >> 1; f.push({ h: [...h], a: i, b: p, msg: `${h[i]} < ${h[p]} → swap up` }); [h[i], h[p]] = [h[p], h[i]]; i = p; f.push({ h: [...h], a: i, msg: `${h[i]} moved up` }); }
+      f.push({ h: [...h], msg: `top = ${h[0]}` });
+    }
+    f.push({ h: [...h], top: true, msg: `min on top: ${h[0]}` });
+    return f;
+  }, ({ h, a, b, top, msg }) => {
+    nodes.forEach((n, i) => { n.style.opacity = i < h.length ? 1 : 0; n.querySelector('text').textContent = h[i] ?? ''; setCls(n, 'v', i === a ? 'cur' : i === b ? 'wait' : top && i === 0 ? 'done' : ''); });
+    edges.forEach((e, i) => { if (e) { e.style.opacity = i < h.length ? 1 : 0; setCls(e, 'e', a != null && b != null && i === a ? 'cur' : ''); } });
+    cap(msg);
+  }, { step: 600, hold: 1600 });
+})();
+
+/* ============ card: backtracking (4-queens) ============ */
+(() => {
+  const svg = document.getElementById('cardBack');
+  const N = 4, S = 34, X0 = (320 - N * S) / 2, Y0 = (180 - N * S) / 2;
+  const sq = [], qs = [];
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    const rect = el('rect', { x: X0 + c * S, y: Y0 + r * S, width: S, height: S, fill: (r + c) % 2 ? 'var(--panel2)' : 'var(--panel)' }, svg);
+    rect.style.transition = 'fill .25s'; sq.push(rect);
+    const q = el('text', { class: 'queen', x: X0 + c * S + S / 2, y: Y0 + r * S + S / 2 + 1 }, svg); q.textContent = '♛'; qs.push(q);
+  }
+  el('rect', { x: X0, y: Y0, width: N * S, height: N * S, fill: 'none', stroke: 'var(--edge)', 'stroke-width': 1.5, rx: 3 }, svg);
+  const cap = caption(svg, 160, 174);
+  let flip = false;
+  run(svg, () => {
+    flip = !flip; const f = [], q = [];
+    const safe = (r, c) => q.every((qc, qr) => qc !== c && Math.abs(qc - c) !== r - qr);
+    const go = (r) => {
+      if (r === N) { f.push({ q: [...q], solved: true, msg: 'all 4 placed ✓' }); return true; }
+      for (let k = 0; k < N; k++) {
+        const c = flip ? k : N - 1 - k;
+        if (!safe(r, c)) { f.push({ q: [...q], bad: [r, c], msg: `row ${r + 1}: attacked` }); continue; }
+        q.push(c); f.push({ q: [...q], msg: `place in row ${r + 1}` });
+        if (go(r + 1)) return true;
+        q.pop(); f.push({ q: [...q], undo: [r, c], msg: 'dead end → undo' });
+      }
+      return false;
+    };
+    f.push({ q: [], msg: 'one queen per row' }); go(0);
+    return f;
+  }, ({ q, bad, undo, solved, msg }) => {
+    sq.forEach((s, i) => {
+      const r = Math.floor(i / N), c = i % N, base = (r + c) % 2 ? 'var(--panel2)' : 'var(--panel)';
+      s.setAttribute('fill', bad && bad[0] === r && bad[1] === c ? 'color-mix(in srgb, var(--bad) 55%, var(--panel))' : undo && undo[0] === r && undo[1] === c ? 'var(--wait-bg)' : solved && q[r] === c ? 'color-mix(in srgb, var(--done) 30%, var(--panel))' : base);
+      qs[i].style.opacity = q[r] === c ? 1 : 0;
+      qs[i].setAttribute('fill', solved ? 'var(--done)' : r === q.length - 1 ? 'var(--cur)' : 'var(--ink)');
+    });
+    cap(msg);
+  }, { step: 420, hold: 1800 });
+})();
+
+/* ============ card: greedy (jump game) ============ */
+(() => {
+  const svg = document.getElementById('cardGreedy');
+  const inputs = [[2, 3, 1, 1, 4, 0, 1, 2], [3, 2, 1, 0, 4, 1, 2, 1]];
+  const reachBar = el('rect', { class: 'reach', y: 52, height: 42, rx: 9 }, svg);
+  const row = el('g', {}, svg), I = pointer(svg, 'i', 'var(--cur)', 100);
+  const title = caption(svg, 160, 28), cap = caption(svg, 160, 150);
+  let n = -1, cells = [];
+  run(svg, () => {
+    n = (n + 1) % inputs.length; const A = inputs[n];
+    const f = []; let reach = 0;
+    for (let i = 0; i < A.length; i++) {
+      if (i > reach) { f.push({ i, reach, stuck: true, msg: `index ${i} is out of reach ✗` }); return f; }
+      const nr = Math.max(reach, i + A[i]);
+      f.push({ i, reach: nr, A: i ? null : A, msg: `reach = max(${reach}, ${i} + ${A[i]}) = ${nr}` }); reach = nr;
+      if (reach >= A.length - 1) { f.push({ i, reach, win: true, msg: 'the end is reachable ✓' }); return f; }
+    }
+    return f;
+  }, ({ i, reach, stuck, win, msg, A }) => {
+    if (A) { row.innerHTML = ''; cells = cellRow(row, A, { y: 58, w: 30, h: 30, gap: 6 }); }
+    const last = cells[Math.min(reach, cells.length - 1)];
+    reachBar.setAttribute('x', cells[0].x - 3); reachBar.setAttribute('width', last.x + last.w - cells[0].x + 6);
+    setCls(reachBar, 'reach', win ? 'best' : '');
+    cells.forEach((c, k) => setCls(c.g, 'v', stuck && k === i ? 'bad' : k === i ? 'cur' : win && k === cells.length - 1 ? 'done' : k > reach ? 'dim' : ''));
+    I(cells[Math.min(i, cells.length - 1)].cx); title('jump game: how far can we reach?'); cap(msg);
+  }, { step: 750, hold: 1700 });
+})();
+
+/* ============ card: intervals (merge) ============ */
+(() => {
+  const svg = document.getElementById('cardInt');
+  const IV = [[1, 3], [2, 6], [8, 10], [9, 12], [15, 18], [16, 17]], X = (v) => 26 + v * 14.5, Y = (k) => 16 + k * 17;
+  for (let v = 0; v <= 18; v += 3) { const t = el('text', { class: 'tick', x: X(v), y: 172 }, svg); t.textContent = v; }
+  const bars = IV.map(([a, b], k) => { const r = el('rect', { class: 'iv', x: X(a), y: Y(k), width: X(b) - X(a), height: 11, rx: 4 }, svg); return r; });
+  el('line', { class: 'e', x1: 20, y1: 128, x2: 300, y2: 128 }, svg);
+  const tag = el('text', { class: 'tag', x: 20, y: 120, fill: 'var(--muted)', 'text-anchor': 'start' }, svg); tag.textContent = 'merged';
+  const out = el('g', {}, svg);
+  run(svg, () => {
+    const f = [{ k: -1, m: [] }], m = [];
+    IV.forEach(([a, b], k) => {
+      const last = m[m.length - 1];
+      if (last && a <= last[1]) last[1] = Math.max(last[1], b); else m.push([a, b]);
+      f.push({ k, m: m.map(x => [...x]), grew: last && a <= last[1] });
+    });
+    f.push({ k: IV.length, m: m.map(x => [...x]) });
+    return f;
+  }, ({ k, m }) => {
+    bars.forEach((b, i) => setCls(b, 'iv', i === k ? 'cur' : i < k ? 'done' : ''));
+    out.innerHTML = '';
+    m.forEach(([a, b], j) => el('rect', { class: 'iv ' + (j === m.length - 1 && k < IV.length ? 'cur' : 'done'), x: X(a), y: 136, width: X(b) - X(a), height: 16, rx: 5 }, out));
+  }, { step: 750, hold: 1800 });
+})();
+
+/* ============ card: math & geometry (spiral matrix) ============ */
+(() => {
+  const svg = document.getElementById('cardMath');
+  const R = 4, C = 6, S = 30, G = 4, X0 = (320 - (C * S + (C - 1) * G)) / 2, Y0 = (180 - (R * S + (R - 1) * G)) / 2;
+  const cell = [];
+  for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
+    const g = el('g', { class: 'v' }, svg);
+    el('rect', { class: 'body', x: X0 + c * (S + G), y: Y0 + r * (S + G), width: S, height: S, rx: 6 }, g);
+    cell.push({ g, t: el('text', { x: X0 + c * (S + G) + S / 2, y: Y0 + r * (S + G) + S / 2 }, g) });
+  }
+  const path = el('polyline', { class: 'spiral' }, svg);
+  const order = []; let top = 0, bot = R - 1, lf = 0, rt = C - 1;
+  while (top <= bot && lf <= rt) {
+    for (let c = lf; c <= rt; c++) order.push(top * C + c); top++;
+    for (let r = top; r <= bot; r++) order.push(r * C + rt); rt--;
+    if (top <= bot) { for (let c = rt; c >= lf; c--) order.push(bot * C + c); bot--; }
+    if (lf <= rt) { for (let r = bot; r >= top; r--) order.push(r * C + lf); lf++; }
+  }
+  const ctr = (i) => `${X0 + (i % C) * (S + G) + S / 2},${Y0 + Math.floor(i / C) * (S + G) + S / 2}`;
+  run(svg, () => { const f = [{ k: -1 }]; for (let k = 0; k < order.length; k++) f.push({ k }); f.push({ k: order.length }); return f; }, ({ k }) => {
+    cell.forEach(({ g, t }, i) => { const at = order.indexOf(i); setCls(g, 'v', at === k ? 'cur' : at < k || k >= order.length ? 'done' : ''); t.textContent = at <= k ? at + 1 : ''; });
+    path.setAttribute('points', order.slice(0, Math.max(0, Math.min(k + 1, order.length))).map(ctr).join(' '));
+  }, { step: 280, hold: 1800 });
+})();
+
+/* ============ card: bit manipulation (XOR finds the single number) ============ */
+(() => {
+  const svg = document.getElementById('cardBits');
+  const nums = [5, 3, 5, 6, 3], W = 30, G = 6, X0 = 132;
+  const bits = (v) => [8, 4, 2, 1].map(b => (v & b ? 1 : 0));
+  [8, 4, 2, 1].forEach((b, j) => { const t = el('text', { class: 'tick', x: X0 + j * (W + G) + W / 2, y: 34 }, svg); t.textContent = b; });
+  const rowX = cellRow(svg, bits(0), { y: 44, w: W, h: 30, gap: G, x0: X0 }), rowA = cellRow(svg, bits(0), { y: 96, w: W, h: 30, gap: G, x0: X0 });
+  const lx = el('text', { class: 'cap', x: X0 - 14, y: 59, 'text-anchor': 'end' }, svg), la = el('text', { class: 'cap', x: X0 - 14, y: 111, 'text-anchor': 'end' }, svg);
+  el('line', { class: 'e', x1: X0 - 4, y1: 86, x2: X0 + 4 * W + 3 * G + 4, y2: 86 }, svg);
+  const xorTag = el('text', { class: 'tag', x: X0 + 4 * W + 3 * G + 16, y: 86, fill: 'var(--muted)', 'text-anchor': 'start' }, svg); xorTag.textContent = '^';
+  const title = caption(svg, 160, 18), cap = caption(svg, 160, 160);
+  run(svg, () => {
+    const f = [{ k: -1, acc: 0, prev: 0 }]; let acc = 0;
+    nums.forEach((x, k) => { const prev = acc; acc ^= x; f.push({ k, acc, prev }); });
+    f.push({ k: nums.length, acc, prev: acc });
+    return f;
+  }, ({ k, acc, prev }) => {
+    const x = nums[k] ?? 0, bx = bits(x), ba = bits(acc), bp = bits(prev), live = k >= 0 && k < nums.length;
+    rowX.forEach((c, j) => { c.t.textContent = live ? bx[j] : '·'; setCls(c.g, 'v', live && bx[j] ? 'wait' : ''); });
+    rowA.forEach((c, j) => { c.t.textContent = ba[j]; setCls(c.g, 'v', k >= nums.length ? (ba[j] ? 'done' : '') : live && ba[j] !== bp[j] ? 'cur' : ''); });
+    lx.textContent = live ? `x = ${x}` : 'x'; la.textContent = `acc = ${acc}`;
+    title(`nums: ${nums.join(', ')}`);
+    cap(k < 0 ? 'XOR everything together' : live ? `acc = ${prev} ^ ${x} = ${acc}` : `pairs cancel out → single number is ${acc}`);
+  }, { step: 900, hold: 1900 });
 })();
 
 /* ============ card: linked list reversal ============ */
