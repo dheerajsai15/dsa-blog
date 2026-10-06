@@ -1,0 +1,2194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dynamic programming, step by step</title>
+<link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+<script src="../shared/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ECF0ED; --panel:#F8FAF8; --panel2:#E1E8E3; --stagebg:#E6ECE8; --ink:#16241D; --muted:#55665C; --rule:#C5D0C8; --edge:#97AB9F; --dot:#C3CEC6;
+  --cur:#E8622E; --done:#2C8660; --wait:#3767CC; --wait-bg:#D9E4FA; --path:#8248C2; --found:#E6AE07; --found-ink:#2A2000; --target:#D23E87; --bad:#C43232;
+  --hl:rgba(232,98,46,.13); --code-bg:#F4F7F5; --on:#FFFFFF;
+  --g0:#17898A; --g1:#C2457A; --g2:#B0711A; --g3:#4B5BC8; --g4:#5F8A1B; --g5:#8B58B5; --ca:#2F7DC0; --cb:#D7901A;
+  --water:#CFE2F1; --land:#D9CBA5; --fresh:#F3B640; --rotten:#6E5C3D;
+  --t-kw:#8248C2; --t-ty:#2D63B8; --t-fn:#1F7A57; --t-num:#B5531F; --t-str:#B5531F; --t-com:#7C8B82;
+  --font:'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme:light;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1713; --panel:#13201B; --panel2:#1A2A23; --stagebg:#101C17; --ink:#DCE8E1; --muted:#8DA195; --rule:#25362E; --edge:#4A5F54; --dot:#22332B;
+    --cur:#FF7444; --done:#36A574; --wait:#729BF2; --wait-bg:#1A2A48; --path:#AC7BEA; --found:#F3C232; --found-ink:#251C00; --target:#F06AAD; --bad:#E85A50;
+    --hl:rgba(255,116,68,.15); --code-bg:#0F1A16; --on:#FFFFFF;
+  --g0:#2DB3B0; --g1:#E06A9B; --g2:#D99A3A; --g3:#7B89F0; --g4:#8DBA3A; --g5:#B488E0; --ca:#4E9BE0; --cb:#E8A93A;
+  --water:#16304A; --land:#5C5036; --fresh:#E3A52C; --rotten:#806C4B;
+    --g0:#2DB3B0; --g1:#E06A9B; --g2:#D99A3A; --g3:#7B89F0; --g4:#8DBA3A; --g5:#B488E0; --ca:#4E9BE0; --cb:#E8A93A;
+    --water:#16304A; --land:#5C5036; --fresh:#E3A52C; --rotten:#806C4B;
+    --t-kw:#C49AF5; --t-ty:#7FB0F5; --t-fn:#6DD3A6; --t-num:#F2A272; --t-str:#F2A272; --t-com:#6F8378;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1713; --panel:#13201B; --panel2:#1A2A23; --stagebg:#101C17; --ink:#DCE8E1; --muted:#8DA195; --rule:#25362E; --edge:#4A5F54; --dot:#22332B;
+  --cur:#FF7444; --done:#36A574; --wait:#729BF2; --wait-bg:#1A2A48; --path:#AC7BEA; --found:#F3C232; --found-ink:#251C00; --target:#F06AAD; --bad:#E85A50;
+  --hl:rgba(255,116,68,.15); --code-bg:#0F1A16; --on:#FFFFFF;
+  --t-kw:#C49AF5; --t-ty:#7FB0F5; --t-fn:#6DD3A6; --t-num:#F2A272; --t-str:#F2A272; --t-com:#6F8378;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--wait);outline-offset:2px;border-radius:4px}
+[hidden]{display:none !important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.app{max-width:1520px;margin:0 auto;padding:18px clamp(12px,2.4vw,30px) 48px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding-bottom:16px;border-bottom:1px solid var(--rule)}
+.brand{display:flex;gap:14px;align-items:center}
+.brand svg{flex:none}
+h1{font-size:clamp(1.4rem,2.4vw,1.9rem);line-height:1.1;font-weight:800;letter-spacing:-.025em;margin:0;font-variation-settings:"opsz" 96}
+.top p{margin:4px 0 0;color:var(--muted);max-width:70ch;font-size:.95rem}
+.top p a{color:var(--ink);text-underline-offset:2px}
+kbd{font-family:var(--mono);font-size:.78em;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 .35em;background:var(--panel)}
+.mobile-pick{display:none}
+.mobile-pick select{width:100%;padding:9px 10px;border:1px solid var(--rule);border-radius:8px;background:var(--panel)}
+
+.layout{display:grid;grid-template-columns:232px minmax(0,1fr);gap:30px;margin-top:20px}
+.side{position:sticky;top:12px;align-self:start;max-height:calc(100vh - 24px);overflow:auto;padding:2px 6px 20px 2px;scrollbar-width:thin}
+.side input{width:100%;padding:8px 10px;border:1px solid var(--rule);border-radius:8px;background:var(--panel);margin-bottom:4px}
+.group h4{font-size:.8rem;font-weight:600;color:var(--muted);margin:16px 0 3px 10px}
+.item{display:block;width:100%;text-align:left;background:none;border:0;padding:4px 10px;border-radius:6px;font-size:.93rem;cursor:pointer;line-height:1.35}
+.item:hover{background:var(--panel2)}
+.item[aria-current="true"]{background:var(--ink);color:var(--bg)}
+
+.head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px;margin-bottom:14px}
+.head .cat{width:100%;color:var(--muted);font-size:.85rem;font-weight:500}
+.head h2{margin:0;font-size:clamp(1.7rem,3.2vw,2.5rem);line-height:1.05;font-weight:800;letter-spacing:-.03em;font-variation-settings:"opsz" 96}
+.head .blurb{width:100%;margin:6px 0 0;max-width:70ch;font-size:1.02rem}
+.sample{width:100%;color:var(--muted);font-size:.88rem;margin-top:2px}
+.sample code{font-family:var(--mono);font-size:.85em;color:var(--ink)}
+
+.work{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:20px;align-items:start}
+.stage{position:relative;background-color:var(--stagebg);background-image:radial-gradient(var(--dot) 1.2px,transparent 1.4px);background-size:20px 20px;border:1px solid var(--rule);border-radius:18px;padding:8px}
+#svg{display:block;width:100%;height:320px;transition:height .3s}
+.stage.no-tree #svg{display:none}
+#rows{padding:6px 6px 8px;overflow-x:auto}
+.stage.no-tree #rows{padding-top:18px;padding-bottom:18px}
+
+/* nodes */
+.nd{--nf:var(--panel);--ns:var(--ink);--nt:var(--ink);--nw:1.6;transition:opacity .3s}
+.nd .body{fill:var(--nf);stroke:var(--ns);stroke-width:var(--nw);transition:fill .25s,stroke .25s,stroke-width .25s}
+.nd .halo{fill:none;stroke:transparent;stroke-width:3;transition:stroke .25s}
+.nd .v{font:700 14px var(--font);fill:var(--nt);text-anchor:middle;transition:fill .25s}
+.nd .bd{font:600 11px var(--font);fill:var(--muted);text-anchor:middle;paint-order:stroke;stroke:var(--stagebg);stroke-width:4px;stroke-linejoin:round}
+.nd .tg{font:700 11.5px var(--font);fill:var(--target);text-anchor:middle;paint-order:stroke;stroke:var(--stagebg);stroke-width:4px;stroke-linejoin:round}
+.s-cur{--nf:var(--cur);--ns:var(--cur);--nt:var(--on)} .s-cur .halo{stroke:var(--cur);stroke-opacity:.35}
+.s-done{--nf:var(--done);--ns:var(--done);--nt:var(--on)}
+.s-stack{--nf:var(--wait-bg);--ns:var(--wait);--nw:2.8}
+.s-path{--nf:var(--path);--ns:var(--path);--nt:var(--on)}
+.s-found{--nf:var(--found);--ns:var(--found);--nt:var(--found-ink)}
+.s-target{--ns:var(--target);--nw:3} .s-target .body{stroke-dasharray:4 3}
+.s-bad{--nf:var(--bad);--ns:var(--bad);--nt:var(--on)}
+.s-dim{opacity:.3}
+.s-ca{--nf:var(--ca);--ns:var(--ca);--nt:var(--on)} .s-cb{--nf:var(--cb);--ns:var(--cb);--nt:var(--found-ink)}
+.s-g0{--nf:var(--g0);--ns:var(--g0);--nt:var(--on)} .s-g1{--nf:var(--g1);--ns:var(--g1);--nt:var(--on)} .s-g2{--nf:var(--g2);--ns:var(--g2);--nt:var(--on)}
+.s-g3{--nf:var(--g3);--ns:var(--g3);--nt:var(--on)} .s-g4{--nf:var(--g4);--ns:var(--g4);--nt:var(--on)} .s-g5{--nf:var(--g5);--ns:var(--g5);--nt:var(--on)}
+/* edges */
+.ge{--ec:var(--edge);--ew:2}
+.ge .ln{fill:none;stroke:var(--ec);stroke-width:var(--ew);stroke-linecap:round;transition:stroke .25s,stroke-width .25s,opacity .25s}
+.ge .ah{fill:var(--ec);transition:fill .25s}
+.ge .wt{font:700 12px var(--font);fill:var(--ink);text-anchor:middle;paint-order:stroke;stroke:var(--stagebg);stroke-width:5px;stroke-linejoin:round}
+.e-tree{--ec:var(--ink);--ew:3} .e-cur{--ec:var(--cur);--ew:3.6} .e-mst{--ec:var(--found);--ew:5.5}
+.e-cand .ln{stroke-dasharray:6 5} .e-cand{--ec:var(--cur);--ew:2}
+.e-dim{opacity:.28} .e-back{--ec:var(--bad);--ew:3.8} .e-bridge{--ec:var(--bad);--ew:5.5} .e-path{--ec:var(--path);--ew:4.5}
+.e-g0{--ec:var(--g0);--ew:3.4} .e-g1{--ec:var(--g1);--ew:3.4} .e-g2{--ec:var(--g2);--ew:3.4} .e-g3{--ec:var(--g3);--ew:3.4} .e-g4{--ec:var(--g4);--ew:3.4} .e-g5{--ec:var(--g5);--ew:3.4}
+.stage.no-graph #svg{display:none}
+/* dp tables */
+#tables{overflow-x:auto;padding:6px 4px 10px}
+.tinner{position:relative;width:max-content;margin:0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:16px;padding:46px 18px 8px 46px;--cw:3rem}
+.trow{display:flex;gap:34px;align-items:flex-start}
+.ttitle{font-weight:700;font-size:.85rem;color:var(--muted);margin:0 0 6px 4px}
+.tgrid{display:grid;gap:4px;align-items:center}
+.th{font-size:.8rem;color:var(--muted);display:grid;place-items:center;font-weight:600;min-height:1.3rem;border-radius:6px;transition:background .25s,color .25s}
+.tr-h{justify-items:end;padding-right:8px;white-space:nowrap}
+.th.on{color:var(--cur);background:var(--hl)}
+.dc{height:2.5rem;padding:0 5px;display:grid;place-items:center;border:1.5px solid var(--edge);background:var(--panel);border-radius:7px;font-weight:700;font-variant-numeric:tabular-nums;font-size:.95rem;transition:background .25s,border-color .25s,color .25s,opacity .25s,box-shadow .25s}
+.dc.empty{border-style:dashed;border-color:var(--rule);background:transparent}
+.dc.vt{color:var(--done)} .dc.vf{color:var(--muted);font-weight:500} .dc.vinf{color:var(--muted);font-weight:500}
+.c-cur{background:var(--cur);border-color:var(--cur);color:var(--on) !important;border-style:solid !important}
+.c-dep{background:var(--wait-bg);border-color:var(--wait)}
+.c-in{background:var(--hl);border-color:var(--cur)}
+.c-best{background:var(--found);border-color:var(--found);color:var(--found-ink) !important}
+.c-path{background:var(--path);border-color:var(--path);color:var(--on) !important}
+.c-found{background:var(--found);border-color:var(--found);color:var(--found-ink) !important;box-shadow:0 0 0 3px var(--hl)}
+.c-wall{background:var(--ink) !important;border-color:var(--ink) !important;border-style:solid !important}
+.c-na{background:repeating-linear-gradient(45deg,var(--rule) 0 1px,transparent 1px 6px) !important;border-color:transparent !important;opacity:.55}
+.c-dim{opacity:.32}
+.c-bad{background:var(--bad);border-color:var(--bad);color:var(--on) !important}
+.arrows{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.ar .al{fill:none;stroke:var(--wait);stroke-width:2.2;stroke-linecap:round}
+.ar .ah{fill:var(--wait)}
+.ar-best .al{stroke:var(--found);stroke-width:3.4} .ar-best .ah{fill:var(--found)}
+.ar-dim .al{stroke:var(--edge);stroke-dasharray:4 4} .ar-dim .ah{fill:var(--edge)}
+.cq{width:13px;height:13px;border-radius:3px;border:1.5px solid var(--edge);display:inline-block;background:var(--panel)}
+.aq{display:inline-block;width:20px;border-top:2.5px solid var(--wait);border-radius:2px}
+.aq-best{border-top:3.5px solid var(--found)} .aq-dim{border-top:2px dashed var(--edge)}
+.nd .v.small{font-size:11px}
+.modebar{margin:-2px 0 16px}
+.modes{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap}
+.modes button{display:flex;align-items:center;gap:10px;padding:8px 14px 8px 10px;border:1.5px solid var(--rule);background:var(--panel);border-radius:12px;cursor:pointer;text-align:left;color:var(--ink);transition:border-color .2s,background .2s}
+.modes button:hover{border-color:var(--edge)}
+.modes button b{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--panel2);font-size:.85rem;flex:none}
+.modes button span{display:flex;flex-direction:column;line-height:1.2}
+.modes button strong{font-size:.95rem}
+.modes button .short{display:none}
+.modes button em{font-style:normal;font-size:.78rem;color:var(--muted)}
+.modes button[aria-selected="true"]{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.modes button[aria-selected="true"] b{background:var(--cur);color:var(--on)}
+.modes button[aria-selected="true"] em{color:inherit;opacity:.75}
+.chev{align-self:center;width:10px;height:10px;border-right:2px solid var(--edge);border-top:2px solid var(--edge);transform:rotate(45deg);margin:0 4px 0 0}
+.formula{display:flex;gap:12px;align-items:baseline;margin-top:12px;padding:10px 14px;background:var(--panel);border:1px dashed var(--rule);border-radius:10px;overflow-x:auto}
+.formula span{font-size:.8rem;font-weight:700;color:var(--muted);flex:none}
+.formula code{font-family:var(--mono);font-size:.86rem;white-space:nowrap}
+.ge .wt{font-size:10.5px}
+@media (max-width:860px){ .chev{display:none} .modes{flex-wrap:nowrap} .modes button{flex:1 1 0;min-width:0;gap:6px;padding:7px 8px} .modes button b{width:22px;height:22px} .modes button .full{display:none} .modes button .short{display:block;font-size:.85rem} .modes button em{display:none} }
+
+#params{display:flex;flex-wrap:wrap;gap:10px 14px;margin-bottom:10px}
+.pf{display:flex;flex-direction:column;gap:4px;flex:1 1 200px;font-size:.84rem;font-weight:600}
+.pf.short{flex:0 0 110px}
+.pf input{padding:8px 10px;border:1px solid var(--rule);border-radius:8px;background:var(--panel);font-family:var(--mono);font-size:.85rem;font-weight:400}
+
+/* array rows */
+.arow{display:grid;gap:3px 4px;margin:4px 0 12px;min-width:max-content;align-items:center}
+.rname{font-weight:600;font-size:.88rem;color:var(--muted);padding-right:6px;text-align:right}
+.ridx{font-size:.72rem;color:var(--muted);text-align:center}
+.cell{display:flex;align-items:center;justify-content:center;height:2.3rem;border:1.5px solid var(--edge);background:var(--panel);border-radius:7px;font-weight:700;font-variant-numeric:tabular-nums;transition:background .25s,border-color .25s,color .25s,opacity .25s}
+.c-cur{background:var(--cur);border-color:var(--cur);color:var(--on)}
+.c-done{background:var(--done);border-color:var(--done);color:var(--on)}
+.c-stack{background:var(--wait-bg);border-color:var(--wait)}
+.c-found{background:var(--found);border-color:var(--found);color:var(--found-ink)}
+.c-dim{opacity:.3}
+.c-k{background:var(--wait-bg);border-color:var(--wait)}
+.arow.noidx{margin-top:-6px}
+.span-unused{height:15px;margin-top:2px;border-radius:4px;background:var(--panel2);border:1px solid var(--rule);font-size:.66rem;line-height:13px;text-align:right;padding-right:5px;color:var(--muted);transition:background .25s}
+.sp-cur{background:var(--cur);border-color:var(--cur);color:var(--on)}
+.sp-found{background:var(--found);border-color:var(--found);color:var(--found-ink)}
+
+/* legend + controls */
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;margin:10px 4px 0;font-size:.82rem;color:var(--muted)}
+.lg{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:50%;display:inline-block;border:1.5px solid var(--ink);background:var(--panel)}
+.sw-cur{background:var(--cur);border-color:var(--cur)} .sw-done{background:var(--done);border-color:var(--done)}
+.sw-stack{background:var(--wait-bg);border:2.5px solid var(--wait)} .sw-path{background:var(--path);border-color:var(--path)}
+.sw-found{background:var(--found);border-color:var(--found)} .sw-target{border:2px dashed var(--target)}
+.sw-bad{background:var(--bad);border-color:var(--bad)} .sw-dim{opacity:.35}
+.sw-ca{background:var(--ca);border-color:var(--ca)} .sw-cb{background:var(--cb);border-color:var(--cb)}
+.sw-groups{border:0;background:conic-gradient(var(--g0) 0 60deg,var(--g1) 0 120deg,var(--g2) 0 180deg,var(--g3) 0 240deg,var(--g4) 0 300deg,var(--g5) 0)}
+.sq{width:12px;height:12px;border-radius:3px;display:inline-block}
+.le{--ec:var(--edge);--ew:2px;display:inline-block;width:20px;height:0;border-top:var(--ew) solid var(--ec);border-radius:2px}
+.le-tree{--ec:var(--ink);--ew:3px} .le-cur{--ec:var(--cur);--ew:3px} .le-mst{--ec:var(--found);--ew:5px} .le-cand{border-top-style:dashed;--ec:var(--cur)} .le-dim{opacity:.35} .le-back{--ec:var(--bad);--ew:3px} .le-bridge{--ec:var(--bad);--ew:5px} .le-path{--ec:var(--path);--ew:4px}
+
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:14px}
+.btns{display:flex;gap:4px;align-items:center}
+.ib{width:38px;height:38px;display:grid;place-items:center;border:1px solid var(--rule);background:var(--panel);border-radius:9px;cursor:pointer}
+.ib:hover:not(:disabled){border-color:var(--ink)}
+.ib:disabled{opacity:.4;cursor:default}
+.ib svg{width:16px;height:16px;fill:currentColor}
+#play{width:auto;padding:0 16px 0 13px;display:flex;gap:7px;background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:600}
+#play .i-pause{display:none} #play[data-state="pause"] .i-play{display:none} #play[data-state="pause"] .i-pause{display:block}
+.scrubwrap{flex:1 1 220px;display:flex;align-items:center;gap:10px;min-width:180px}
+input[type=range]{accent-color:var(--cur);width:100%}
+#counter{font-size:.84rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.speed{display:flex;align-items:center;gap:8px;font-size:.84rem;color:var(--muted)}
+.speed input{width:90px}
+#speedVal{min-width:2.6em;font-variant-numeric:tabular-nums}
+
+.narr{min-height:3.1em;margin:14px 0 0;padding:10px 14px;border-left:4px solid var(--cur);background:var(--panel);border-radius:0 10px 10px 0;font-size:1.02rem;font-weight:500}
+.aux{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.ax{display:grid;grid-template-columns:9.5rem minmax(0,1fr);gap:10px;align-items:start}
+.axn{font-size:.86rem;font-weight:600;padding-top:4px}
+.axhint{display:block;font-weight:400;font-size:.75rem;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{padding:3px 9px;border:1px solid var(--rule);background:var(--panel);border-radius:6px;font-weight:600;font-variant-numeric:tabular-nums;font-size:.92rem}
+.chip.edge-top,.chip.edge-front{border-color:var(--wait);background:var(--wait-bg)}
+.ax.out .chip{border-color:var(--done);color:var(--done)}
+.chip.ch-on{background:var(--cur);border-color:var(--cur);color:var(--on)} .chip.ch-ok{background:var(--found);border-color:var(--found);color:var(--found-ink)} .chip.ch-no{opacity:.4;text-decoration:line-through}
+.empty{color:var(--muted);font-size:.86rem;padding-top:4px;font-style:italic}
+
+.custom{margin-top:18px;padding-top:14px;border-top:1px dashed var(--rule)}
+.custom label{display:block;font-weight:600;font-size:.88rem;margin-bottom:6px}
+.custom label span{font-weight:400;color:var(--muted)}
+.crow{display:flex;gap:6px;flex-wrap:wrap}
+.crow input{flex:1 1 220px;padding:8px 10px;border:1px solid var(--rule);border-radius:8px;background:var(--panel);font-family:var(--mono);font-size:.85rem}
+.tb{padding:8px 14px;border:1px solid var(--ink);border-radius:8px;background:var(--panel);font-weight:600;cursor:pointer}
+.tb.ghost{border-color:var(--rule)}
+#treeErr{color:var(--bad);font-size:.85rem;margin:6px 0 0;min-height:1em}
+
+/* code */
+.codebox{position:sticky;top:12px;background:var(--code-bg);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+.codehead{display:flex;justify-content:space-between;align-items:center;padding:8px 10px 8px 14px;border-bottom:1px solid var(--rule);font-size:.85rem;color:var(--muted)}
+.codehead strong{color:var(--ink)}
+#copy{border:1px solid var(--rule);background:var(--panel);border-radius:6px;padding:3px 10px;font-size:.8rem;cursor:pointer}
+#code{margin:0;padding:10px 0;max-height:min(72vh,640px);overflow:auto;font-family:var(--mono);font-size:12.6px;line-height:1.7;position:relative;scroll-behavior:smooth}
+.cl{display:flex;padding-right:14px;transition:background .2s}
+.cl .no{flex:none;width:2.6em;text-align:right;padding-right:12px;color:var(--t-com);user-select:none}
+.cl .tx{white-space:pre}
+.cl.hl{background:var(--hl);box-shadow:inset 3px 0 var(--cur)}
+.cl.hl .no{color:var(--cur);font-weight:600}
+.t-kw{color:var(--t-kw)} .t-ty{color:var(--t-ty)} .t-fn{color:var(--t-fn)} .t-num,.t-str{color:var(--t-num)} .t-com{color:var(--t-com);font-style:italic}
+.nodedef{padding:10px 14px;border-top:1px solid var(--rule);font-size:.8rem;color:var(--muted)}
+.nodedef code{font-family:var(--mono);font-size:.95em;color:var(--ink)}
+
+/* notes */
+#notes{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr) minmax(0,1.2fr);gap:28px;margin-top:30px;padding-top:22px;border-top:1px solid var(--rule)}
+#notes h3{font-size:1.02rem;margin:0 0 6px;font-weight:700}
+#notes p{margin:0 0 16px;max-width:62ch}
+#notes dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+#notes dt{color:var(--muted);font-size:.88rem;padding-top:1px}
+#notes dd{margin:0;font-weight:600}
+#notes ul{margin:0;padding-left:1.1em}
+#notes li{margin-bottom:5px}
+#notes li::marker{color:var(--cur)}
+
+@media (max-width:1180px){ .work{grid-template-columns:minmax(0,1fr)} .codebox{position:static} #code{max-height:none} #notes{grid-template-columns:1fr 1fr} .note-vars{grid-column:1 / -1} }
+@media (max-width:860px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:12px}
+  .side{display:none}
+  .mobile-pick{display:block;margin-top:14px}
+  .top{align-items:flex-start}
+  #notes{grid-template-columns:1fr;gap:6px}
+  .ax{grid-template-columns:1fr;gap:4px}
+}
+@media (max-width:520px){ body{font-size:14.5px} .speed input{width:70px} .brand svg{display:none} }
+@media (prefers-reduced-motion: reduce){ *{transition:none !important;animation:none !important;scroll-behavior:auto !important} }
+.topnav{display:flex;align-items:center;gap:14px;flex:none;font-size:.9rem}
+.topnav a{color:var(--muted);text-decoration:none}
+.topnav a:hover{color:var(--ink)}
+.theme-btn{display:inline-grid;place-items:center;width:34px;height:34px;border:1px solid var(--rule);border-radius:9px;background:var(--panel);cursor:pointer}
+.theme-btn:hover{background:var(--panel2)}
+.theme-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.theme-btn .moon{display:none}
+:root[data-theme="dark"] .theme-btn .sun{display:none}
+:root[data-theme="dark"] .theme-btn .moon{display:block}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true"><rect x="3" y="3" width="12" height="12" rx="3" fill="var(--panel)" stroke="var(--edge)" stroke-width="1.5"/><rect x="17" y="3" width="12" height="12" rx="3" fill="var(--wait-bg)" stroke="var(--wait)" stroke-width="1.5"/><rect x="31" y="3" width="12" height="12" rx="3" fill="var(--panel)" stroke="var(--edge)" stroke-width="1.5"/><rect x="3" y="17" width="12" height="12" rx="3" fill="var(--wait-bg)" stroke="var(--wait)" stroke-width="1.5"/><rect x="17" y="17" width="12" height="12" rx="3" fill="var(--cur)"/><rect x="31" y="17" width="12" height="12" rx="3" fill="var(--panel)" stroke="var(--edge)" stroke-width="1.5"/><rect x="3" y="31" width="12" height="12" rx="3" fill="var(--panel)" stroke="var(--edge)" stroke-width="1.5"/><rect x="17" y="31" width="12" height="12" rx="3" fill="var(--panel)" stroke="var(--edge)" stroke-width="1.5"/><rect x="31" y="31" width="12" height="12" rx="3" fill="var(--found)"/></svg>
+      <div>
+        <h1>Dynamic programming, step by step</h1>
+        <p>17 DP problems, each built up in three steps: plain recursion, then memoization, then a bottom-up table. Press <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> to switch steps, <kbd>Space</kbd> to play, and <kbd>←</kbd> <kbd>→</kbd> to step. Companion to the <a href="../trees/index.html">tree</a> and <a href="../graphs/index.html">graph</a> pages.</p>
+      </div>
+    </div>
+    <nav class="topnav">
+      <a href="../index.html">← All topics</a>
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="Toggle dark mode">
+        <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+    </nav>
+  </header>
+  <div class="mobile-pick"><label for="algoSelect" class="sr">Algorithm</label><select id="algoSelect"></select></div>
+
+  <div class="layout">
+    <nav class="side" aria-label="Algorithms">
+      <input id="filter" type="search" placeholder="Filter, e.g. knapsack or LCS" aria-label="Filter algorithms">
+      <div id="list"></div>
+    </nav>
+
+    <main id="main">
+      <section class="head">
+        <div class="cat" id="cat"></div>
+        <h2 id="title"></h2>
+        <p class="blurb" id="blurb"></p>
+        <div class="sample" id="sample">Input: <code id="sampleTree"></code></div>
+      </section>
+      <section class="modebar">
+        <div class="modes" role="tablist" aria-label="Approach">
+          <button role="tab" data-mode="rec"><b>1</b><span><strong class="full">Plain recursion</strong><strong class="short">Recursion</strong><em>Find the subproblems</em></span></button>
+          <i class="chev" aria-hidden="true"></i>
+          <button role="tab" data-mode="memo"><b>2</b><span><strong class="full">Memoization</strong><strong class="short">Memo</strong><em>Cache each answer</em></span></button>
+          <i class="chev" aria-hidden="true"></i>
+          <button role="tab" data-mode="tab"><b>3</b><span><strong class="full">Bottom-up table</strong><strong class="short">Table</strong><em>Fill in order, no recursion</em></span></button>
+        </div>
+        <div class="formula"><span>Recurrence</span><code id="formula"></code></div>
+      </section>
+
+      <section class="work">
+        <div>
+          <div class="stage" id="stage">
+            <svg id="svg" role="img" aria-label="Recursion tree or state diagram"></svg>
+            <div id="tables" hidden></div>
+            <div id="rows"></div>
+          </div>
+          <div class="legend" id="legend"></div>
+
+          <div class="controls">
+            <div class="btns">
+              <button class="ib" id="first" aria-label="Go to first step" title="First step"><svg viewBox="0 0 16 16"><path d="M3 2h2v12H3zM14 2v12L6 8z"/></svg></button>
+              <button class="ib" id="prev" aria-label="Previous step" title="Previous step (←)"><svg viewBox="0 0 16 16"><path d="M12 2v12L3 8z"/></svg></button>
+              <button class="ib" id="play" aria-label="Play" data-state="play" title="Play or pause (Space)"><svg class="i-play" viewBox="0 0 16 16"><path d="M4 2v12l10-6z"/></svg><svg class="i-pause" viewBox="0 0 16 16"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg><span id="playText">Play</span></button>
+              <button class="ib" id="next" aria-label="Next step" title="Next step (→)"><svg viewBox="0 0 16 16"><path d="M4 2v12l9-6z"/></svg></button>
+              <button class="ib" id="last" aria-label="Go to last step" title="Last step"><svg viewBox="0 0 16 16"><path d="M11 2h2v12h-2zM2 2v12l8-6z"/></svg></button>
+            </div>
+            <div class="scrubwrap"><input type="range" id="scrub" min="0" max="0" value="0" aria-label="Step"><span id="counter"></span></div>
+            <label class="speed">Speed <input type="range" id="speed" min="0.5" max="3" step="0.25" value="1"><span id="speedVal">1×</span></label>
+          </div>
+
+          <p class="narr" id="narr" aria-live="polite"></p>
+          <div class="aux" id="aux"></div>
+
+          <form class="custom" id="custom">
+            <label>Try your own input</label>
+            <div id="params"></div>
+            <div class="crow">
+              <button class="tb" type="submit">Run on this input</button>
+              <button class="tb ghost" type="button" id="treeReset">Use the sample</button>
+            </div>
+            <p id="treeErr" role="alert"></p>
+          </form>
+        </div>
+
+        <div class="codebox">
+          <div class="codehead"><span><strong>C++</strong></span><button id="copy" type="button">Copy code</button></div>
+          <pre id="code"></pre>
+          <div class="nodedef">Table rows and columns match the C++ indices. <code>∅</code> marks the empty prefix, and <code>INF</code> stands for a large sentinel like <code>INT_MAX / 2</code>.</div>
+        </div>
+      </section>
+
+      <section id="notes" aria-label="Interview notes"></section>
+    </main>
+  </div>
+</div>
+<script>
+/* ================= DP engine ================= */
+const INF = Infinity;
+const fmt = (v) => v === INF ? '∞' : v === -INF ? '−∞' : v === true ? 'T' : v === false ? 'F' : v == null ? '' : String(v);
+const arrStr = (a) => '[' + a.join(', ') + ']';
+
+function parseCode(src) {
+  const lines = [], marks = {};
+  src.replace(/^\n+/, '').replace(/\s+$/, '').split('\n').forEach((ln, i) => {
+    const m = ln.match(/\/\/@([\w,]+)/);
+    if (m) { m[1].split(',').forEach(k => { marks[k] = i; }); ln = ln.replace(/\s*\/\/@[\w,]+/, ''); }
+    lines.push(ln.replace(/\s+$/, ''));
+  });
+  return { lines, marks };
+}
+
+class Tracer {
+  constructor(marks) {
+    this.marks = marks; this.frames = [];
+    this.tabs = []; this.pst = {}; this.tst = {}; this.hst = {}; this.arrows = [];
+    this.g = null; this.st = {}; this.est = {}; this.badge = {}; this.tag = {};
+    this.out = []; this.aux = [];
+  }
+  /* tables */
+  tab(id, title, rows, cols, init) {
+    const cells = rows.map((_, r) => cols.map((_, c) => typeof init === 'function' ? init(r, c) : init));
+    const t = { id, title, rows: rows.map(String), cols: cols.map(String), cells };
+    const i = this.tabs.findIndex(x => x.id === id); if (i >= 0) this.tabs[i] = t; else this.tabs.push(t);
+    return t;
+  }
+  set(id, r, c, v) { this.tabs.find(t => t.id === id).cells[r][c] = v; }
+  cs(id, r, c, cls) { const k = `${id}:${r},${c}`; if (cls) this.pst[k] = cls; else delete this.pst[k]; }
+  cur(id, r, c, cls = 'cur') { this.tst[`${id}:${r},${c}`] = cls; }
+  hcur(id, axis, i, cls = 'on') { this.hst[`${id}:${axis}${i}`] = cls; }
+  arr(a, b, cls = 'dep') { this.arrows.push({ a, b, cls }); }
+  /* graph (recursion tree / state machine) */
+  s(id, c) { if (c) this.st[id] = c; else delete this.st[id]; }
+  es(e, c) { if (c) this.est[e] = c; else delete this.est[e]; }
+  b(id, t) { if (t !== '' && t != null) this.badge[id] = String(t); else delete this.badge[id]; }
+  tg(text, id) { for (const k in this.tag) if (this.tag[k] === text) delete this.tag[k]; if (id != null) this.tag[id] = text; }
+  ax(name, items, kind = 'list') {
+    const a = this.aux.find(x => x.name === name);
+    if (a) { a.items = [...items]; a.kind = kind; } else this.aux.push({ name, items: [...items], kind });
+  }
+  step(mark, msg) {
+    if (mark && this.marks[mark] === undefined) throw new Error('Unknown code mark: ' + mark);
+    const clone = (x) => x ? JSON.parse(JSON.stringify(x)) : null;
+    this.frames.push({
+      tabs: this.tabs.map(t => ({ id: t.id, title: t.title, rows: t.rows, cols: t.cols, cells: t.cells.map(r => r.map(fmt)) })),
+      cst: { ...this.pst, ...this.tst }, hst: { ...this.hst }, arrows: this.arrows.map(a => ({ ...a })),
+      g: clone(this.g), st: { ...this.st }, est: { ...this.est }, badge: { ...this.badge }, tag: { ...this.tag },
+      out: [...this.out], aux: clone(this.aux), line: mark ? this.marks[mark] : -1, msg
+    });
+    this.tst = {}; this.hst = {}; this.arrows = [];
+  }
+}
+
+const ALGOS = [];
+const A = (o) => { o.parsed = parseCode(o.code); ALGOS.push(o); };
+function defaults(algo) { const p = {}; (algo.params || []).forEach(q => { p[q.key] = JSON.parse(JSON.stringify(q.def)); }); return p; }
+function framesFor(algo, p) { const T = new Tracer(algo.parsed.marks); algo.run(T, p || defaults(algo)); return T.frames; }
+const idx = (n, from = 0) => Array.from({ length: n }, (_, i) => String(i + from));
+
+/* recursion-tree layout for the Fibonacci demos */
+function treeG(root) {
+  const nodes = {}, edges = []; let x = 0;
+  const go = (n, d) => {
+    if (n.l) go(n.l, d + 1);
+    nodes[n.id] = { label: n.label, x: x++ * 0.58, y: d * 0.86 };
+    if (n.r) go(n.r, d + 1);
+    [n.l, n.r].forEach(c => { if (c) edges.push({ id: 'e' + c.id, u: n.id, v: c.id, w: null, dir: false }); });
+  };
+  go(root, 0);
+  return { nodes, edges };
+}
+
+/* ================= Foundations ================= */
+A({
+  id: 'climb', cat: 'Foundations', title: 'Climbing stairs',
+  blurb: 'Ways to reach step n taking 1 or 2 steps at a time. Fill the table from the bottom up.',
+  params: [{ key: 'n', label: 'n (stairs)', type: 'int', min: 2, max: 15, def: 7 }],
+  code: `
+int climbStairs(int n) {
+    vector<int> dp(n + 1);
+    dp[0] = 1; dp[1] = 1;                 //@base
+    for (int i = 2; i <= n; i++)
+        dp[i] = dp[i - 1] + dp[i - 2];    //@fill
+    return dp[n];                         //@ret
+}
+// O(1) space: only the last two values are ever read`,
+  run(T, p) {
+    const n = p.n, dp = Array(n + 1).fill(null);
+    T.tab('dp', '', ['dp'], idx(n + 1), null);
+    dp[0] = dp[1] = 1; T.set('dp', 0, 0, 1); T.set('dp', 0, 1, 1); T.cur('dp', 0, 0); T.cur('dp', 0, 1);
+    T.step('base', 'One way to stand at step 0 (do nothing) and one way to reach step 1.');
+    for (let i = 2; i <= n; i++) {
+      dp[i] = dp[i - 1] + dp[i - 2]; T.set('dp', 0, i, dp[i]); T.cur('dp', 0, i);
+      T.cur('dp', 0, i - 1, 'dep'); T.cur('dp', 0, i - 2, 'dep');
+      T.arr(['dp', 0, i - 1], ['dp', 0, i]); T.arr(['dp', 0, i - 2], ['dp', 0, i]);
+      T.step('fill', `To reach step ${i}, the last move came from step ${i - 1} or step ${i - 2}: ${dp[i - 1]} + ${dp[i - 2]} = ${dp[i]}.`);
+    }
+    T.cs('dp', 0, n, 'found'); T.out.push(dp[n]); T.step('ret', `${dp[n]} ways to climb ${n} stairs.`);
+  },
+  idea: 'Bottom-up DP (tabulation) solves the smallest cases first, so every value a cell needs is already sitting to its left. No recursion, no stack, and it\'s easy to see when older cells can be thrown away.',
+  time: 'O(n)', space: 'O(n), or O(1) with two variables',
+  vars: ['Min cost climbing stairs (LC 746)', 'Steps of 1, 2 or 3, or any set of allowed jumps', 'Decode ways (LC 91): same recurrence with validity checks', 'Fibonacci itself is this table']
+});
+
+/* ================= 1D DP ================= */
+A({
+  id: 'robber', cat: '1D DP', title: 'House Robber',
+  blurb: 'Rob houses in a row for the most money, never two neighbors.',
+  params: [{ key: 'a', label: 'money in each house', type: 'ints', min: 0, max: 99, minLen: 1, maxLen: 12, def: [2, 7, 9, 3, 1, 5, 4, 8] }],
+  code: `
+int rob(vector<int>& a) {
+    int n = a.size();
+    if (n == 1) return a[0];
+    vector<int> dp(n);                             // best total using houses 0..i
+    dp[0] = a[0];                                  //@base0
+    dp[1] = max(a[0], a[1]);                       //@base1
+    for (int i = 2; i < n; i++)
+        dp[i] = max(dp[i - 1], dp[i - 2] + a[i]);  //@fill
+    return dp[n - 1];
+}`,
+  run(T, p) {
+    const a = p.a, n = a.length, dp = Array(n).fill(null);
+    T.tab('a', '', ['money'], idx(n), (r, c) => a[c]); T.tab('dp', '', ['dp'], idx(n), null);
+    dp[0] = a[0]; T.set('dp', 0, 0, a[0]); T.cur('dp', 0, 0); T.cur('a', 0, 0, 'in');
+    T.step('base0', `Only house 0: rob it for ${a[0]}.`);
+    if (n > 1) {
+      dp[1] = Math.max(a[0], a[1]); T.set('dp', 0, 1, dp[1]); T.cur('dp', 0, 1); T.cur('a', 0, 0, 'in'); T.cur('a', 0, 1, 'in');
+      T.step('base1', `Houses 0 and 1 are neighbors, so take the richer one: ${dp[1]}.`);
+    }
+    for (let i = 2; i < n; i++) {
+      const skip = dp[i - 1], take = dp[i - 2] + a[i]; dp[i] = Math.max(skip, take);
+      T.set('dp', 0, i, dp[i]); T.cur('dp', 0, i); T.cur('a', 0, i, 'in');
+      T.arr(['dp', 0, i - 1], ['dp', 0, i], skip >= take ? 'best' : 'dep');
+      T.arr(['dp', 0, i - 2], ['dp', 0, i], take > skip ? 'best' : 'dep');
+      T.step('fill', `House ${i}: skip it and keep ${skip}, or rob it: dp[${i - 2}] + ${a[i]} = ${take}. ${take > skip ? 'Rob' : 'Skip'} → ${dp[i]}.`);
+    }
+    const pick = []; let i = n - 1;
+    while (i >= 0) { if (i === 0 || dp[i] !== dp[i - 1]) { pick.push(i); T.cs('a', 0, i, 'found'); T.cs('dp', 0, i, 'path'); i -= 2; } else i--; }
+    T.out.push(`${dp[n - 1]} from houses ${pick.reverse().join(', ')}`);
+    T.step(null, `Best haul: ${dp[n - 1]}. Walking back through dp shows which houses were robbed.`);
+  },
+  idea: 'At each house there are two choices: skip it (the best so far stays dp[i−1]) or rob it (then the previous house was skipped, giving dp[i−2] + a[i]). Each cell only looks two places back.',
+  time: 'O(n)', space: 'O(n), or O(1) with two variables',
+  vars: ['House Robber II (LC 213): houses in a circle, run twice excluding first or last', 'House Robber III (LC 337): on a tree, see the tree page', 'Delete and earn (LC 740): reduces to this after bucketing values']
+});
+
+A({
+  id: 'kadane', cat: '1D DP', title: 'Maximum subarray (Kadane)',
+  blurb: 'Best sum of any contiguous slice. At each index: extend the running slice, or start fresh.',
+  params: [{ key: 'a', label: 'array', type: 'ints', min: -99, max: 99, minLen: 1, maxLen: 14, def: [-2, 1, -3, 4, -1, 2, 1, -5, 4] }],
+  code: `
+int maxSubArray(vector<int>& a) {
+    int cur = a[0], best = a[0];              //@init
+    for (int i = 1; i < a.size(); i++) {
+        cur = max(a[i], cur + a[i]);          //@ext   // restart, or extend
+        best = max(best, cur);                //@best
+    }
+    return best;
+}`,
+  run(T, p) {
+    const a = p.a, n = a.length; let cur = a[0], best = a[0], s = 0, bs = 0, be = 0;
+    T.tab('a', '', ['a'], idx(n), (r, c) => a[c]); T.tab('cur', '', ['cur'], idx(n), null);
+    T.set('cur', 0, 0, cur); T.cur('cur', 0, 0); T.cur('a', 0, 0, 'in'); T.ax('best', [best]);
+    T.step('init', `cur = best = a[0] = ${a[0]}. cur means "best sum of a slice ending right here".`);
+    for (let i = 1; i < n; i++) {
+      const ext = cur + a[i], restart = a[i] > ext;
+      cur = restart ? a[i] : ext; if (restart) s = i;
+      T.set('cur', 0, i, cur); T.cur('cur', 0, i); for (let j = s; j <= i; j++) T.cur('a', 0, j, 'in');
+      T.arr(['cur', 0, i - 1], ['cur', 0, i], restart ? 'dim' : 'best');
+      T.step('ext', restart ? `Extending gives ${ext}, but a[${i}] = ${a[i]} alone is better. Drop the old slice and restart at ${i}.` : `Extend: ${ext - a[i]} + (${a[i]}) = ${ext}, which beats starting over at ${a[i]}.`);
+      if (cur > best) { best = cur; bs = s; be = i; T.ax('best', [best]); T.cur('cur', 0, i, 'best'); for (let j = s; j <= i; j++) T.cur('a', 0, j, 'in'); T.step('best', `New best: ${best}, the slice a[${s}..${i}].`); }
+    }
+    for (let j = bs; j <= be; j++) T.cs('a', 0, j, 'found');
+    T.out.push(`${best} from a[${bs}..${be}]`); T.step(null, `Maximum subarray sum = ${best}.`);
+  },
+  idea: 'Kadane is a 1D DP squeezed into one variable: dp[i] = max(a[i], dp[i−1] + a[i]). A negative running sum can only hurt what comes next, so you drop it and restart.',
+  time: 'O(n)', space: 'O(1)',
+  trap: 'Initialise with a[0], not 0, so an all-negative array returns its largest element instead of 0.',
+  vars: ['Maximum product subarray (LC 152): track both max and min, since a negative flips them', 'Maximum sum circular subarray (LC 918): total − minimum subarray', 'Best time to buy and sell stock (LC 121): Kadane on day-to-day differences']
+});
+
+A({
+  id: 'coin-min', cat: '1D DP', title: 'Coin Change (fewest coins)',
+  blurb: 'Fewest coins that add up to the amount. With coins 1, 3, 4 the greedy choice fails, but DP doesn\'t.',
+  params: [{ key: 'coins', label: 'coins', type: 'ints', min: 1, max: 20, minLen: 1, maxLen: 5, def: [1, 3, 4] }, { key: 'amount', label: 'amount', type: 'int', min: 1, max: 20, def: 10 }],
+  code: `
+int coinChange(vector<int>& coins, int amount) {
+    vector<int> dp(amount + 1, INF);           // fewest coins to make x
+    dp[0] = 0;                                 //@base
+    for (int x = 1; x <= amount; x++)
+        for (int c : coins)
+            if (c <= x && dp[x - c] != INF)
+                dp[x] = min(dp[x], dp[x - c] + 1);   //@try
+    return dp[amount] == INF ? -1 : dp[amount];       //@ret
+}`,
+  run(T, p) {
+    const coins = [...new Set(p.coins)].sort((a, b) => a - b), amt = p.amount, dp = Array(amt + 1).fill(INF), pick = Array(amt + 1).fill(0);
+    T.tab('dp', '', ['dp'], idx(amt + 1), null); T.ax('coins', coins);
+    dp[0] = 0; T.set('dp', 0, 0, 0); T.cur('dp', 0, 0); T.step('base', 'Zero coins make amount 0. Everything else starts at ∞ (not reachable yet).');
+    for (let x = 1; x <= amt; x++) {
+      const tries = [];
+      for (const c of coins) if (c <= x) { if (dp[x - c] !== INF && dp[x - c] + 1 < dp[x]) { dp[x] = dp[x - c] + 1; pick[x] = c; } tries.push(c); }
+      T.set('dp', 0, x, dp[x]); T.cur('dp', 0, x);
+      tries.forEach(c => T.arr(['dp', 0, x - c], ['dp', 0, x], dp[x - c] === INF ? 'dim' : c === pick[x] ? 'best' : 'dep'));
+      const parts = tries.map(c => `coin ${c}: dp[${x - c}] + 1 = ${fmt(dp[x - c] === INF ? INF : dp[x - c] + 1)}`);
+      T.step('try', parts.length ? `Amount ${x}. ${parts.join(', ')}. Keep the smallest: ${fmt(dp[x])}.` : `Amount ${x}: every coin is too big.`);
+    }
+    if (dp[amt] === INF) { T.out.push(-1); T.step('ret', `${amt} can't be made from these coins: return −1.`); return; }
+    const used = []; let x = amt; while (x > 0) { T.cs('dp', 0, x, 'path'); used.push(pick[x]); x -= pick[x]; }
+    T.cs('dp', 0, 0, 'path'); T.cs('dp', 0, amt, 'found');
+    T.out.push(`${dp[amt]} coins: ${used.join(' + ')}`);
+    const greedy = (() => { let r = amt, k = 0; for (const c of [...coins].reverse()) while (r >= c) { r -= c; k++; } return r ? null : k; })();
+    T.step('ret', `${dp[amt]} coins (${used.join(' + ')}).${greedy != null && greedy > dp[amt] ? ` Greedy (biggest coin first) would use ${greedy}.` : ''}`);
+  },
+  idea: 'Unbounded choice: the last coin used could be any c, leaving amount x − c, which is already solved. Try every coin and keep the best. Unreachable amounts stay ∞.',
+  time: 'O(amount × coins)', space: 'O(amount)',
+  trap: 'Guard dp[x − c] != INF before adding 1, or INF + 1 overflows when INF is INT_MAX.',
+  vars: ['Coin change II (number of ways) — in the Knapsack section', 'Perfect squares (LC 279): coins are 1, 4, 9, …', 'Minimum cost for tickets (LC 983)']
+});
+
+A({
+  id: 'lis', cat: '1D DP', title: 'Longest increasing subsequence',
+  blurb: 'dp[i] = length of the longest increasing subsequence that ends exactly at i.',
+  params: [{ key: 'a', label: 'array', type: 'ints', min: -99, max: 999, minLen: 1, maxLen: 12, def: [10, 9, 2, 5, 3, 7, 101, 18] }],
+  code: `
+int lengthOfLIS(vector<int>& a) {
+    int n = a.size(), best = 0;
+    vector<int> dp(n, 1);                         // LIS ending at i
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < i; j++)
+            if (a[j] < a[i])
+                dp[i] = max(dp[i], dp[j] + 1);    //@try
+        best = max(best, dp[i]);                  //@best
+    }
+    return best;
+}`,
+  run(T, p) {
+    const a = p.a, n = a.length, dp = Array(n).fill(1), par = Array(n).fill(-1); let best = 0, bi = 0;
+    T.tab('a', '', ['a'], idx(n), (r, c) => a[c]); T.tab('dp', '', ['dp'], idx(n), null);
+    for (let i = 0; i < n; i++) {
+      const ok = [];
+      for (let j = 0; j < i; j++) if (a[j] < a[i]) { ok.push(j); if (dp[j] + 1 > dp[i]) { dp[i] = dp[j] + 1; par[i] = j; } }
+      T.set('dp', 0, i, dp[i]); T.cur('dp', 0, i); T.cur('a', 0, i, 'in');
+      for (let j = 0; j < i; j++) if (a[j] >= a[i]) T.cur('a', 0, j, 'dim');
+      ok.forEach(j => T.arr(['dp', 0, j], ['dp', 0, i], j === par[i] ? 'best' : 'dep'));
+      if (dp[i] > best) { best = dp[i]; bi = i; } T.ax('best', [best]);
+      T.step('try', !ok.length ? `Nothing before ${a[i]} is smaller, so the best sequence ending here is just [${a[i]}]: 1.` : `${a[i]} can follow any smaller earlier value (${ok.map(j => a[j]).join(', ')}). Longest of those is ${dp[i] - 1}, so dp[${i}] = ${dp[i]}.`);
+    }
+    const seq = []; for (let i = bi; i >= 0; i = par[i]) { seq.push(a[i]); T.cs('a', 0, i, 'found'); T.cs('dp', 0, i, 'path'); }
+    T.out.push(`${best}: ${seq.reverse().join(' → ')}`); T.step('best', `LIS length = ${best}. Following the gold choices back gives ${seq.join(' → ')}.`);
+  },
+  idea: 'Every increasing subsequence ends somewhere. If it ends at i, the element before it is some smaller a[j] with its own best chain dp[j], so dp[i] = 1 + max over those. The answer is the largest dp[i], not dp[n−1].',
+  time: 'O(n²)', space: 'O(n)',
+  trap: 'Returning dp[n−1] is a classic bug: the longest sequence doesn\'t have to end at the last element.',
+  vars: ['O(n log n) with patience sorting: keep the smallest tail for each length, binary search with lower_bound', 'Number of LIS (LC 673): track counts alongside lengths', 'Russian doll envelopes (LC 354): sort, then LIS', 'Longest string chain (LC 1048)']
+});
+
+A({
+  id: 'word-break', cat: '1D DP', title: 'Word Break',
+  blurb: 'Can the string be split into dictionary words? dp[i] = "the first i characters can be split".',
+  params: [{ key: 's', label: 'string', type: 'str', maxLen: 16, lower: true, def: 'applepenapple' }, { key: 'dict', label: 'dictionary', type: 'words', maxWords: 8, def: ['apple', 'pen'] }],
+  code: `
+bool wordBreak(string s, vector<string>& dict) {
+    unordered_set<string> words(dict.begin(), dict.end());
+    int n = s.size();
+    vector<bool> dp(n + 1, false);
+    dp[0] = true;                                    //@base
+    for (int i = 1; i <= n; i++)
+        for (int j = 0; j < i; j++)                  //@loop
+            if (dp[j] && words.count(s.substr(j, i - j))) {
+                dp[i] = true;                        //@hit
+                break;
+            }
+    return dp[n];                                    //@ret
+}`,
+  run(T, p) {
+    const s = p.s, n = s.length, W = new Set(p.dict), dp = Array(n + 1).fill(false), from = Array(n + 1).fill(-1);
+    T.tab('s', '', ['s'], idx(n), (r, c) => s[c]); T.tab('dp', '', ['dp'], idx(n + 1), null); T.ax('dictionary', p.dict);
+    dp[0] = true; T.set('dp', 0, 0, true); T.cur('dp', 0, 0); T.step('base', 'dp[0] = T: the empty prefix needs no words.');
+    for (let i = 1; i <= n; i++) {
+      for (let j = 0; j < i; j++) if (dp[j] && W.has(s.slice(j, i))) { dp[i] = true; from[i] = j; break; }
+      T.set('dp', 0, i, dp[i]); T.cur('dp', 0, i);
+      if (dp[i]) {
+        const j = from[i]; for (let k = j; k < i; k++) T.cur('s', 0, k, 'in');
+        T.arr(['dp', 0, j], ['dp', 0, i], 'best');
+        T.step('hit', `dp[${j}] is T and "${s.slice(j, i)}" is a word, so the first ${i} characters can be split.`);
+      } else T.step('loop', `No split point j works for the first ${i} characters ("${s.slice(0, i)}"): dp[${i}] = F.`);
+    }
+    if (!dp[n]) { T.out.push('false'); T.step('ret', 'dp[n] is F: no valid split.'); return; }
+    const parts = []; let i = n, alt = 0;
+    while (i > 0) { const j = from[i]; parts.push(s.slice(j, i)); for (let k = j; k < i; k++) T.cs('s', 0, k, alt % 2 ? 'path' : 'found'); T.cs('dp', 0, i, 'path'); alt++; i = j; }
+    T.out.push(parts.reverse().join(' + ')); T.step('ret', `dp[${n}] is T: "${parts.join('" + "')}".`);
+  },
+  idea: 'A prefix can be split if some shorter splittable prefix is followed by a dictionary word. Indexing dp by prefix length (0..n) makes the empty prefix a clean base case.',
+  time: 'O(n² · L) for substring hashing', space: 'O(n)',
+  trap: 'Off-by-one between string indices (0..n−1) and prefix lengths (0..n) is where most bugs live.',
+  vars: ['Word Break II (LC 140): collect all splits, memoize by start index', 'Limit j to i − maxWordLength for speed', 'Concatenated words (LC 472)']
+});
+
+/* ================= Grid DP ================= */
+A({
+  id: 'unique-paths', cat: 'Grid DP', title: 'Unique paths with obstacles',
+  blurb: 'Count paths from top-left to bottom-right moving only right or down. Black cells are blocked.',
+  params: [{ key: 'grid', label: 'grid (1 = obstacle)', type: 'grid', chars: '01', maxR: 6, maxC: 7, def: ['00000', '01000', '00010', '10000'] }],
+  code: `
+long long uniquePaths(vector<vector<int>>& g) {     // 1 = obstacle
+    int m = g.size(), n = g[0].size();
+    vector<vector<long long>> dp(m, vector<long long>(n, 0));
+    for (int r = 0; r < m; r++)
+        for (int c = 0; c < n; c++) {
+            if (g[r][c] == 1) continue;                       //@wall
+            if (r == 0 && c == 0) { dp[r][c] = 1; continue; } //@start
+            if (r > 0) dp[r][c] += dp[r - 1][c];              //@up
+            if (c > 0) dp[r][c] += dp[r][c - 1];              //@left
+        }
+    return dp[m - 1][n - 1];
+}`,
+  run(T, p) {
+    const g = p.grid.map(r => r.split('').map(Number)), m = g.length, n = g[0].length;
+    const dp = g.map(r => r.map(() => 0));
+    T.tab('dp', '', idx(m), idx(n), null);
+    for (let r = 0; r < m; r++) for (let c = 0; c < n; c++) if (g[r][c]) T.cs('dp', r, c, 'wall');
+    T.step(null, 'Black cells are obstacles. Fill row by row; each cell can only be entered from above or from the left.');
+    for (let r = 0; r < m; r++) for (let c = 0; c < n; c++) {
+      if (g[r][c]) continue;
+      T.cur('dp', r, c);
+      if (r === 0 && c === 0) { dp[0][0] = 1; T.set('dp', 0, 0, 1); T.step('start', 'One way to be at the start.'); continue; }
+      const up = r > 0 ? dp[r - 1][c] : 0, left = c > 0 ? dp[r][c - 1] : 0; dp[r][c] = up + left; T.set('dp', r, c, dp[r][c]);
+      if (r > 0) T.arr(['dp', r - 1, c], ['dp', r, c], g[r - 1][c] ? 'dim' : 'dep');
+      if (c > 0) T.arr(['dp', r, c - 1], ['dp', r, c], g[r][c - 1] ? 'dim' : 'dep');
+      T.step(c > 0 ? 'left' : 'up', `(${r},${c}): ${r > 0 ? `from above ${up}` : 'nothing above'} + ${c > 0 ? `from the left ${left}` : 'nothing to the left'} = ${dp[r][c]}.`);
+    }
+    T.cs('dp', m - 1, n - 1, 'found'); T.out.push(dp[m - 1][n - 1]);
+    T.step(null, `${dp[m - 1][n - 1]} distinct paths.`);
+  },
+  idea: 'The last move into any cell came from above or from the left, so its path count is the sum of those two. Obstacles contribute 0 and block everything that would pass through them.',
+  time: 'O(m · n)', space: 'O(m · n), or O(n) keeping one row',
+  vars: ['Unique paths without obstacles (LC 62): also C(m+n−2, m−1)', 'Dungeon game (LC 174): fill backwards from the goal', 'Cherry pickup (LC 741): two walkers at once, 3D state']
+});
+
+A({
+  id: 'min-path', cat: 'Grid DP', title: 'Minimum path sum',
+  blurb: 'Cheapest route from top-left to bottom-right moving right or down, adding each cell\'s cost.',
+  params: [{ key: 'grid', label: 'grid of digit costs', type: 'grid', chars: '0123456789', maxR: 6, maxC: 7, def: ['1312', '1513', '4211', '2161'] }],
+  code: `
+int minPathSum(vector<vector<int>>& g) {
+    int m = g.size(), n = g[0].size();
+    vector<vector<int>> dp(m, vector<int>(n));
+    for (int r = 0; r < m; r++)
+        for (int c = 0; c < n; c++) {
+            if (r == 0 && c == 0) dp[r][c] = g[0][0];                    //@start
+            else if (r == 0) dp[r][c] = dp[r][c - 1] + g[r][c];          //@row0
+            else if (c == 0) dp[r][c] = dp[r - 1][c] + g[r][c];          //@col0
+            else dp[r][c] = min(dp[r - 1][c], dp[r][c - 1]) + g[r][c];   //@both
+        }
+    return dp[m - 1][n - 1];
+}`,
+  run(T, p) {
+    const g = p.grid.map(r => r.split('').map(Number)), m = g.length, n = g[0].length, dp = g.map(r => r.map(() => 0));
+    T.tab('g', 'cost', idx(m), idx(n), (r, c) => g[r][c]); T.tab('dp', 'dp', idx(m), idx(n), null);
+    for (let r = 0; r < m; r++) for (let c = 0; c < n; c++) {
+      T.cur('dp', r, c); T.cur('g', r, c, 'in');
+      if (!r && !c) { dp[0][0] = g[0][0]; T.set('dp', 0, 0, dp[0][0]); T.step('start', `Start cell costs ${g[0][0]}.`); continue; }
+      let mark, msg;
+      if (!r) { dp[r][c] = dp[r][c - 1] + g[r][c]; T.arr(['dp', r, c - 1], ['dp', r, c], 'best'); mark = 'row0'; msg = `Top row: only reachable from the left. ${dp[r][c - 1]} + ${g[r][c]} = ${dp[r][c]}.`; }
+      else if (!c) { dp[r][c] = dp[r - 1][c] + g[r][c]; T.arr(['dp', r - 1, c], ['dp', r, c], 'best'); mark = 'col0'; msg = `Left column: only reachable from above. ${dp[r - 1][c]} + ${g[r][c]} = ${dp[r][c]}.`; }
+      else {
+        const up = dp[r - 1][c], left = dp[r][c - 1]; dp[r][c] = Math.min(up, left) + g[r][c];
+        T.arr(['dp', r - 1, c], ['dp', r, c], up <= left ? 'best' : 'dep'); T.arr(['dp', r, c - 1], ['dp', r, c], left < up ? 'best' : 'dep');
+        mark = 'both'; msg = `Cheaper of above (${up}) and left (${left}) is ${Math.min(up, left)}, plus this cell's ${g[r][c]} = ${dp[r][c]}.`;
+      }
+      T.set('dp', r, c, dp[r][c]); T.step(mark, msg);
+    }
+    let r = m - 1, c = n - 1; const path = [];
+    while (true) { T.cs('dp', r, c, 'path'); T.cs('g', r, c, 'found'); path.push(g[r][c]); if (!r && !c) break; if (!r) c--; else if (!c) r--; else if (dp[r - 1][c] <= dp[r][c - 1]) r--; else c--; }
+    T.out.push(`${dp[m - 1][n - 1]} = ${path.reverse().join(' + ')}`);
+    T.step(null, `Minimum path sum = ${dp[m - 1][n - 1]}. Walk back from the corner, always to the cheaper neighbor, to recover the route.`);
+  },
+  idea: 'The cheapest way into a cell is the cheaper of the two ways in, plus the cell itself. The first row and column have only one way in, which is why they are handled separately.',
+  time: 'O(m · n)', space: 'O(m · n), or in place in the grid',
+  vars: ['Triangle (LC 120): fill from the bottom row up', 'Minimum falling path sum (LC 931): three parents instead of two', 'Maximal square (LC 221): min of three neighbors + 1']
+});
+
+/* ================= Two strings ================= */
+function stringTable(T, a, b, init) {
+  return T.tab('dp', '', ['∅', ...a.split('')], ['∅', ...b.split('')], init);
+}
+A({
+  id: 'lcs', cat: 'Two strings', title: 'Longest common subsequence',
+  blurb: 'dp[i][j] = LCS of the first i letters of a and the first j letters of b.',
+  params: [{ key: 'a', label: 'a', type: 'str', maxLen: 8, def: 'ABCBDA' }, { key: 'b', label: 'b', type: 'str', maxLen: 8, def: 'BDCABA' }],
+  code: `
+int lcs(string a, string b) {
+    int n = a.size(), m = b.size();
+    vector<vector<int>> dp(n + 1, vector<int>(m + 1, 0));   //@init
+    for (int i = 1; i <= n; i++)
+        for (int j = 1; j <= m; j++)
+            if (a[i - 1] == b[j - 1]) dp[i][j] = dp[i - 1][j - 1] + 1;   //@match
+            else dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]);             //@skip
+    return dp[n][m];
+}
+string rebuild(vector<vector<int>>& dp, string& a, string& b) {
+    string s; int i = a.size(), j = b.size();
+    while (i > 0 && j > 0) {
+        if (a[i - 1] == b[j - 1]) { s += a[i - 1]; i--; j--; }       //@take
+        else if (dp[i - 1][j] >= dp[i][j - 1]) i--;                  //@move
+        else j--;
+    }
+    reverse(s.begin(), s.end());
+    return s;
+}`,
+  run(T, p) {
+    const a = p.a, b = p.b, n = a.length, m = b.length;
+    const dp = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0));
+    stringTable(T, a, b, (r, c) => r === 0 || c === 0 ? 0 : null);
+    T.step('init', 'Row 0 and column 0 compare against an empty string, so their LCS is 0.');
+    for (let i = 1; i <= n; i++) for (let j = 1; j <= m; j++) {
+      T.cur('dp', i, j); T.hcur('dp', 'r', i); T.hcur('dp', 'c', j);
+      if (a[i - 1] === b[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1] + 1; T.arr(['dp', i - 1, j - 1], ['dp', i, j], 'best');
+        T.set('dp', i, j, dp[i][j]); T.step('match', `'${a[i - 1]}' = '${b[j - 1]}': extend the diagonal. ${dp[i - 1][j - 1]} + 1 = ${dp[i][j]}.`);
+      } else {
+        const up = dp[i - 1][j], left = dp[i][j - 1]; dp[i][j] = Math.max(up, left);
+        T.arr(['dp', i - 1, j], ['dp', i, j], up >= left ? 'best' : 'dep'); T.arr(['dp', i, j - 1], ['dp', i, j], left > up ? 'best' : 'dep');
+        T.set('dp', i, j, dp[i][j]); T.step('skip', `'${a[i - 1]}' ≠ '${b[j - 1]}': drop a letter from one string. max(${up}, ${left}) = ${dp[i][j]}.`);
+      }
+    }
+    let i = n, j = m, s = ''; T.cs('dp', n, m, 'found');
+    while (i > 0 && j > 0) {
+      if (a[i - 1] === b[j - 1]) { s = a[i - 1] + s; T.cs('dp', i, j, 'found'); T.cur('dp', i, j, 'found'); T.out = [s]; T.step('take', `'${a[i - 1]}' matches: it's part of the LCS. Move diagonally.`); i--; j--; }
+      else { T.cs('dp', i, j, 'path'); const up = dp[i - 1][j] >= dp[i][j - 1]; T.step('move', `No match here: follow the larger neighbor (${up ? 'up' : 'left'}).`); if (up) i--; else j--; }
+    }
+    T.out = [`${s} (length ${dp[n][m]})`]; T.step(null, `LCS = "${s}", length ${dp[n][m]}. Gold cells are the matching letters.`);
+  },
+  idea: 'Compare the last letters of both prefixes. If they match, they can end the common subsequence together (diagonal + 1). If not, one of them is useless at the end, so drop it from a or from b and take the better result.',
+  time: 'O(n · m)', space: 'O(n · m), or O(m) for the length only',
+  vars: ['Longest common substring: reset to 0 on mismatch, track the max cell', 'Shortest common supersequence (LC 1092): n + m − LCS', 'Delete operation for two strings (LC 583)', 'Uncrossed lines (LC 1035) is LCS in disguise']
+});
+
+A({
+  id: 'edit', cat: 'Two strings', title: 'Edit distance',
+  blurb: 'Fewest inserts, deletes and replacements to turn a into b.',
+  params: [{ key: 'a', label: 'a', type: 'str', maxLen: 8, lower: true, def: 'horse' }, { key: 'b', label: 'b', type: 'str', maxLen: 8, lower: true, def: 'ros' }],
+  code: `
+int minDistance(string a, string b) {
+    int n = a.size(), m = b.size();
+    vector<vector<int>> dp(n + 1, vector<int>(m + 1));
+    for (int i = 0; i <= n; i++) dp[i][0] = i;     //@col0
+    for (int j = 0; j <= m; j++) dp[0][j] = j;     //@row0
+    for (int i = 1; i <= n; i++)
+        for (int j = 1; j <= m; j++)
+            if (a[i - 1] == b[j - 1]) dp[i][j] = dp[i - 1][j - 1];   //@same
+            else dp[i][j] = 1 + min({dp[i - 1][j],        // delete
+                                     dp[i][j - 1],        // insert
+                                     dp[i - 1][j - 1]});  //@op
+    return dp[n][m];
+}`,
+  run(T, p) {
+    const a = p.a, b = p.b, n = a.length, m = b.length;
+    const dp = Array.from({ length: n + 1 }, (_, i) => Array.from({ length: m + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0)));
+    stringTable(T, a, b, null);
+    for (let i = 0; i <= n; i++) { T.set('dp', i, 0, i); T.cur('dp', i, 0); }
+    T.step('col0', 'Column 0: turning the first i letters of a into an empty string takes i deletes.');
+    for (let j = 0; j <= m; j++) { T.set('dp', 0, j, j); T.cur('dp', 0, j); }
+    T.step('row0', 'Row 0: building the first j letters of b from nothing takes j inserts.');
+    for (let i = 1; i <= n; i++) for (let j = 1; j <= m; j++) {
+      T.cur('dp', i, j); T.hcur('dp', 'r', i); T.hcur('dp', 'c', j);
+      if (a[i - 1] === b[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1]; T.arr(['dp', i - 1, j - 1], ['dp', i, j], 'best'); T.set('dp', i, j, dp[i][j]);
+        T.step('same', `'${a[i - 1]}' = '${b[j - 1]}': no edit needed, copy the diagonal (${dp[i][j]}).`);
+      } else {
+        const del = dp[i - 1][j], ins = dp[i][j - 1], rep = dp[i - 1][j - 1], best = Math.min(del, ins, rep); dp[i][j] = 1 + best;
+        const pickD = del === best, pickI = !pickD && ins === best;
+        T.arr(['dp', i - 1, j], ['dp', i, j], pickD ? 'best' : 'dep'); T.arr(['dp', i, j - 1], ['dp', i, j], pickI ? 'best' : 'dep'); T.arr(['dp', i - 1, j - 1], ['dp', i, j], !pickD && !pickI ? 'best' : 'dep');
+        T.set('dp', i, j, dp[i][j]);
+        T.step('op', `'${a[i - 1]}' ≠ '${b[j - 1]}'. Delete ${del}, insert ${ins}, replace ${rep}: 1 + ${best} = ${dp[i][j]}.`);
+      }
+    }
+    const ops = []; let i = n, j = m;
+    while (i > 0 || j > 0) {
+      T.cs('dp', i, j, 'path');
+      if (i > 0 && j > 0 && a[i - 1] === b[j - 1] && dp[i][j] === dp[i - 1][j - 1]) { i--; j--; }
+      else if (i > 0 && j > 0 && dp[i][j] === dp[i - 1][j - 1] + 1) { ops.push(`replace ${a[i - 1]}→${b[j - 1]}`); i--; j--; }
+      else if (i > 0 && dp[i][j] === dp[i - 1][j] + 1) { ops.push(`delete ${a[i - 1]}`); i--; }
+      else { ops.push(`insert ${b[j - 1]}`); j--; }
+    }
+    T.cs('dp', 0, 0, 'path'); T.cs('dp', n, m, 'found'); ops.reverse().forEach(o => T.out.push(o));
+    T.step(null, `Edit distance = ${dp[n][m]}. The highlighted path back to the corner spells out the edits.`);
+  },
+  idea: 'Look at the last letters. Equal: nothing to do, solve the shorter prefixes. Different: the last edit was a delete (up), an insert (left) or a replace (diagonal), each costing 1 on top of a smaller solved problem.',
+  time: 'O(n · m)', space: 'O(n · m), or O(m) with two rows',
+  trap: 'Remember the base row and column. Leaving them at 0 makes "abc" → "" cost nothing.',
+  vars: ['One edit distance (LC 161): check without the full table', 'Distinct subsequences (LC 115): count instead of minimise', 'Regular expression / wildcard matching (LC 10, 44): same grid, different transitions']
+});
+
+/* ================= Knapsack ================= */
+A({
+  id: 'knapsack', cat: 'Knapsack', title: '0/1 knapsack',
+  blurb: 'Pick items (each at most once) to maximise value without exceeding the weight limit.',
+  params: [{ key: 'wt', label: 'weights', type: 'ints', min: 1, max: 10, minLen: 1, maxLen: 5, def: [1, 3, 4, 5] }, { key: 'val', label: 'values', type: 'ints', min: 1, max: 99, minLen: 1, maxLen: 5, def: [1, 4, 5, 7] }, { key: 'W', label: 'capacity', type: 'int', min: 1, max: 12, def: 7 }],
+  check: (p) => p.wt.length !== p.val.length ? 'Weights and values need the same number of items.' : null,
+  code: `
+int knapsack(vector<int>& wt, vector<int>& val, int W) {
+    int n = wt.size();
+    vector<vector<int>> dp(n + 1, vector<int>(W + 1, 0));   // first i items, capacity w
+    for (int i = 1; i <= n; i++)
+        for (int w = 0; w <= W; w++) {
+            dp[i][w] = dp[i - 1][w];                                          //@skip
+            if (wt[i - 1] <= w)
+                dp[i][w] = max(dp[i][w], dp[i - 1][w - wt[i - 1]] + val[i - 1]);  //@take
+        }
+    return dp[n][W];
+}`,
+  run(T, p) {
+    const { wt, val, W } = p, n = wt.length, dp = Array.from({ length: n + 1 }, () => Array(W + 1).fill(0));
+    T.tab('dp', '', ['none', ...wt.map((w, i) => `#${i + 1} w${w} v${val[i]}`)], idx(W + 1), (r) => r === 0 ? 0 : null);
+    T.step(null, 'Row "none": with no items, every capacity is worth 0. Columns are capacities 0..W.');
+    for (let i = 1; i <= n; i++) for (let w = 0; w <= W; w++) {
+      const skip = dp[i - 1][w]; T.cur('dp', i, w); T.hcur('dp', 'r', i);
+      if (wt[i - 1] <= w) {
+        const take = dp[i - 1][w - wt[i - 1]] + val[i - 1]; dp[i][w] = Math.max(skip, take);
+        T.arr(['dp', i - 1, w], ['dp', i, w], skip >= take ? 'best' : 'dep'); T.arr(['dp', i - 1, w - wt[i - 1]], ['dp', i, w], take > skip ? 'best' : 'dep');
+        T.set('dp', i, w, dp[i][w]);
+        T.step('take', `Capacity ${w}, item ${i}: skip it (${skip}) or take it (dp[${i - 1}][${w - wt[i - 1]}] + ${val[i - 1]} = ${take}). → ${dp[i][w]}.`);
+      } else {
+        dp[i][w] = skip; T.arr(['dp', i - 1, w], ['dp', i, w], 'best'); T.set('dp', i, w, skip);
+        T.step('skip', `Capacity ${w} is too small for item ${i} (weight ${wt[i - 1]}): copy ${skip} from above.`);
+      }
+    }
+    const items = []; let w = W;
+    for (let i = n; i >= 1; i--) { T.cs('dp', i, w, 'path'); if (dp[i][w] !== dp[i - 1][w]) { items.push(i); T.cs('dp', i, w, 'found'); w -= wt[i - 1]; } }
+    T.cs('dp', 0, w, 'path');
+    T.out.push(`value ${dp[n][W]}: items ${items.reverse().map(i => '#' + i).join(', ')}`);
+    T.step(null, `Best value = ${dp[n][W]}. Walking up the table: wherever the value changed from the row above, that item was taken (gold).`);
+  },
+  idea: 'For each item and capacity, either leave the item (same as the row above) or take it once (value plus the best of the previous items with the remaining capacity). Reading from the previous row is what enforces "at most once".',
+  time: 'O(n · W)', space: 'O(n · W), or O(W) iterating w downward',
+  trap: 'In the 1D version, loop w from W down to wt[i]. Going upward lets an item be reused, which silently turns it into the unbounded knapsack.',
+  vars: ['Partition equal subset sum (next): the boolean version', 'Target sum (LC 494): count subsets with a given difference', 'Ones and zeroes (LC 474): two capacities at once', 'Last stone weight II (LC 1049)']
+});
+
+A({
+  id: 'partition', cat: 'Knapsack', title: 'Partition equal subset sum',
+  blurb: 'Can the numbers split into two groups with equal sums? A 1D boolean knapsack, walked backwards.',
+  params: [{ key: 'a', label: 'numbers', type: 'ints', min: 1, max: 20, minLen: 1, maxLen: 8, def: [1, 5, 11, 5] }],
+  check: (p) => p.a.reduce((x, y) => x + y, 0) > 60 ? 'Keep the total at 60 or less so the table fits.' : null,
+  code: `
+bool canPartition(vector<int>& a) {
+    int sum = accumulate(a.begin(), a.end(), 0);
+    if (sum % 2) return false;                  //@odd
+    int target = sum / 2;
+    vector<bool> dp(target + 1, false);         // can some subset sum to s?
+    dp[0] = true;                               //@base
+    for (int x : a)                             //@item
+        for (int s = target; s >= x; s--)       // backwards: x used at most once
+            if (dp[s - x]) dp[s] = true;        //@set
+    return dp[target];                          //@ret
+}`,
+  run(T, p) {
+    const a = p.a, sum = a.reduce((x, y) => x + y, 0);
+    T.ax('numbers', a);
+    if (sum % 2) { T.out.push('false'); T.step('odd', `The total is ${sum}, which is odd, so two equal halves are impossible.`); return; }
+    const t = sum / 2, dp = Array(t + 1).fill(false); dp[0] = true;
+    T.tab('dp', '', ['dp'], idx(t + 1), (r, c) => c === 0); T.cur('dp', 0, 0);
+    T.step('base', `Total ${sum}, so each half must be ${t}. dp[s] says whether some subset sums to s. The empty subset gives 0.`);
+    a.forEach((x, k) => {
+      T.ax('numbers', a.map((v, i) => ({ t: v, cls: i === k ? 'on' : i < k ? 'ok' : '' })));
+      T.step('item', `Add ${x} to the mix. Walk s from ${t} down to ${x}, so each dp[s − ${x}] still reflects the earlier numbers only.`);
+      for (let s = t; s >= x; s--) if (dp[s - x] && !dp[s]) {
+        dp[s] = true; T.set('dp', 0, s, true); T.cur('dp', 0, s); T.arr(['dp', 0, s - x], ['dp', 0, s], 'best');
+        T.ax('numbers', a.map((v, i) => ({ t: v, cls: i === k ? 'on' : i < k ? 'ok' : '' })));
+        T.step('set', `dp[${s - x}] is T, so adding ${x} reaches ${s}.`);
+      }
+    });
+    T.cs('dp', 0, t, dp[t] ? 'found' : 'bad'); T.out.push(String(dp[t]));
+    T.step('ret', dp[t] ? `dp[${t}] is T: one group sums to ${t} and the rest sums to ${t} too.` : `dp[${t}] is F: no subset reaches ${t}.`);
+  },
+  idea: 'This is the 0/1 knapsack with only one row kept. Going from high s to low means dp[s − x] hasn\'t been updated for this x yet, so each number is used at most once.',
+  time: 'O(n · sum)', space: 'O(sum)',
+  trap: 'Iterate s forward and a single 5 could be counted as 5 + 5 + 5. The direction of the inner loop is the whole difference between 0/1 and unbounded.',
+  vars: ['Subset sum (classic GfG)', 'Target sum (LC 494)', 'Partition to K equal sum subsets (LC 698): bitmask DP', 'Use bitset<N> and shifts for a fast version: bits |= bits << x']
+});
+
+A({
+  id: 'coin-ways', cat: 'Knapsack', title: 'Coin Change II (number of ways)',
+  blurb: 'Count the combinations of coins that make the amount. Coins can be reused, so s runs forwards.',
+  params: [{ key: 'coins', label: 'coins', type: 'ints', min: 1, max: 10, minLen: 1, maxLen: 4, def: [1, 2, 5] }, { key: 'amount', label: 'amount', type: 'int', min: 1, max: 12, def: 5 }],
+  code: `
+int change(int amount, vector<int>& coins) {
+    vector<long long> dp(amount + 1, 0);
+    dp[0] = 1;                                  //@base
+    for (int c : coins)                         //@coin   // coins outside: combinations
+        for (int x = c; x <= amount; x++)       // forwards: coin c can repeat
+            dp[x] += dp[x - c];                 //@add
+    return dp[amount];
+}`,
+  run(T, p) {
+    const coins = [...new Set(p.coins)].sort((a, b) => a - b), amt = p.amount, dp = Array(amt + 1).fill(0); dp[0] = 1;
+    T.tab('dp', '', ['ways'], idx(amt + 1), (r, c) => c === 0 ? 1 : 0); T.cur('dp', 0, 0);
+    T.step('base', 'One way to make 0: use no coins. Everything else starts at 0 ways.');
+    coins.forEach((c, k) => {
+      T.ax('coins', coins.map((v, i) => ({ t: v, cls: i === k ? 'on' : i < k ? 'ok' : '' })));
+      T.step('coin', `Now allow coin ${c}. Going forwards lets it be used more than once.`);
+      for (let x = c; x <= amt; x++) {
+        const before = dp[x]; dp[x] += dp[x - c]; T.set('dp', 0, x, dp[x]); T.cur('dp', 0, x); T.arr(['dp', 0, x - c], ['dp', 0, x], dp[x - c] ? 'best' : 'dim');
+        T.step('add', `Ways to make ${x} ending with a ${c}: dp[${x - c}] = ${dp[x - c]}. ${before} + ${dp[x - c]} = ${dp[x]}.`);
+      }
+    });
+    T.cs('dp', 0, amt, 'found'); T.out.push(dp[amt]); T.step(null, `${dp[amt]} combinations make ${amt}.`);
+  },
+  idea: 'Unbounded knapsack counting ways. Putting coins in the outer loop fixes an order of coin types, so 1+2 and 2+1 are counted once. Swapping the loops counts orderings instead.',
+  time: 'O(coins × amount)', space: 'O(amount)',
+  trap: 'Loop order matters: coins outside gives combinations (this problem); amount outside gives permutations (Combination Sum IV, LC 377).',
+  vars: ['Combination Sum IV (LC 377): same table, loops swapped', 'Coin Change (fewest coins) in the 1D section', 'Integer break / perfect squares use the same unbounded shape']
+});
+
+/* ================= Intervals & states ================= */
+A({
+  id: 'lps', cat: 'Intervals & states', title: 'Longest palindromic subsequence',
+  blurb: 'Interval DP: dp[i][j] covers s[i..j]. Fill short intervals first, so i runs backwards.',
+  params: [{ key: 's', label: 'string', type: 'str', maxLen: 8, lower: true, def: 'agbdba' }],
+  code: `
+int lps(string s) {
+    int n = s.size();
+    vector<vector<int>> dp(n, vector<int>(n, 0));   // best inside s[i..j]
+    for (int i = n - 1; i >= 0; i--) {
+        dp[i][i] = 1;                                //@single
+        for (int j = i + 1; j < n; j++)
+            if (s[i] == s[j]) dp[i][j] = dp[i + 1][j - 1] + 2;     //@match
+            else dp[i][j] = max(dp[i + 1][j], dp[i][j - 1]);       //@skip
+    }
+    return dp[0][n - 1];
+}`,
+  run(T, p) {
+    const s = p.s, n = s.length, dp = Array.from({ length: n }, () => Array(n).fill(0));
+    const lab = s.split('').map((ch, i) => `${i} ${ch}`);
+    T.tab('dp', '', lab, lab, null);
+    for (let i = 0; i < n; i++) for (let j = 0; j < i; j++) T.cs('dp', i, j, 'na');
+    T.step(null, 'Row i is the start of the interval, column j the end. Only j ≥ i makes sense, so the lower-left half is unused.');
+    for (let i = n - 1; i >= 0; i--) {
+      dp[i][i] = 1; T.set('dp', i, i, 1); T.cur('dp', i, i); T.hcur('dp', 'r', i); T.hcur('dp', 'c', i);
+      T.step('single', `A single letter '${s[i]}' is a palindrome of length 1.`);
+      for (let j = i + 1; j < n; j++) {
+        T.cur('dp', i, j); T.hcur('dp', 'r', i); T.hcur('dp', 'c', j);
+        if (s[i] === s[j]) {
+          dp[i][j] = (i + 1 <= j - 1 ? dp[i + 1][j - 1] : 0) + 2; if (i + 1 <= j - 1) T.arr(['dp', i + 1, j - 1], ['dp', i, j], 'best');
+          T.set('dp', i, j, dp[i][j]); T.step('match', `s[${i}] = s[${j}] = '${s[i]}': wrap them around the best inside. ${dp[i][j] - 2} + 2 = ${dp[i][j]}.`);
+        } else {
+          const dn = dp[i + 1][j], lf = dp[i][j - 1]; dp[i][j] = Math.max(dn, lf);
+          T.arr(['dp', i + 1, j], ['dp', i, j], dn >= lf ? 'best' : 'dep'); T.arr(['dp', i, j - 1], ['dp', i, j], lf > dn ? 'best' : 'dep');
+          T.set('dp', i, j, dp[i][j]); T.step('skip', `'${s[i]}' ≠ '${s[j]}': drop one end. max(${dn}, ${lf}) = ${dp[i][j]}.`);
+        }
+      }
+    }
+    T.cs('dp', 0, n - 1, 'found'); T.out.push(dp[0][n - 1]); T.step(null, `Longest palindromic subsequence of "${s}" has length ${dp[0][n - 1]} (top-right cell).`);
+  },
+  idea: 'For an interval s[i..j], equal ends can both be kept, wrapped around the best answer strictly inside. Otherwise one end is dropped. Every cell reads from shorter intervals: below, left, or diagonal-down-left.',
+  time: 'O(n²)', space: 'O(n²)',
+  vars: ['Same as LCS(s, reverse(s))', 'Longest palindromic substring (LC 5): boolean interval table or expand-around-center', 'Palindromic substrings count (LC 647)', 'Minimum insertions to make a palindrome (LC 1312): n − LPS']
+});
+
+A({
+  id: 'mcm', cat: 'Intervals & states', title: 'Matrix chain multiplication',
+  blurb: 'Cheapest way to parenthesise A1·A2·…·An. Try every split point inside each interval.',
+  params: [{ key: 'd', label: 'dimensions', type: 'ints', min: 1, max: 60, minLen: 3, maxLen: 6, def: [40, 20, 30, 10, 30] }],
+  code: `
+int mcm(vector<int>& d) {                 // matrix k is d[k-1] x d[k]
+    int n = d.size() - 1;
+    vector<vector<int>> dp(n + 1, vector<int>(n + 1, 0));
+    for (int len = 2; len <= n; len++)
+        for (int i = 1; i + len - 1 <= n; i++) {
+            int j = i + len - 1;
+            dp[i][j] = INT_MAX;                                        //@cell
+            for (int k = i; k < j; k++)
+                dp[i][j] = min(dp[i][j],
+                    dp[i][k] + dp[k + 1][j] + d[i - 1] * d[k] * d[j]); //@split
+        }
+    return dp[1][n];
+}`,
+  run(T, p) {
+    const d = p.d, n = d.length - 1, dp = Array.from({ length: n + 1 }, () => Array(n + 1).fill(0)), sp = Array.from({ length: n + 1 }, () => Array(n + 1).fill(0));
+    const lab = Array.from({ length: n }, (_, i) => `A${i + 1}`);
+    T.tab('dp', '', lab, lab, (r, c) => r === c ? 0 : null); T.ax('matrices', lab.map((l, i) => `${l}: ${d[i]}×${d[i + 1]}`));
+    for (let i = 0; i < n; i++) for (let j = 0; j < i; j++) T.cs('dp', i, j, 'na');
+    T.step(null, 'Diagonal = one matrix, which costs nothing. Fill intervals by length: 2, then 3, and so on.');
+    const R = (i) => i - 1;
+    for (let len = 2; len <= n; len++) for (let i = 1; i + len - 1 <= n; i++) {
+      const j = i + len - 1; dp[i][j] = INF; T.set('dp', R(i), R(j), INF); T.cur('dp', R(i), R(j));
+      T.step('cell', `A${i}..A${j}: try every place k to make the last multiplication.`);
+      for (let k = i; k < j; k++) {
+        const cost = dp[i][k] + dp[k + 1][j] + d[i - 1] * d[k] * d[j], better = cost < dp[i][j];
+        if (better) { dp[i][j] = cost; sp[i][j] = k; }
+        T.set('dp', R(i), R(j), dp[i][j]); T.cur('dp', R(i), R(j));
+        T.arr(['dp', R(i), R(k)], ['dp', R(i), R(j)], better ? 'best' : 'dep'); T.arr(['dp', R(k + 1), R(j)], ['dp', R(i), R(j)], better ? 'best' : 'dep');
+        T.step('split', `k = ${k}: (A${i}..A${k})(A${k + 1}..A${j}) costs ${dp[i][k]} + ${dp[k + 1][j]} + ${d[i - 1]}·${d[k]}·${d[j]} = ${cost}.${better ? ' Best so far.' : ''}`);
+      }
+    }
+    const paren = (i, j) => i === j ? `A${i}` : `(${paren(i, sp[i][j])}·${paren(sp[i][j] + 1, j)})`;
+    T.cs('dp', 0, n - 1, 'found'); T.out.push(`${dp[1][n]} multiplications`); T.out.push(paren(1, n));
+    T.step(null, `Minimum cost ${dp[1][n]} with ${paren(1, n)}.`);
+  },
+  idea: 'The final multiplication splits the chain into a left part and a right part, each already solved as a shorter interval. Trying every split k and paying d[i−1]·d[k]·d[j] for the last step gives the answer for the whole interval.',
+  time: 'O(n³)', space: 'O(n²)',
+  trap: 'Loop by interval length (or i backwards), never plain i then j forwards, or you\'ll read cells that aren\'t filled yet.',
+  vars: ['Burst balloons (LC 312): choose the last balloon in the interval', 'Minimum cost to cut a stick (LC 1547)', 'Minimum score triangulation of polygon (LC 1039)', 'Strange printer (LC 664)']
+});
+
+A({
+  id: 'stock-cooldown', cat: 'Intervals & states', title: 'Stock with cooldown (state machine)',
+  blurb: 'Three states per day: holding a share, just sold, or resting. Each day\'s states come from yesterday\'s.',
+  params: [{ key: 'p', label: 'prices', type: 'ints', min: 0, max: 50, minLen: 2, maxLen: 9, def: [1, 2, 3, 0, 2, 4, 1] }],
+  code: `
+int maxProfit(vector<int>& p) {
+    int hold = -p[0], sold = INT_MIN, rest = 0;      //@init
+    for (int i = 1; i < p.size(); i++) {
+        int h = max(hold, rest - p[i]);              //@hold   // keep, or buy after resting
+        int s = hold + p[i];                         //@sold   // sell what we hold
+        int r = max(rest, sold);                     //@rest   // idle, or cooldown ends
+        hold = h; sold = s; rest = r;
+    }
+    return max(sold, rest);                          //@ret
+}`,
+  run(T, p) {
+    const pr = p.p, n = pr.length;
+    T.g = {
+      nodes: { hold: { label: 'hold', x: 0, y: 0 }, sold: { label: 'sold', x: 2.4, y: 0 }, rest: { label: 'rest', x: 1.2, y: 1.6 } },
+      edges: [{ id: 'keep', u: 'hold', v: 'hold', w: 'keep', dir: true, loop: 'up' }, { id: 'sell', u: 'hold', v: 'sold', w: '+price', dir: true },
+        { id: 'cool', u: 'sold', v: 'rest', w: 'cooldown', dir: true }, { id: 'wait', u: 'rest', v: 'rest', w: 'wait', dir: true, loop: 'down' }, { id: 'buy', u: 'rest', v: 'hold', w: '−price', dir: true }]
+    };
+    T.tab('p', '', ['price'], idx(n), (r, c) => pr[c]); T.tab('dp', '', ['hold', 'sold', 'rest'], idx(n), null);
+    let H = -pr[0], S = -INF, Rr = 0; T.set('dp', 0, 0, H); T.set('dp', 1, 0, S); T.set('dp', 2, 0, Rr);
+    T.cur('dp', 0, 0); T.cur('dp', 1, 0); T.cur('dp', 2, 0); T.cur('p', 0, 0, 'in');
+    T.step('init', `Day 0: buying costs ${pr[0]} (hold = ${H}), nothing to sell yet (sold = −∞), or do nothing (rest = 0).`);
+    for (let i = 1; i < n; i++) {
+      T.cur('p', 0, i, 'in');
+      const h = Math.max(H, Rr - pr[i]); T.set('dp', 0, i, h); T.cur('dp', 0, i); T.s('hold', 'cur');
+      T.arr(['dp', 0, i - 1], ['dp', 0, i], H >= Rr - pr[i] ? 'best' : 'dep'); T.arr(['dp', 2, i - 1], ['dp', 0, i], Rr - pr[i] > H ? 'best' : 'dep');
+      T.es('keep', H >= Rr - pr[i] ? 'mst' : 'cur'); T.es('buy', Rr - pr[i] > H ? 'mst' : 'cur');
+      T.step('hold', `Day ${i} hold: keep yesterday's share (${H}) or buy from rest (${fmt(Rr)} − ${pr[i]} = ${Rr - pr[i]}). → ${h}.`);
+      T.est = {}; T.st = {};
+      T.cur('p', 0, i, 'in');
+      const s = H + pr[i]; T.set('dp', 1, i, s); T.cur('dp', 1, i); T.s('sold', 'cur'); T.arr(['dp', 0, i - 1], ['dp', 1, i], 'best'); T.es('sell', 'mst');
+      T.step('sold', `Day ${i} sold: sell the share held yesterday. ${H} + ${pr[i]} = ${s}.`);
+      T.est = {}; T.st = {};
+      T.cur('p', 0, i, 'in');
+      const r = Math.max(Rr, S); T.set('dp', 2, i, r); T.cur('dp', 2, i); T.s('rest', 'cur');
+      T.arr(['dp', 2, i - 1], ['dp', 2, i], Rr >= S ? 'best' : 'dep'); T.arr(['dp', 1, i - 1], ['dp', 2, i], S > Rr ? 'best' : 'dep');
+      T.es('wait', Rr >= S ? 'mst' : 'cur'); T.es('cool', S > Rr ? 'mst' : 'cur');
+      T.step('rest', `Day ${i} rest: stay idle (${fmt(Rr)}) or finish yesterday's cooldown (${fmt(S)}). → ${r}.`);
+      T.est = {}; T.st = {};
+      H = h; S = s; Rr = r;
+    }
+    const best = Math.max(S, Rr); T.cs('dp', S >= Rr ? 1 : 2, n - 1, 'found'); T.out.push(best);
+    T.step('ret', `Best profit = max(sold, rest) on the last day = ${best}. Ending while holding a share is never better.`);
+  },
+  idea: 'When the rules depend on what you did yesterday, give each "situation" its own state and write how you can move between them. Each day is one column; each state reads only from the previous column through the arrows in the diagram.',
+  time: 'O(n)', space: 'O(1) with three variables',
+  vars: ['Stock with transaction fee (LC 714): two states, subtract the fee on sell', 'Stock III / IV (LC 123, 188): add a "transactions used" dimension', 'Paint house (LC 256): one state per color, same column-by-column shape']
+});
+
+/* ================= Recursion -> memo -> table ================= */
+const LIMIT = 46;
+function naryG(root) {
+  const nodes = {}, edges = []; let x = 0;
+  const go = (n, d) => {
+    if (!n.kids.length) { nodes[n.id] = { label: n.label, x: x, y: d * 0.95 }; x += 0.62; }
+    else { n.kids.forEach(k => go(k, d + 1)); nodes[n.id] = { label: n.label, x: (nodes[n.kids[0].id].x + nodes[n.kids[n.kids.length - 1].id].x) / 2, y: d * 0.95 }; }
+    n.kids.forEach(k => edges.push({ id: 'e' + k.id, u: n.id, v: k.id, w: k.elab || null, dir: false }));
+  };
+  go(root, 0); return { nodes, edges };
+}
+const addInf = (a, b) => (a === INF || a === -INF) ? a : a + b;
+
+function runRec(T, P, p, memoMode) {
+  const R = P.rec, r0 = R.root(p);
+  if (r0.stop) { T.out.push(r0.out); T.step(r0.mark || null, r0.stop); return; }
+  let uid = 0, rootNode = null, drawn = 0, truncated = false, calls = 0;
+  const solved = new Set(), all = new Set(), memo = new Map(), cs = [];
+  const live = () => memoMode || !truncated;
+  if (memoMode) { const t = R.table(p); T.tab('memo', '', t.rows, t.cols, null); (t.na || []).forEach(([r, c]) => T.cs('memo', r, c, 'na')); }
+  const name = (s) => R.fn ? `${R.fn}(${R.label(s, p)})` : R.label(s, p);
+  const mkOf = (s, kids, v) => R.marks ? R.marks(s, p, kids, v, memoMode) : {};
+  const go = (s, parentNd, elab, isRoot) => {
+    calls++; const key = R.key(s), lab = R.label(s, p), nm = name(s); all.add(key);
+    let nd = null;
+    if (isRoot || parentNd) {
+      if (drawn < LIMIT) { nd = { id: 'n' + (uid++), label: lab, kids: [], elab }; drawn++; if (parentNd) parentNd.kids.push(nd); else rootNode = nd; T.g = naryG(rootNode); }
+      else truncated = true;
+    }
+    if (nd) { cs.push(nm); T.ax('Call stack', cs, 'stack'); T.tg('now', nd.id); }
+    T.ax('Calls', [calls]);
+    const bv = R.base(s, p);
+    if (bv !== undefined) {
+      if (nd && live()) { T.s(nd.id, 'done'); T.b(nd.id, fmt(bv)); T.step('base', R.baseMsg ? R.baseMsg(s, bv, p) : `${nm} is a base case: ${fmt(bv)}.`); }
+      if (nd) { cs.pop(); T.ax('Call stack', cs, 'stack'); }
+      return bv;
+    }
+    if (memoMode && memo.has(key)) {
+      const v = memo.get(key);
+      if (nd) {
+        T.s(nd.id, 'found'); T.b(nd.id, fmt(v)); const cell = R.cell(s, p); if (cell) T.cur('memo', cell[0], cell[1], 'best');
+        T.step('hit', `${nm} is already in the memo (${fmt(v)}). Return it, no recursion.`); cs.pop(); T.ax('Call stack', cs, 'stack');
+      }
+      return v;
+    }
+    const again = solved.has(key) && !memoMode, virt = isRoot && R.virtual;
+    const kids = R.kids(s, p), mk0 = mkOf(s, kids);
+    if (nd && live() && kids.length) {
+      T.s(nd.id, again ? 'bad' : 'cur');
+      T.step(virt ? 'outer' : (mk0.call || 'call'), again ? `${nm} again. It was solved before, but plain recursion has no memory, so the whole subtree runs again.` : (R.callMsg ? R.callMsg(s, kids, p) : `${nm} needs ${kids.map(k => name(k.s)).join(', ')}.`));
+      T.s(nd.id, again ? 'bad' : 'stack');
+    }
+    const vals = [];
+    for (const k of kids) { const v = go(k.s, nd, k.lab, false); vals.push(v); if (R.stop && R.stop(v)) break; }
+    const v = R.combine(s, vals, p); solved.add(key);
+    const mk = mkOf(s, kids, v);
+    if (memoMode && !virt) {
+      memo.set(key, v); const cell = R.cell(s, p);
+      if (cell) {
+        T.set('memo', cell[0], cell[1], v); T.cur('memo', cell[0], cell[1]);
+        const ch = R.choice ? R.choice(s, vals, p) : [];
+        kids.slice(0, vals.length).forEach((k, ix) => { const cc = R.cell(k.s, p); if (cc && R.base(k.s, p) === undefined) T.arr(['memo', cc[0], cc[1]], ['memo', cell[0], cell[1]], ch.includes(ix) ? 'best' : 'dep'); });
+      }
+    }
+    if (nd) { T.tg('now', nd.id); T.b(nd.id, fmt(v)); if (!again) T.s(nd.id, 'cur'); cs.pop(); T.ax('Call stack', cs, 'stack'); }
+    if ((nd && live()) || (memoMode && !nd && !virt)) T.step(virt ? 'outerRet' : (mk.ret || (memoMode ? 'store' : 'ret')), R.explain(s, vals, v, p) + (memoMode && !virt ? ' Save it in the memo.' : ''));
+    if (nd) T.s(nd.id, again ? 'bad' : 'done');
+    return v;
+  };
+  const v = go(r0.s, undefined, null, true); T.tg('now', null);
+  T.out.push(R.ans ? R.ans(v, p) : fmt(v));
+  const label = R.virtual ? 'The answer' : name(r0.s);
+  if (!memoMode) {
+    T.step(null, `${label} = ${fmt(v)}. That took ${calls} calls, but there are only ${all.size} different subproblems${truncated ? ` (the tree shows the first ${LIMIT} calls)` : ''}. Every red node repeats work already done somewhere else.`);
+  } else {
+    T.step(null, `${label} = ${fmt(v)} in ${calls} calls${truncated ? ` (tree shows the first ${LIMIT})` : ''}. Each of the ${all.size} subproblems was worked out once; every gold node was a lookup.`);
+  }
+}
+
+function REC(id, spec) {
+  const a = ALGOS.find(x => x.id === id); a.rec = spec;
+  a.parsedRec = parseCode(spec.codeRec); a.parsedMemo = parseCode(spec.codeMemo);
+  if (spec.def) a.params.forEach(q => { if (spec.def[q.key] !== undefined) q.def = spec.def[q.key]; });
+}
+function framesFor(algo, p, mode = 'tab') {
+  const parsed = mode === 'rec' ? algo.parsedRec : mode === 'memo' ? algo.parsedMemo : algo.parsed;
+  const T = new Tracer(parsed.marks); p = p || defaults(algo);
+  if (mode === 'tab') algo.run(T, p); else runRec(T, algo, p, mode === 'memo');
+  return T.frames;
+}
+
+/* ---------- Fibonacci (bottom-up tab; recursion specs below) ---------- */
+A({
+  id: 'fib', cat: 'Foundations', title: 'Fibonacci',
+  blurb: 'The classic starting point: one recurrence, written three ways.',
+  params: [{ key: 'n', label: 'n', type: 'int', min: 2, max: 12, def: 6 }],
+  code: `
+int fib(int n) {
+    if (n <= 1) return n;
+    vector<int> dp(n + 1);
+    dp[0] = 0; dp[1] = 1;                 //@base
+    for (int i = 2; i <= n; i++)
+        dp[i] = dp[i - 1] + dp[i - 2];    //@fill
+    return dp[n];                         //@ret
+}
+// O(1) space: keep only the last two values`,
+  run(T, p) {
+    const n = p.n, dp = Array(n + 1).fill(null);
+    T.tab('dp', '', ['dp'], idx(n + 1), null);
+    dp[0] = 0; dp[1] = 1; T.set('dp', 0, 0, 0); T.set('dp', 0, 1, 1); T.cur('dp', 0, 0); T.cur('dp', 0, 1);
+    T.step('base', 'Start from the base cases: dp[0] = 0, dp[1] = 1.');
+    for (let i = 2; i <= n; i++) {
+      dp[i] = dp[i - 1] + dp[i - 2]; T.set('dp', 0, i, dp[i]); T.cur('dp', 0, i);
+      T.arr(['dp', 0, i - 1], ['dp', 0, i]); T.arr(['dp', 0, i - 2], ['dp', 0, i]);
+      T.step('fill', `dp[${i}] = dp[${i - 1}] + dp[${i - 2}] = ${dp[i - 1]} + ${dp[i - 2]} = ${dp[i]}. Both are already filled.`);
+    }
+    T.cs('dp', 0, n, 'found'); T.out.push(`fib(${n}) = ${dp[n]}`); T.step('ret', `fib(${n}) = ${dp[n]}. Same values the memo held, filled left to right with no recursion.`);
+  },
+  idea: 'Every subproblem fib(i) depends only on smaller i, so filling the array from left to right guarantees both inputs are ready. That ordering is the whole trick of bottom-up DP.',
+  time: 'O(n)', space: 'O(n), or O(1) with two variables', rtime: 'O(2ⁿ), about φⁿ calls',
+  vars: ['Tribonacci (LC 1137)', 'Climbing stairs is the same recurrence with different base cases', 'Matrix exponentiation gives O(log n) if asked for a follow-up']
+});
+ALGOS.unshift(ALGOS.pop());
+
+/* ---------- recurrence specs ---------- */
+const P2 = (i, j) => `${i},${j}`;
+REC('fib', {
+  formula: 'fib(n) = fib(n−1) + fib(n−2),   fib(0) = 0, fib(1) = 1',
+  root: (p) => ({ s: p.n }), key: (s) => String(s), label: (s) => `f(${s})`,
+  base: (s) => s <= 1 ? s : undefined, kids: (s) => [{ s: s - 1 }, { s: s - 2 }],
+  combine: (s, v) => v[0] + v[1], explain: (s, v, r) => `fib(${s}) = ${v[0]} + ${v[1]} = ${r}.`,
+  table: (p) => ({ rows: ['memo'], cols: idx(p.n + 1) }), cell: (s) => [0, s],
+  codeRec: `
+int fib(int n) {
+    if (n <= 1) return n;                 //@base
+    return fib(n - 1) + fib(n - 2);       //@call,ret
+}`,
+  codeMemo: `
+vector<int> memo;                         // size n + 1, all -1
+int fib(int n) {
+    if (n <= 1) return n;                       //@base
+    if (memo[n] != -1) return memo[n];          //@hit
+    return memo[n] = fib(n - 1) + fib(n - 2);   //@call,store
+}`
+});
+REC('climb', {
+  def: { n: 6 },
+  formula: 'ways(n) = ways(n−1) + ways(n−2),   ways(0) = ways(1) = 1',
+  root: (p) => ({ s: p.n }), key: (s) => String(s), label: (s) => `w(${s})`,
+  base: (s) => s <= 1 ? 1 : undefined, kids: (s) => [{ s: s - 1, lab: '1 step' }, { s: s - 2, lab: '2 steps' }],
+  combine: (s, v) => v[0] + v[1], explain: (s, v, r) => `ways(${s}): last move was 1 step (${v[0]} ways) or 2 steps (${v[1]} ways) = ${r}.`,
+  baseMsg: (s) => `ways(${s}) = 1: ${s === 0 ? 'already at the bottom' : 'one single step'}.`,
+  table: (p) => ({ rows: ['memo'], cols: idx(p.n + 1) }), cell: (s) => [0, s],
+  codeRec: `
+int ways(int n) {
+    if (n <= 1) return 1;                 //@base
+    return ways(n - 1) + ways(n - 2);     //@call,ret
+}`,
+  codeMemo: `
+vector<int> memo;                         // size n + 1, all -1
+int ways(int n) {
+    if (n <= 1) return 1;                       //@base
+    if (memo[n] != -1) return memo[n];          //@hit
+    return memo[n] = ways(n - 1) + ways(n - 2); //@call,store
+}`
+});
+REC('robber', {
+  def: { a: [2, 7, 9, 3, 1, 5] }, rtime: 'O(2ⁿ)',
+  formula: 'best(i) = max( best(i−1),  best(i−2) + a[i] ),   best(−1) = 0, best(0) = a[0]',
+  root: (p) => ({ s: p.a.length - 1 }), key: (s) => String(s), label: (s) => `b(${s < 0 ? '−1' : s})`,
+  base: (s, p) => s < 0 ? 0 : s === 0 ? p.a[0] : undefined, kids: (s) => [{ s: s - 1, lab: 'skip' }, { s: s - 2, lab: 'rob' }],
+  combine: (s, v, p) => Math.max(v[0], v[1] + p.a[s]), choice: (s, v, p) => [v[1] + p.a[s] > v[0] ? 1 : 0],
+  explain: (s, v, r, p) => `best(${s}) = max(skip ${v[0]}, rob ${v[1]} + ${p.a[s]}) = ${r}.`,
+  table: (p) => ({ rows: ['memo'], cols: idx(p.a.length) }), cell: (s) => s >= 1 ? [0, s] : null,
+  codeRec: `
+int best(vector<int>& a, int i) {         // best total from houses 0..i
+    if (i < 0) return 0;                  //@base
+    if (i == 0) return a[0];
+    int skip = best(a, i - 1);            //@call
+    int rob  = best(a, i - 2) + a[i];
+    return max(skip, rob);                //@ret
+}
+// answer: best(a, n - 1)`,
+  codeMemo: `
+vector<int> memo;                         // size n, all -1
+int best(vector<int>& a, int i) {
+    if (i < 0) return 0;                  //@base
+    if (i == 0) return a[0];
+    if (memo[i] != -1) return memo[i];    //@hit
+    int skip = best(a, i - 1);            //@call
+    int rob  = best(a, i - 2) + a[i];
+    return memo[i] = max(skip, rob);      //@store
+}`
+});
+REC('kadane', {
+  def: { a: [-2, 1, -3, 4, -1, 2, 1, -5] }, virtual: true, rtime: 'O(n²) — each endingAt(i) walks back to 0',
+  formula: 'end(i) = max( a[i],  end(i−1) + a[i] ),   answer = max over i of end(i)',
+  root: () => ({ s: 'ans' }), key: (s) => String(s), label: (s) => s === 'ans' ? 'max' : `e(${s})`,
+  base: (s, p) => s === 0 ? p.a[0] : undefined,
+  kids: (s, p) => s === 'ans' ? p.a.map((_, i) => ({ s: i })) : [{ s: s - 1 }],
+  combine: (s, v, p) => s === 'ans' ? Math.max(...v) : Math.max(p.a[s], v[0] + p.a[s]),
+  choice: (s, v, p) => [0],
+  callMsg: (s, k, p) => s === 'ans' ? 'The best slice ends somewhere, so ask endingAt(i) for every i.' : `endingAt(${s}) needs endingAt(${s - 1}).`,
+  explain: (s, v, r, p) => s === 'ans' ? `Largest of all endingAt values: ${r}.` : `endingAt(${s}) = max(start fresh ${p.a[s]}, extend ${v[0]} + ${p.a[s]} = ${v[0] + p.a[s]}) = ${r}.`,
+  table: (p) => ({ rows: ['memo'], cols: idx(p.a.length) }), cell: (s) => s >= 1 ? [0, s] : null,
+  codeRec: `
+int endingAt(vector<int>& a, int i) {     // best slice that ends at i
+    if (i == 0) return a[0];              //@base
+    int prev = endingAt(a, i - 1);        //@call
+    return max(a[i], prev + a[i]);        //@ret
+}
+int maxSubArray(vector<int>& a) {
+    int best = INT_MIN;
+    for (int i = 0; i < a.size(); i++)    //@outer
+        best = max(best, endingAt(a, i));
+    return best;                          //@outerRet
+}`,
+  codeMemo: `
+vector<int> memo; vector<bool> known;     // values can be negative, so no -1 sentinel
+int endingAt(vector<int>& a, int i) {
+    if (i == 0) return a[0];              //@base
+    if (known[i]) return memo[i];         //@hit
+    int prev = endingAt(a, i - 1);        //@call
+    known[i] = true;
+    return memo[i] = max(a[i], prev + a[i]);   //@store
+}
+int maxSubArray(vector<int>& a) {
+    int best = INT_MIN;
+    for (int i = 0; i < a.size(); i++)    //@outer
+        best = max(best, endingAt(a, i));
+    return best;                          //@outerRet
+}`
+});
+REC('coin-min', {
+  fn: 'fewest',
+  def: { amount: 6 }, rtime: 'O(coinsᵃᵐᵒᵘⁿᵗ) in the worst case',
+  formula: 'fewest(x) = 1 + min over coins c ≤ x of fewest(x − c),   fewest(0) = 0',
+  root: (p) => ({ s: p.amount }), key: (s) => String(s), label: (s) => String(s),
+  base: (s) => s === 0 ? 0 : undefined,
+  kids: (s, p) => [...new Set(p.coins)].sort((a, b) => a - b).filter(c => c <= s).map(c => ({ s: s - c, lab: '−' + c })),
+  combine: (s, v) => v.length ? addInf(Math.min(...v), 1) : INF,
+  choice: (s, v) => { const m = Math.min(...v); return m === INF ? [] : [v.indexOf(m)]; },
+  callMsg: (s, k) => k.length ? `Amount ${s}: try each coin, leaving ${k.map(x => x.s).join(', ')}.` : `Amount ${s}: no coin fits.`,
+  explain: (s, v, r) => v.length ? `fewest(${s}) = 1 + min(${v.map(fmt).join(', ')}) = ${fmt(r)}.` : `No coin fits ${s}: ∞.`,
+  baseMsg: () => 'Amount 0 needs 0 coins.',
+  table: (p) => ({ rows: ['memo'], cols: idx(p.amount + 1) }), cell: (s) => s >= 1 ? [0, s] : null,
+  codeRec: `
+int fewest(vector<int>& coins, int x) {
+    if (x == 0) return 0;                                  //@base
+    int best = INF;
+    for (int c : coins)
+        if (c <= x)
+            best = min(best, fewest(coins, x - c) + 1);    //@call
+    return best;                                           //@ret
+}`,
+  codeMemo: `
+vector<int> memo;                                          // size amount + 1, all -1
+int fewest(vector<int>& coins, int x) {
+    if (x == 0) return 0;                                  //@base
+    if (memo[x] != -1) return memo[x];                     //@hit
+    int best = INF;
+    for (int c : coins)
+        if (c <= x)
+            best = min(best, fewest(coins, x - c) + 1);    //@call
+    return memo[x] = best;                                 //@store
+}`
+});
+REC('lis', {
+  def: { a: [3, 1, 4, 2, 5, 3, 6] }, virtual: true, rtime: 'O(2ⁿ)',
+  formula: 'end(i) = 1 + max end(j) over j < i with a[j] < a[i]  (or 1),   answer = max end(i)',
+  root: () => ({ s: 'ans' }), key: (s) => String(s), label: (s, p) => s === 'ans' ? 'max' : `e(${s})`,
+  base: () => undefined,
+  kids: (s, p) => s === 'ans' ? p.a.map((_, i) => ({ s: i })) : p.a.slice(0, s).map((x, j) => ({ x, j })).filter(o => o.x < p.a[s]).map(o => ({ s: o.j })),
+  combine: (s, v, p) => s === 'ans' ? Math.max(...v) : (v.length ? Math.max(...v) + 1 : 1),
+  choice: (s, v) => v.length ? [v.indexOf(Math.max(...v))] : [],
+  marks: (s, p, k) => ({ ret: k && !k.length ? 'base' : undefined }),
+  callMsg: (s, k, p) => s === 'ans' ? 'The LIS ends at some index, so ask endingAt(i) for every i.' : `a[${s}] = ${p.a[s]} can follow ${k.map(x => `a[${x.s}] = ${p.a[x.s]}`).join(', ')}.`,
+  explain: (s, v, r, p) => s === 'ans' ? `Longest of all: ${r}.` : v.length ? `endingAt(${s}) = 1 + max(${v.join(', ')}) = ${r}.` : `Nothing earlier is smaller than ${p.a[s]}: endingAt(${s}) = 1.`,
+  table: (p) => ({ rows: ['memo'], cols: idx(p.a.length) }), cell: (s) => [0, s],
+  codeRec: `
+int endingAt(vector<int>& a, int i) {      // LIS that ends at a[i]
+    int best = 1;                          //@base
+    for (int j = 0; j < i; j++)
+        if (a[j] < a[i])
+            best = max(best, endingAt(a, j) + 1);   //@call
+    return best;                           //@ret
+}
+int lis(vector<int>& a) {
+    int ans = 0;
+    for (int i = 0; i < a.size(); i++)     //@outer
+        ans = max(ans, endingAt(a, i));
+    return ans;                            //@outerRet
+}`,
+  codeMemo: `
+vector<int> memo;                          // size n, all -1
+int endingAt(vector<int>& a, int i) {
+    if (memo[i] != -1) return memo[i];     //@hit
+    int best = 1;                          //@base
+    for (int j = 0; j < i; j++)
+        if (a[j] < a[i])
+            best = max(best, endingAt(a, j) + 1);   //@call
+    return memo[i] = best;                 //@store
+}
+int lis(vector<int>& a) {
+    int ans = 0;
+    for (int i = 0; i < a.size(); i++)     //@outer
+        ans = max(ans, endingAt(a, i));
+    return ans;                            //@outerRet
+}`
+});
+REC('word-break', {
+  def: { s: 'catsandog', dict: ['cats', 'dog', 'sand', 'and', 'cat'] }, rtime: 'O(2ⁿ)',
+  formula: 'ok(i) = some word w with s[i..] starting with w and ok(i + |w|),   ok(n) = true',
+  root: () => ({ s: 0 }), key: (s) => String(s), label: (s) => `ok(${s})`,
+  base: (s, p) => s === p.s.length ? true : undefined,
+  kids: (s, p) => { const r = []; for (let j = s + 1; j <= p.s.length; j++) if (p.dict.includes(p.s.slice(s, j))) r.push({ s: j, lab: p.s.slice(s, j) }); return r; },
+  stop: (v) => v === true, combine: (s, v) => v.some(x => x === true), choice: (s, v) => v.indexOf(true) >= 0 ? [v.indexOf(true)] : [],
+  marks: (s, p, k, v) => ({ ret: v === true ? 'yes' : undefined }),
+  callMsg: (s, k, p) => k.length ? `"${p.s.slice(s)}" starts with ${k.map(x => `"${x.lab}"`).join(', ')}. Try each.` : `No dictionary word starts "${p.s.slice(s)}".`,
+  explain: (s, v, r, p) => r ? `"${p.s.slice(s)}" can be split.` : `"${p.s.slice(s)}" can't be split: false.`,
+  baseMsg: () => 'Reached the end of the string: everything before was split cleanly. true.',
+  table: (p) => ({ rows: ['memo'], cols: idx(p.s.length + 1) }), cell: (s) => [0, s],
+  codeRec: `
+bool ok(string& s, int i, unordered_set<string>& dict) {       // can s[i..] be split?
+    if (i == s.size()) return true;                             //@base
+    for (int j = i + 1; j <= s.size(); j++)
+        if (dict.count(s.substr(i, j - i)) && ok(s, j, dict))   //@call
+            return true;                                        //@yes
+    return false;                                               //@ret
+}`,
+  codeMemo: `
+vector<int> memo;                                               // -1 unknown, 0 no, 1 yes
+bool ok(string& s, int i, unordered_set<string>& dict) {
+    if (i == s.size()) return true;                             //@base
+    if (memo[i] != -1) return memo[i];                          //@hit
+    for (int j = i + 1; j <= s.size(); j++)
+        if (dict.count(s.substr(i, j - i)) && ok(s, j, dict))   //@call
+            return memo[i] = true;                              //@yes
+    return memo[i] = false;                                     //@store
+}`
+});
+REC('unique-paths', {
+  fn: 'paths',
+  def: { grid: ['0000', '0100', '0000'] }, rtime: 'O(2^(m+n))',
+  formula: 'paths(r, c) = paths(r−1, c) + paths(r, c−1),   paths(0, 0) = 1, blocked = 0',
+  root: (p) => ({ s: [p.grid.length - 1, p.grid[0].length - 1] }), key: (s) => P2(...s), label: (s) => P2(...s),
+  base: (s, p) => p.grid[s[0]][s[1]] === '1' ? 0 : (s[0] === 0 && s[1] === 0 ? 1 : undefined),
+  baseMsg: (s, v) => v ? 'Back at the start: 1 path.' : `(${s[0]},${s[1]}) is blocked: 0 paths through it.`,
+  kids: (s) => [s[0] > 0 ? { s: [s[0] - 1, s[1]], lab: 'up' } : null, s[1] > 0 ? { s: [s[0], s[1] - 1], lab: 'left' } : null].filter(Boolean),
+  combine: (s, v) => v.reduce((a, b) => a + b, 0), choice: (s, v) => v.map((_, i) => i),
+  explain: (s, v, r) => `paths(${s[0]},${s[1]}) = ${v.join(' + ')} = ${r}.`,
+  table: (p) => ({ rows: idx(p.grid.length), cols: idx(p.grid[0].length) }), cell: (s) => s,
+  codeRec: `
+long long paths(vector<vector<int>>& g, int r, int c) {
+    if (r < 0 || c < 0 || g[r][c] == 1) return 0;     //@base
+    if (r == 0 && c == 0) return 1;
+    return paths(g, r - 1, c) + paths(g, r, c - 1);   //@call,ret
+}`,
+  codeMemo: `
+vector<vector<long long>> memo;                       // all -1
+long long paths(vector<vector<int>>& g, int r, int c) {
+    if (r < 0 || c < 0 || g[r][c] == 1) return 0;     //@base
+    if (r == 0 && c == 0) return 1;
+    if (memo[r][c] != -1) return memo[r][c];          //@hit
+    return memo[r][c] = paths(g, r - 1, c) + paths(g, r, c - 1);   //@call,store
+}`
+});
+REC('min-path', {
+  fn: 'cost',
+  def: { grid: ['131', '151', '421'] }, rtime: 'O(2^(m+n))',
+  formula: 'cost(r, c) = g[r][c] + min( cost(r−1, c), cost(r, c−1) ),   cost(0, 0) = g[0][0]',
+  root: (p) => ({ s: [p.grid.length - 1, p.grid[0].length - 1] }), key: (s) => P2(...s), label: (s) => P2(...s),
+  base: (s, p) => s[0] === 0 && s[1] === 0 ? +p.grid[0][0] : undefined,
+  kids: (s) => [s[0] > 0 ? { s: [s[0] - 1, s[1]], lab: 'up' } : null, s[1] > 0 ? { s: [s[0], s[1] - 1], lab: 'left' } : null].filter(Boolean),
+  combine: (s, v, p) => +p.grid[s[0]][s[1]] + Math.min(...v), choice: (s, v) => [v.indexOf(Math.min(...v))],
+  explain: (s, v, r, p) => `cost(${s[0]},${s[1]}) = ${p.grid[s[0]][s[1]]} + min(${v.join(', ')}) = ${r}.`,
+  baseMsg: (s, v) => `The start cell costs ${v}.`,
+  table: (p) => ({ rows: idx(p.grid.length), cols: idx(p.grid[0].length) }), cell: (s) => s,
+  codeRec: `
+int cost(vector<vector<int>>& g, int r, int c) {      // cheapest path to (r, c)
+    if (r == 0 && c == 0) return g[0][0];             //@base
+    int up   = r > 0 ? cost(g, r - 1, c) : INF;       //@call
+    int left = c > 0 ? cost(g, r, c - 1) : INF;
+    return g[r][c] + min(up, left);                   //@ret
+}`,
+  codeMemo: `
+vector<vector<int>> memo;                             // all -1
+int cost(vector<vector<int>>& g, int r, int c) {
+    if (r == 0 && c == 0) return g[0][0];             //@base
+    if (memo[r][c] != -1) return memo[r][c];          //@hit
+    int up   = r > 0 ? cost(g, r - 1, c) : INF;       //@call
+    int left = c > 0 ? cost(g, r, c - 1) : INF;
+    return memo[r][c] = g[r][c] + min(up, left);      //@store
+}`
+});
+REC('lcs', {
+  def: { a: 'ABCD', b: 'BDCA' }, fn: 'L', rtime: 'O(2^(n+m))',
+  formula: 'L(i, j) = L(i−1, j−1) + 1 if a[i−1] = b[j−1], else max( L(i−1, j), L(i, j−1) ),   L(0, ·) = L(·, 0) = 0',
+  root: (p) => ({ s: [p.a.length, p.b.length] }), key: (s) => P2(...s), label: (s) => P2(...s),
+  base: (s) => s[0] === 0 || s[1] === 0 ? 0 : undefined, baseMsg: (s) => `L(${s[0]},${s[1]}): one string is empty, so 0.`,
+  kids: (s, p) => p.a[s[0] - 1] === p.b[s[1] - 1] ? [{ s: [s[0] - 1, s[1] - 1], lab: '+1' }] : [{ s: [s[0] - 1, s[1]], lab: '−a' }, { s: [s[0], s[1] - 1], lab: '−b' }],
+  combine: (s, v, p) => p.a[s[0] - 1] === p.b[s[1] - 1] ? v[0] + 1 : Math.max(...v),
+  choice: (s, v) => [v.length === 1 ? 0 : (v[0] >= v[1] ? 0 : 1)],
+  marks: (s, p) => { const m = p.a[s[0] - 1] === p.b[s[1] - 1] ? 'match' : 'skip'; return { call: m, ret: m }; },
+  callMsg: (s, k, p) => p.a[s[0] - 1] === p.b[s[1] - 1] ? `'${p.a[s[0] - 1]}' = '${p.b[s[1] - 1]}': it can end the LCS. Solve L(${s[0] - 1},${s[1] - 1}).` : `'${p.a[s[0] - 1]}' ≠ '${p.b[s[1] - 1]}': drop the last letter of a, or of b.`,
+  explain: (s, v, r, p) => p.a[s[0] - 1] === p.b[s[1] - 1] ? `L(${s[0]},${s[1]}) = ${v[0]} + 1 = ${r}.` : `L(${s[0]},${s[1]}) = max(${v.join(', ')}) = ${r}.`,
+  table: (p) => ({ rows: ['∅', ...p.a.split('')], cols: ['∅', ...p.b.split('')] }), cell: (s) => s,
+  codeRec: `
+int L(string& a, string& b, int i, int j) {        // first i of a, first j of b
+    if (i == 0 || j == 0) return 0;                                  //@base
+    if (a[i - 1] == b[j - 1]) return L(a, b, i - 1, j - 1) + 1;      //@match
+    return max(L(a, b, i - 1, j), L(a, b, i, j - 1));                //@skip
+}`,
+  codeMemo: `
+vector<vector<int>> memo;                          // (n+1) x (m+1), all -1
+int L(string& a, string& b, int i, int j) {
+    if (i == 0 || j == 0) return 0;                                  //@base
+    if (memo[i][j] != -1) return memo[i][j];                         //@hit
+    if (a[i - 1] == b[j - 1]) return memo[i][j] = L(a, b, i - 1, j - 1) + 1;     //@match
+    return memo[i][j] = max(L(a, b, i - 1, j), L(a, b, i, j - 1));               //@skip
+}`
+});
+REC('edit', {
+  fn: 'D',
+  def: { a: 'cats', b: 'cut' }, rtime: 'O(3^(n+m))',
+  formula: 'D(i, j) = D(i−1, j−1) if letters match, else 1 + min( D(i−1, j), D(i, j−1), D(i−1, j−1) ),   D(i, 0) = i, D(0, j) = j',
+  root: (p) => ({ s: [p.a.length, p.b.length] }), key: (s) => P2(...s), label: (s) => P2(...s),
+  base: (s) => s[0] === 0 ? s[1] : s[1] === 0 ? s[0] : undefined,
+  baseMsg: (s, v) => s[0] === 0 ? `a is empty: insert ${v} letter${v === 1 ? '' : 's'}.` : `b is empty: delete ${v} letter${v === 1 ? '' : 's'}.`,
+  kids: (s, p) => p.a[s[0] - 1] === p.b[s[1] - 1] ? [{ s: [s[0] - 1, s[1] - 1], lab: 'keep' }] : [{ s: [s[0] - 1, s[1]], lab: 'del' }, { s: [s[0], s[1] - 1], lab: 'ins' }, { s: [s[0] - 1, s[1] - 1], lab: 'rep' }],
+  combine: (s, v) => v.length === 1 ? v[0] : 1 + Math.min(...v), choice: (s, v) => [v.indexOf(Math.min(...v))],
+  marks: (s, p) => { const m = p.a[s[0] - 1] === p.b[s[1] - 1] ? 'same' : 'op'; return { call: m, ret: m }; },
+  callMsg: (s, k, p) => k.length === 1 ? `'${p.a[s[0] - 1]}' = '${p.b[s[1] - 1]}': no edit needed here.` : `'${p.a[s[0] - 1]}' ≠ '${p.b[s[1] - 1]}': try delete, insert and replace.`,
+  explain: (s, v, r) => v.length === 1 ? `D(${s[0]},${s[1]}) = ${r}.` : `D(${s[0]},${s[1]}) = 1 + min(${v.join(', ')}) = ${r}.`,
+  table: (p) => ({ rows: ['∅', ...p.a.split('')], cols: ['∅', ...p.b.split('')] }), cell: (s) => s,
+  codeRec: `
+int D(string& a, string& b, int i, int j) {
+    if (i == 0) return j;                                   //@base
+    if (j == 0) return i;
+    if (a[i - 1] == b[j - 1]) return D(a, b, i - 1, j - 1);  //@same
+    return 1 + min({D(a, b, i - 1, j),       // delete
+                    D(a, b, i, j - 1),       // insert
+                    D(a, b, i - 1, j - 1)}); //@op // replace
+}`,
+  codeMemo: `
+vector<vector<int>> memo;                                   // all -1
+int D(string& a, string& b, int i, int j) {
+    if (i == 0) return j;                                   //@base
+    if (j == 0) return i;
+    if (memo[i][j] != -1) return memo[i][j];                //@hit
+    if (a[i - 1] == b[j - 1]) return memo[i][j] = D(a, b, i - 1, j - 1);   //@same
+    return memo[i][j] = 1 + min({D(a, b, i - 1, j),
+                                 D(a, b, i, j - 1),
+                                 D(a, b, i - 1, j - 1)}); //@op
+}`
+});
+REC('knapsack', {
+  def: { wt: [1, 2, 1, 2], val: [2, 3, 1, 4], W: 4 }, fn: 'K', rtime: 'O(2ⁿ)',
+  formula: 'K(i, w) = max( K(i−1, w),  K(i−1, w − wt[i−1]) + val[i−1] if it fits ),   K(0, w) = 0',
+  root: (p) => ({ s: [p.wt.length, p.W] }), key: (s) => P2(...s), label: (s) => P2(...s),
+  base: (s) => s[0] === 0 ? 0 : undefined, baseMsg: (s) => `K(0,${s[1]}): no items left, value 0.`,
+  kids: (s, p) => { const i = s[0], w = s[1], r = [{ s: [i - 1, w], lab: 'skip' }]; if (p.wt[i - 1] <= w) r.push({ s: [i - 1, w - p.wt[i - 1]], lab: 'take' }); return r; },
+  combine: (s, v, p) => v.length === 1 ? v[0] : Math.max(v[0], v[1] + p.val[s[0] - 1]),
+  choice: (s, v, p) => [v.length === 2 && v[1] + p.val[s[0] - 1] > v[0] ? 1 : 0],
+  marks: (s, p) => ({ ret: p.wt[s[0] - 1] > s[1] ? 'nofit' : undefined }),
+  callMsg: (s, k, p) => k.length === 2 ? `Item ${s[0]} (w${p.wt[s[0] - 1]}, v${p.val[s[0] - 1]}) with capacity ${s[1]}: skip it or take it.` : `Item ${s[0]} weighs ${p.wt[s[0] - 1]} > ${s[1]}: it can only be skipped.`,
+  explain: (s, v, r, p) => v.length === 1 ? `K(${s[0]},${s[1]}) = ${r} (item ${s[0]} doesn't fit).` : `K(${s[0]},${s[1]}) = max(skip ${v[0]}, take ${v[1]} + ${p.val[s[0] - 1]}) = ${r}.`,
+  table: (p) => ({ rows: ['none', ...p.wt.map((w, i) => `#${i + 1} w${w} v${p.val[i]}`)], cols: idx(p.W + 1) }), cell: (s) => s,
+  codeRec: `
+int K(vector<int>& wt, vector<int>& val, int i, int w) {   // first i items, capacity w
+    if (i == 0) return 0;                                   //@base
+    int skip = K(wt, val, i - 1, w);                        //@call
+    if (wt[i - 1] > w) return skip;                         //@nofit
+    int take = K(wt, val, i - 1, w - wt[i - 1]) + val[i - 1];
+    return max(skip, take);                                 //@ret
+}`,
+  codeMemo: `
+vector<vector<int>> memo;                                   // (n+1) x (W+1), all -1
+int K(vector<int>& wt, vector<int>& val, int i, int w) {
+    if (i == 0) return 0;                                   //@base
+    if (memo[i][w] != -1) return memo[i][w];                //@hit
+    int skip = K(wt, val, i - 1, w);                        //@call
+    if (wt[i - 1] > w) return memo[i][w] = skip;            //@nofit
+    int take = K(wt, val, i - 1, w - wt[i - 1]) + val[i - 1];
+    return memo[i][w] = max(skip, take);                    //@store
+}`
+});
+REC('partition', {
+  def: { a: [7, 4, 2, 2, 1] }, fn: 'can', rtime: 'O(2ⁿ)',
+  formula: 'can(i, s) = can(i−1, s − a[i−1]) or can(i−1, s),   can(·, 0) = true, can(0, s>0) = false',
+  root: (p) => { const t = p.a.reduce((x, y) => x + y, 0); return t % 2 ? { stop: `The total is ${t}, which is odd, so two equal halves are impossible.`, out: 'false', mark: 'odd' } : { s: [p.a.length, t / 2] }; },
+  key: (s) => P2(...s), label: (s) => P2(...s),
+  base: (s) => s[1] === 0 ? true : s[0] === 0 ? false : undefined,
+  baseMsg: (s, v) => v ? `can(${s[0]},0): sum 0 is always reachable.` : `can(0,${s[1]}): no numbers left and ${s[1]} still to go.`,
+  kids: (s, p) => { const x = p.a[s[0] - 1], r = []; if (x <= s[1]) r.push({ s: [s[0] - 1, s[1] - x], lab: 'take' }); r.push({ s: [s[0] - 1, s[1]], lab: 'skip' }); return r; },
+  stop: (v) => v === true, combine: (s, v) => v.some(Boolean), choice: (s, v) => v.indexOf(true) >= 0 ? [v.indexOf(true)] : [],
+  callMsg: (s, k, p) => `Can the first ${s[0]} numbers make ${s[1]}? Try ${k.map(x => x.lab === 'take' ? `taking ${p.a[s[0] - 1]}` : 'skipping it').join(', then ')}.`,
+  explain: (s, v, r) => `can(${s[0]},${s[1]}) = ${r ? 'true' : 'false'}.`,
+  table: (p) => { const t = p.a.reduce((x, y) => x + y, 0) / 2; return { rows: ['none', ...p.a.map((x, i) => `#${i + 1} (${x})`)], cols: idx(Math.floor(t) + 1) }; }, cell: (s) => s,
+  codeRec: `
+bool can(vector<int>& a, int i, int s) {     // can the first i numbers make sum s?
+    if (s == 0) return true;                 //@base
+    if (i == 0) return false;
+    if (a[i - 1] <= s && can(a, i - 1, s - a[i - 1])) return true;   //@call
+    return can(a, i - 1, s);                 //@ret
+}
+// answer: total is even && can(a, n, total / 2)   //@odd`,
+  codeMemo: `
+vector<vector<int>> memo;                    // -1 unknown, 0 no, 1 yes
+bool can(vector<int>& a, int i, int s) {
+    if (s == 0) return true;                 //@base
+    if (i == 0) return false;
+    if (memo[i][s] != -1) return memo[i][s]; //@hit
+    bool ok = (a[i - 1] <= s && can(a, i - 1, s - a[i - 1]))
+              || can(a, i - 1, s);           //@call
+    return memo[i][s] = ok;                  //@store
+}
+// answer: total is even && can(a, n, total / 2)   //@odd`
+});
+REC('coin-ways', {
+  fn: 'ways',
+  rtime: 'O(2^amount)',
+  formula: 'ways(i, x) = ways(i−1, x) + ways(i, x − coin[i−1]),   ways(·, 0) = 1, ways(0, x>0) = 0',
+  root: (p) => ({ s: [[...new Set(p.coins)].length, p.amount] }), key: (s) => P2(...s), label: (s) => P2(...s),
+  base: (s) => s[1] === 0 ? 1 : s[0] === 0 ? 0 : undefined,
+  baseMsg: (s, v) => v ? `ways(${s[0]},0) = 1: nothing left to pay.` : `ways(0,${s[1]}) = 0: no coin types left.`,
+  kids: (s, p) => { const cs = [...new Set(p.coins)].sort((a, b) => a - b), c = cs[s[0] - 1], r = [{ s: [s[0] - 1, s[1]], lab: 'skip' }]; if (c <= s[1]) r.push({ s: [s[0], s[1] - c], lab: 'use ' + c }); return r; },
+  combine: (s, v) => v.reduce((a, b) => a + b, 0), choice: (s, v) => v.map((_, i) => i),
+  marks: (s, p) => { const cs = [...new Set(p.coins)].sort((a, b) => a - b); return { ret: cs[s[0] - 1] > s[1] ? 'nofit' : undefined }; },
+  explain: (s, v, r) => `ways(${s[0]},${s[1]}) = ${v.join(' + ')} = ${r}.`,
+  table: (p) => { const cs = [...new Set(p.coins)].sort((a, b) => a - b); return { rows: ['none', ...cs.map(c => `+${c}`)], cols: idx(p.amount + 1) }; }, cell: (s) => s,
+  codeRec: `
+int ways(vector<int>& coins, int i, int x) {   // using the first i coin types
+    if (x == 0) return 1;                      //@base
+    if (i == 0) return 0;
+    int skip = ways(coins, i - 1, x);          //@call   // never use coin i again
+    if (coins[i - 1] > x) return skip;         //@nofit
+    return skip + ways(coins, i, x - coins[i - 1]);   //@ret   // use it (maybe again)
+}`,
+  codeMemo: `
+vector<vector<long long>> memo;                // all -1
+long long ways(vector<int>& coins, int i, int x) {
+    if (x == 0) return 1;                      //@base
+    if (i == 0) return 0;
+    if (memo[i][x] != -1) return memo[i][x];   //@hit
+    long long skip = ways(coins, i - 1, x);    //@call
+    if (coins[i - 1] > x) return memo[i][x] = skip;   //@nofit
+    return memo[i][x] = skip + ways(coins, i, x - coins[i - 1]);   //@store
+}`
+});
+REC('lps', {
+  def: { s: 'cabdb' }, fn: 'P', rtime: 'O(2ⁿ)',
+  formula: 'P(i, j) = P(i+1, j−1) + 2 if s[i] = s[j], else max( P(i+1, j), P(i, j−1) ),   P(i, i) = 1',
+  root: (p) => ({ s: [0, p.s.length - 1] }), key: (s) => P2(...s), label: (s) => P2(...s),
+  base: (s) => s[0] > s[1] ? 0 : s[0] === s[1] ? 1 : undefined, baseMsg: (s, v) => v ? `A single letter is a palindrome: 1.` : 'Empty range: 0.',
+  kids: (s, p) => p.s[s[0]] === p.s[s[1]] ? (s[0] + 1 <= s[1] - 1 ? [{ s: [s[0] + 1, s[1] - 1], lab: '+2' }] : []) : [{ s: [s[0] + 1, s[1]], lab: 'drop i' }, { s: [s[0], s[1] - 1], lab: 'drop j' }],
+  combine: (s, v, p) => p.s[s[0]] === p.s[s[1]] ? (v[0] || 0) + 2 : Math.max(...v),
+  choice: (s, v) => [v.length < 2 ? 0 : (v[0] >= v[1] ? 0 : 1)],
+  marks: (s, p) => { const m = p.s[s[0]] === p.s[s[1]] ? 'match' : 'skip'; return { call: m, ret: m }; },
+  callMsg: (s, k, p) => p.s[s[0]] === p.s[s[1]] ? `s[${s[0]}] = s[${s[1]}] = '${p.s[s[0]]}': keep both ends, solve the inside.` : `'${p.s[s[0]]}' ≠ '${p.s[s[1]]}': drop one end.`,
+  explain: (s, v, r, p) => p.s[s[0]] === p.s[s[1]] ? `P(${s[0]},${s[1]}) = ${v[0] || 0} + 2 = ${r}.` : `P(${s[0]},${s[1]}) = max(${v.join(', ')}) = ${r}.`,
+  table: (p) => { const lab = p.s.split('').map((ch, i) => `${i} ${ch}`); const na = []; for (let i = 0; i < p.s.length; i++) for (let j = 0; j < i; j++) na.push([i, j]); return { rows: lab, cols: lab, na }; }, cell: (s) => s,
+  codeRec: `
+int P(string& s, int i, int j) {            // best inside s[i..j]
+    if (i > j) return 0;                    //@base
+    if (i == j) return 1;
+    if (s[i] == s[j]) return P(s, i + 1, j - 1) + 2;        //@match
+    return max(P(s, i + 1, j), P(s, i, j - 1));             //@skip
+}`,
+  codeMemo: `
+vector<vector<int>> memo;                   // n x n, all -1
+int P(string& s, int i, int j) {
+    if (i > j) return 0;                    //@base
+    if (i == j) return 1;
+    if (memo[i][j] != -1) return memo[i][j];                //@hit
+    if (s[i] == s[j]) return memo[i][j] = P(s, i + 1, j - 1) + 2;   //@match
+    return memo[i][j] = max(P(s, i + 1, j), P(s, i, j - 1));        //@skip
+}`
+});
+REC('mcm', {
+  fn: 'C',
+  rtime: 'O(2ⁿ) — exponential (Catalan-sized)',
+  formula: 'C(i, j) = min over k of C(i, k) + C(k+1, j) + d[i−1]·d[k]·d[j],   C(i, i) = 0',
+  root: (p) => ({ s: [1, p.d.length - 1] }), key: (s) => P2(...s), label: (s) => P2(...s),
+  base: (s) => s[0] === s[1] ? 0 : undefined, baseMsg: (s) => `A${s[0]} alone needs no multiplication: 0.`,
+  kids: (s) => { const r = []; for (let k = s[0]; k < s[1]; k++) { r.push({ s: [s[0], k], lab: 'k=' + k }); r.push({ s: [k + 1, s[1]], lab: 'k=' + k }); } return r; },
+  combine: (s, v, p) => { let b = INF; for (let t = 0; t < v.length; t += 2) { const k = s[0] + t / 2; b = Math.min(b, v[t] + v[t + 1] + p.d[s[0] - 1] * p.d[k] * p.d[s[1]]); } return b; },
+  choice: (s, v, p) => { let b = INF, bt = 0; for (let t = 0; t < v.length; t += 2) { const k = s[0] + t / 2, c = v[t] + v[t + 1] + p.d[s[0] - 1] * p.d[k] * p.d[s[1]]; if (c < b) { b = c; bt = t; } } return [bt, bt + 1]; },
+  callMsg: (s) => `A${s[0]}..A${s[1]}: try every split k, solving both halves.`,
+  explain: (s, v, r, p) => { const c = []; for (let t = 0; t < v.length; t += 2) { const k = s[0] + t / 2; c.push(v[t] + v[t + 1] + p.d[s[0] - 1] * p.d[k] * p.d[s[1]]); } return `C(${s[0]},${s[1]}) = min(${c.join(', ')}) = ${r}.`; },
+  table: (p) => { const n = p.d.length - 1, lab = Array.from({ length: n }, (_, i) => `A${i + 1}`), na = []; for (let i = 0; i < n; i++) for (let j = 0; j < i; j++) na.push([i, j]); return { rows: lab, cols: lab, na }; },
+  cell: (s) => [s[0] - 1, s[1] - 1],
+  codeRec: `
+int C(vector<int>& d, int i, int j) {       // multiply A_i..A_j
+    if (i == j) return 0;                   //@base
+    int best = INT_MAX;
+    for (int k = i; k < j; k++)
+        best = min(best, C(d, i, k) + C(d, k + 1, j)
+                         + d[i - 1] * d[k] * d[j]);   //@call
+    return best;                            //@ret
+}`,
+  codeMemo: `
+vector<vector<int>> memo;                   // all -1
+int C(vector<int>& d, int i, int j) {
+    if (i == j) return 0;                   //@base
+    if (memo[i][j] != -1) return memo[i][j];          //@hit
+    int best = INT_MAX;
+    for (int k = i; k < j; k++)
+        best = min(best, C(d, i, k) + C(d, k + 1, j)
+                         + d[i - 1] * d[k] * d[j]);   //@call
+    return memo[i][j] = best;               //@store
+}`
+});
+const ST = ['hold', 'sold', 'rest'], STL = ['H', 'S', 'R'];
+REC('stock-cooldown', {
+  def: { p: [1, 2, 3, 0, 2, 4] }, virtual: true, rtime: 'O(2ⁿ)',
+  formula: 'hold(i) = max(hold(i−1), rest(i−1) − p[i]);  sold(i) = hold(i−1) + p[i];  rest(i) = max(rest(i−1), sold(i−1))',
+  root: () => ({ s: 'ans' }), key: (s) => s === 'ans' ? s : `${s[0]},${s[1]}`, label: (s) => s === 'ans' ? 'max' : `${STL[s[0]]}${s[1]}`,
+  base: (s, p) => s !== 'ans' && s[1] === 0 ? [-p.p[0], -INF, 0][s[0]] : undefined,
+  baseMsg: (s, v, p) => [`Day 0 holding: bought for ${p.p[0]}, so ${v}.`, 'Day 0 sold: impossible, −∞.', 'Day 0 resting: 0.'][s[0]],
+  kids: (s, p) => {
+    if (s === 'ans') { const n = p.p.length - 1; return [{ s: [1, n] }, { s: [2, n] }]; }
+    const i = s[1]; return s[0] === 0 ? [{ s: [0, i - 1], lab: 'keep' }, { s: [2, i - 1], lab: 'buy' }] : s[0] === 1 ? [{ s: [0, i - 1], lab: 'sell' }] : [{ s: [2, i - 1], lab: 'wait' }, { s: [1, i - 1], lab: 'cool' }];
+  },
+  combine: (s, v, p) => s === 'ans' ? Math.max(...v) : s[0] === 0 ? Math.max(v[0], addInf(v[1], -p.p[s[1]])) : s[0] === 1 ? addInf(v[0], p.p[s[1]]) : Math.max(v[0], v[1]),
+  choice: (s, v, p) => s[0] === 0 ? [v[0] >= addInf(v[1], -p.p[s[1]]) ? 0 : 1] : s[0] === 1 ? [0] : [v[0] >= v[1] ? 0 : 1],
+  marks: (s) => s === 'ans' ? {} : { call: ST[s[0]], ret: ST[s[0]] },
+  callMsg: (s, k, p) => s === 'ans' ? 'Best profit ends the last day either just sold or resting.' : `${ST[s[0]]}(${s[1]}) depends on ${k.map(x => `${ST[x.s[0]]}(${x.s[1]})`).join(' and ')}.`,
+  explain: (s, v, r, p) => s === 'ans' ? `max(sold, rest) on the last day = ${r}.` : s[0] === 0 ? `hold(${s[1]}) = max(keep ${fmt(v[0])}, buy ${fmt(v[1])} − ${p.p[s[1]]}) = ${fmt(r)}.` : s[0] === 1 ? `sold(${s[1]}) = ${fmt(v[0])} + ${p.p[s[1]]} = ${fmt(r)}.` : `rest(${s[1]}) = max(${fmt(v[0])}, ${fmt(v[1])}) = ${fmt(r)}.`,
+  table: (p) => ({ rows: ST, cols: idx(p.p.length) }), cell: (s) => s === 'ans' ? null : [s[0], s[1]],
+  codeRec: `
+// st: 0 = hold, 1 = sold, 2 = rest; best profit at the end of day i in state st
+int f(vector<int>& p, int st, int i) {
+    if (i == 0) return st == 0 ? -p[0] : st == 1 ? NEG : 0;           //@base
+    if (st == 0) return max(f(p, 0, i - 1), f(p, 2, i - 1) - p[i]);   //@hold
+    if (st == 1) return f(p, 0, i - 1) + p[i];                        //@sold
+    return max(f(p, 2, i - 1), f(p, 1, i - 1));                       //@rest
+}
+// answer: max(f(p, 1, n - 1), f(p, 2, n - 1))   NEG = a big negative   //@outer,outerRet`,
+  codeMemo: `
+int memo[3][MAXN]; bool known[3][MAXN];
+int f(vector<int>& p, int st, int i) {
+    if (i == 0) return st == 0 ? -p[0] : st == 1 ? NEG : 0;           //@base
+    if (known[st][i]) return memo[st][i];                             //@hit
+    known[st][i] = true;
+    if (st == 0) return memo[st][i] = max(f(p, 0, i - 1), f(p, 2, i - 1) - p[i]);   //@hold
+    if (st == 1) return memo[st][i] = f(p, 0, i - 1) + p[i];                        //@sold
+    return memo[st][i] = max(f(p, 2, i - 1), f(p, 1, i - 1));                       //@rest
+}
+// answer: max(f(p, 1, n - 1), f(p, 2, n - 1))   //@outer,outerRet`
+});
+
+/* ================= UI ================= */
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const NS = 'http://www.w3.org/2000/svg';
+const RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const U = 84, RAD = 18;
+
+const S = { mode: 'rec', algo: null, frames: [], i: 0, playing: false, timer: null, speed: 1, custom: null };
+const V = { nodes: new Map(), edges: new Map(), disp: new Map(), anim: 0, box: null, last: null };
+function sel(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+
+/* ---------- C++ highlighting ---------- */
+const KW = new Set('if else for while return break continue new struct class const auto true false nullptr this'.split(' '));
+const TY = new Set('void int long bool char string vector stack queue deque map unordered_map unordered_set set pair array priority_queue greater size_t'.split(' '));
+const FN = new Set('max min abs swap push_back pop_back push_front pop_front push pop top front back size empty count insert reverse sort iota assign begin end substr accumulate INT_MAX INT_MIN LONG_MAX INF'.split(' '));
+function hl(line) {
+  let code = line, com = '';
+  const ci = line.indexOf('//'); if (ci >= 0) { code = line.slice(0, ci); com = line.slice(ci); }
+  const re = /("[^"]*"|'[^']*')|(\b\d+\b)|([A-Za-z_]\w*)/g; let out = '', last = 0, m;
+  while ((m = re.exec(code))) {
+    out += esc(code.slice(last, m.index)); last = re.lastIndex;
+    if (m[1]) out += `<span class="t-str">${esc(m[1])}</span>`;
+    else if (m[2]) out += `<span class="t-num">${m[2]}</span>`;
+    else { const w = m[3]; out += KW.has(w) ? `<span class="t-kw">${w}</span>` : TY.has(w) ? `<span class="t-ty">${w}</span>` : FN.has(w) ? `<span class="t-fn">${w}</span>` : w; }
+  }
+  out += esc(code.slice(last));
+  if (com) out += `<span class="t-com">${esc(com)}</span>`;
+  return out || ' ';
+}
+
+/* ---------- Graph rendering ---------- */
+function setupSvg() {
+  const svg = $('#svg'); svg.innerHTML = '';
+  V.gE = sel('g', { class: 'edges' }, svg); V.gN = sel('g', { class: 'nodes' }, svg);
+  V.nodes.clear(); V.edges.clear(); V.disp.clear(); V.box = null;
+}
+function renderGraph(f, animate) {
+  const g = f.g; $('#stage').classList.toggle('no-graph', !g);
+  if (!g) return;
+  const tgt = new Map(); for (const id in g.nodes) tgt.set(id, { x: g.nodes[id].x * U, y: g.nodes[id].y * U });
+  for (const [id, el] of V.nodes) if (!tgt.has(id)) { el.remove(); V.nodes.delete(id); V.disp.delete(id); }
+  const fresh = new Set();
+  for (const [id] of tgt) {
+    let el = V.nodes.get(id);
+    if (!el) {
+      el = sel('g', { class: 'nd' }, V.gN); const inner = sel('g', { class: 'in' }, el);
+      sel('circle', { r: RAD + 5, class: 'halo' }, inner); sel('circle', { r: RAD, class: 'body' }, inner);
+      sel('text', { class: 'v', dy: '.35em' }, inner); sel('text', { class: 'bd', y: RAD + 16 }, inner); sel('text', { class: 'tg', y: -RAD - 9 }, inner);
+      V.nodes.set(id, el); fresh.add(id);
+    }
+    const st = f.st[id] || ''; el.setAttribute('class', 'nd' + (st ? ' s-' + st : ''));
+    const [, , v, bd, tg] = el.firstChild.childNodes; v.textContent = g.nodes[id].label; v.setAttribute('class', 'v' + (g.nodes[id].label.length > 2 ? ' small' : '')); bd.textContent = f.badge[id] || ''; tg.textContent = f.tag[id] || '';
+  }
+  const keys = new Set(g.edges.map(e => e.u + ',' + e.v));
+  const want = new Map(g.edges.map(e => [e.id, e]));
+  for (const [id, x] of V.edges) if (!want.has(id)) { x.g.remove(); V.edges.delete(id); }
+  for (const [id, e] of want) {
+    let x = V.edges.get(id);
+    if (!x) { const gg = sel('g', {}, V.gE); x = { g: gg, ln: sel('path', { class: 'ln' }, gg), ah: sel('path', { class: 'ah' }, gg), wt: sel('text', { class: 'wt', dy: '.35em' }, gg) }; V.edges.set(id, x); }
+    x.e = e; x.bow = e.dir && keys.has(e.v + ',' + e.u) ? 24 : 0;
+    x.g.setAttribute('class', 'ge' + (f.est[id] ? ' e-' + f.est[id] : '') + (e.dir ? ' dir' : ''));
+    x.wt.textContent = e.w == null ? '' : e.w;
+  }
+  const from = new Map(); for (const [id, p] of tgt) from.set(id, fresh.has(id) ? p : (V.disp.get(id) || p));
+  const moving = [...tgt].some(([id, p]) => { const a = from.get(id); return Math.abs(a.x - p.x) + Math.abs(a.y - p.y) > .5; });
+  const dur = animate && !RM && moving ? Math.max(160, Math.min(560, 480 / S.speed)) : 0;
+  const box0 = V.box, box1 = fitBox(tgt); sizeSvg(box1);
+  cancelAnimationFrame(V.anim); const t0 = performance.now();
+  const tick = (now) => {
+    const t = dur ? Math.min(1, (now - t0) / dur) : 1, k = t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    for (const [id, p] of tgt) { const a = from.get(id); const q = { x: a.x + (p.x - a.x) * k, y: a.y + (p.y - a.y) * k }; V.disp.set(id, q); V.nodes.get(id).setAttribute('transform', `translate(${q.x.toFixed(1)},${q.y.toFixed(1)})`); }
+    for (const [, x] of V.edges) drawEdge(x);
+    const b = box0 ? box0.map((v, i) => v + (box1[i] - v) * k) : box1; V.box = b; $('#svg').setAttribute('viewBox', b.map(v => v.toFixed(1)).join(' '));
+    if (t < 1) V.anim = requestAnimationFrame(tick);
+  };
+  if (dur) V.anim = requestAnimationFrame(tick); else tick(t0);
+}
+function drawEdge(x) {
+  const P = V.disp.get(String(x.e.u)), Q = V.disp.get(String(x.e.v)); if (!P || !Q) return;
+  const f0 = (v) => v.toFixed(1);
+  if (x.e.u === x.e.v) {
+    const s = x.e.loop === 'down' ? 1 : -1, a = 0.5;
+    const sx = P.x - Math.sin(a) * RAD, sy = P.y + s * Math.cos(a) * RAD, ex = P.x + Math.sin(a) * (RAD + 2), ey = P.y + s * Math.cos(a) * (RAD + 2);
+    const c1x = P.x - 34, c1y = P.y + s * 62, c2x = P.x + 34, c2y = P.y + s * 62;
+    let tx = ex - c2x, ty = ey - c2y; const l = Math.hypot(tx, ty) || 1; tx /= l; ty /= l;
+    const ax = ex - tx * 10, ay = ey - ty * 10, px = -ty * 5, py = tx * 5;
+    x.ln.setAttribute('d', `M${f0(sx)},${f0(sy)} C${f0(c1x)},${f0(c1y)} ${f0(c2x)},${f0(c2y)} ${f0(ex - tx * 8)},${f0(ey - ty * 8)}`);
+    x.ah.setAttribute('d', `M${f0(ex)},${f0(ey)} L${f0(ax + px)},${f0(ay + py)} L${f0(ax - px)},${f0(ay - py)} Z`);
+    x.wt.setAttribute('x', f0(P.x)); x.wt.setAttribute('y', f0(P.y + s * 66)); return;
+  }
+  const dx = Q.x - P.x, dy = Q.y - P.y, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
+  const cx = (P.x + Q.x) / 2 + nx * x.bow, cy = (P.y + Q.y) / 2 + ny * x.bow;
+  const dirTo = (ax, ay, bx, by) => { const l = Math.hypot(bx - ax, by - ay) || 1; return [(bx - ax) / l, (by - ay) / l]; };
+  const [sx0, sy0] = x.bow ? dirTo(P.x, P.y, cx, cy) : [dx / L, dy / L];
+  const [ex0, ey0] = x.bow ? dirTo(Q.x, Q.y, cx, cy) : [-dx / L, -dy / L];
+  const sx = P.x + sx0 * RAD, sy = P.y + sy0 * RAD;
+  const pad = x.e.dir ? RAD + 2 : RAD, ex = Q.x + ex0 * pad, ey = Q.y + ey0 * pad;
+  const f = (v) => v.toFixed(1);
+  if (x.e.dir) {
+    const tx = -ex0, ty = -ey0, ax = ex - tx * 10, ay = ey - ty * 10, px = -ty * 5, py = tx * 5;
+    x.ah.setAttribute('d', `M${f(ex)},${f(ey)} L${f(ax + px)},${f(ay + py)} L${f(ax - px)},${f(ay - py)} Z`);
+    const lx = ex - tx * 8, ly = ey - ty * 8;
+    x.ln.setAttribute('d', x.bow ? `M${f(sx)},${f(sy)} Q${f(cx)},${f(cy)} ${f(lx)},${f(ly)}` : `M${f(sx)},${f(sy)} L${f(lx)},${f(ly)}`);
+  } else { x.ah.setAttribute('d', ''); x.ln.setAttribute('d', `M${f(sx)},${f(sy)} L${f(ex)},${f(ey)}`); }
+  const mx = x.bow ? .25 * P.x + .5 * cx + .25 * Q.x : (P.x + Q.x) / 2, my = x.bow ? .25 * P.y + .5 * cy + .25 * Q.y : (P.y + Q.y) / 2;
+  x.wt.setAttribute('x', f(mx)); x.wt.setAttribute('y', f(my));
+}
+function fitBox(pos) {
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const p of pos.values()) { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); }
+  x0 -= 70; x1 += 70; y0 -= 70; y1 += 76;
+  let w = x1 - x0, h = y1 - y0; const minW = 420, minH = 240;
+  if (w < minW) { x0 -= (minW - w) / 2; w = minW; } if (h < minH) { y0 -= (minH - h) / 2; h = minH; }
+  return [x0, y0, w, h];
+}
+function sizeSvg(b) {
+  const svg = $('#svg'); const w = svg.clientWidth || 600; V.last = b;
+  const h = Math.max(200, Math.min(440, window.innerHeight * 0.54, w * b[3] / b[2]));
+  svg.style.height = Math.round(h) + 'px';
+}
+window.addEventListener('resize', () => { if (V.last) sizeSvg(V.last); });
+
+/* ---------- DP tables ---------- */
+const TV = { sig: null, cells: new Map(), heads: new Map(), prev: new Map() };
+function renderTables(f, animate) {
+  const box = $('#tables');
+  if (!f.tabs.length) { box.hidden = true; TV.sig = null; return; }
+  box.hidden = false;
+  const sig = f.tabs.map(t => `${t.id}|${t.title}|${t.rows.join('/')}|${t.cols.join('/')}`).join(';');
+  if (sig !== TV.sig) {
+    TV.sig = sig; TV.cells.clear(); TV.heads.clear(); TV.prev.clear();
+    const inner = document.createElement('div'); inner.className = 'tinner'; let rowBox = null;
+    f.tabs.forEach(t => {
+      const one = t.rows.length === 1;
+      const hw = Math.max(4.6, Math.max(...t.rows.map(r => r.length)) * 0.56 + 1.2);
+      const el = document.createElement('div'); el.className = 'tab' + (one ? ' one' : '');
+      let h = t.title ? `<div class="ttitle">${esc(t.title)}</div>` : '';
+      h += `<div class="tgrid" style="grid-template-columns:${hw}rem repeat(${t.cols.length}, minmax(var(--cw), max-content))"><span class="corner"></span>`;
+      el.dataset.hw = hw; el.dataset.cols = t.cols.length;
+      t.cols.forEach((c, j) => { h += `<span class="th tc-h" data-h="${t.id}:c${j}">${esc(c)}</span>`; });
+      t.rows.forEach((r, i) => {
+        h += `<span class="th tr-h" data-h="${t.id}:r${i}">${esc(r)}</span>`;
+        t.cols.forEach((_, j) => { h += `<span class="dc" data-k="${t.id}:${i},${j}"></span>`; });
+      });
+      el.innerHTML = h + '</div>';
+      if (one) { inner.appendChild(el); rowBox = null; }
+      else { if (!rowBox) { rowBox = document.createElement('div'); rowBox.className = 'trow'; inner.appendChild(rowBox); } rowBox.appendChild(el); }
+    });
+    const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('class', 'arrows'); inner.appendChild(svg);
+    box.innerHTML = ''; box.appendChild(inner);
+    const W = box.clientWidth - 8; let cw = 48;
+    [...inner.children].filter(c => c.tagName === 'DIV').forEach(line => {
+      const tabs = line.classList.contains('tab') ? [line] : [...line.children];
+      let fixed = 64 + (tabs.length - 1) * 34, cols = 0;
+      tabs.forEach(t => { fixed += (+t.dataset.hw) * 16 + 4 * (+t.dataset.cols); cols += +t.dataset.cols; });
+      cw = Math.min(cw, Math.floor((W - fixed) / cols));
+    });
+    inner.style.setProperty('--cw', Math.max(30, cw) + 'px');
+    inner.querySelectorAll('.dc').forEach(e => TV.cells.set(e.dataset.k, e));
+    inner.querySelectorAll('.th').forEach(e => TV.heads.set(e.dataset.h, e));
+  }
+  f.tabs.forEach(t => t.cells.forEach((row, i) => row.forEach((v, j) => {
+    const k = `${t.id}:${i},${j}`, el = TV.cells.get(k); const st = f.cst[k];
+    const vcls = v === '' ? ' empty' : v === 'T' ? ' vt' : v === 'F' ? ' vf' : (v === '∞' || v === '−∞') ? ' vinf' : '';
+    el.className = 'dc' + vcls + (st ? ' c-' + st : '');
+    if (el.textContent !== v) {
+      const had = TV.prev.has(k) && TV.prev.get(k) !== '';
+      el.textContent = v;
+      if (animate && !RM && v !== '' && TV.prev.has(k)) el.animate([{ transform: 'scale(1.22)' }, { transform: 'scale(1)' }], { duration: 300, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    }
+    TV.prev.set(k, v);
+  })));
+  for (const [k, el] of TV.heads) el.classList.toggle('on', !!f.hst[k]);
+  const curEl = box.querySelector('.dc.c-cur');
+  if (curEl && box.scrollWidth > box.clientWidth) {
+    const b = box.getBoundingClientRect(), r = curEl.getBoundingClientRect();
+    if (r.left < b.left + 40 || r.right > b.right - 40) box.scrollLeft += (r.left + r.width / 2) - (b.left + b.width / 2);
+  }
+  drawArrows(f.arrows, animate);
+}
+function drawArrows(list, animate) {
+  const inner = $('#tables .tinner'); if (!inner) return;
+  const svg = inner.querySelector('.arrows'); svg.innerHTML = '';
+  const base = inner.getBoundingClientRect();
+  svg.setAttribute('width', inner.scrollWidth); svg.setAttribute('height', inner.scrollHeight);
+  const rect = (a) => { const el = TV.cells.get(`${a[0]}:${a[1]},${a[2]}`); if (!el) return null; const r = el.getBoundingClientRect(); return { x: r.left - base.left, y: r.top - base.top, w: r.width, h: r.height }; };
+  const f = (v) => v.toFixed(1);
+  // draw winners last so they sit on top
+  [...list].sort((p, q) => (p.cls === 'best') - (q.cls === 'best')).forEach(({ a, b, cls }) => {
+    const A_ = rect(a), B_ = rect(b); if (!A_ || !B_) return;
+    const ax = A_.x + A_.w / 2, ay = A_.y + A_.h / 2, bx = B_.x + B_.w / 2, by = B_.y + B_.h / 2;
+    const near = Math.abs(bx - ax) < A_.w * 1.6 && Math.abs(by - ay) < A_.h * 1.6;
+    let sx, sy, ex, ey, cx, cy;
+    if (!near && Math.abs(by - ay) < 2) {
+      const h = Math.min(44, 10 + Math.abs(bx - ax) * 0.22);
+      sx = ax + Math.sign(bx - ax) * 4; sy = A_.y + 3; ex = bx - Math.sign(bx - ax) * 4; ey = B_.y - 1; cx = (sx + ex) / 2; cy = Math.min(sy, ey) - h;
+    } else if (!near && Math.abs(bx - ax) < 2) {
+      const h = Math.min(40, 10 + Math.abs(by - ay) * 0.22);
+      sx = A_.x + 3; sy = ay + Math.sign(by - ay) * 4; ex = B_.x - 1; ey = by - Math.sign(by - ay) * 4; cx = Math.min(sx, ex) - h; cy = (sy + ey) / 2;
+    } else {
+      const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
+      const tA = Math.min(A_.w / 2 / Math.max(Math.abs(ux), 1e-6), A_.h / 2 / Math.max(Math.abs(uy), 1e-6));
+      const tB = Math.min(B_.w / 2 / Math.max(Math.abs(ux), 1e-6), B_.h / 2 / Math.max(Math.abs(uy), 1e-6));
+      sx = ax + ux * tA * 0.55; sy = ay + uy * tA * 0.55; ex = bx - ux * (tB + 2); ey = by - uy * (tB + 2);
+      const bend = near ? 0 : Math.min(30, L * 0.12); cx = (sx + ex) / 2 - uy * bend; cy = (sy + ey) / 2 + ux * bend;
+    }
+    let tx = ex - cx, ty = ey - cy; const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
+    const g = sel('g', { class: 'ar ar-' + cls }, svg);
+    const p = sel('path', { class: 'al', d: `M${f(sx)},${f(sy)} Q${f(cx)},${f(cy)} ${f(ex - tx * 6)},${f(ey - ty * 6)}` }, g);
+    const ax2 = ex - tx * 9, ay2 = ey - ty * 9, px = -ty * 4.5, py = tx * 4.5;
+    const h = sel('path', { class: 'ah', d: `M${f(ex)},${f(ey)} L${f(ax2 + px)},${f(ay2 + py)} L${f(ax2 - px)},${f(ay2 - py)} Z` }, g);
+    if (animate && !RM) {
+      const len = p.getTotalLength(); p.style.strokeDasharray = cls === 'dim' ? '' : String(len);
+      if (cls !== 'dim') p.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }], { duration: 380, easing: 'ease-out', fill: 'both' });
+      h.animate([{ opacity: 0 }, { opacity: 0 }, { opacity: 1 }], { duration: 400, fill: 'both' });
+    }
+  });
+}
+window.addEventListener('resize', () => { if (S.frames.length) { TV.sig = null; renderTables(S.frames[S.i], false); } });
+
+/* ---------- aux, legend ---------- */
+function renderAux(f) {
+  const blocks = f.aux.map(a => {
+    const chips = a.items.length ? a.items.map((v, i) => {
+      if (v && typeof v === 'object') return `<span class="chip${v.cls ? ' ch-' + v.cls : ''}">${esc(v.t)}</span>`;
+      const mark = a.kind === 'stack' && i === a.items.length - 1 ? ' edge-top' : a.kind === 'queue' && i === 0 ? ' edge-front' : '';
+      return `<span class="chip${mark}">${esc(v)}</span>`;
+    }).join('') : '<span class="empty">empty</span>';
+    const hint = a.kind === 'stack' ? '<span class="axhint">top is on the right</span>' : '';
+    return `<div class="ax"><div class="axn">${esc(a.name)}${hint}</div><div class="chips">${chips}</div></div>`;
+  });
+  if (S.hasOut) blocks.push(`<div class="ax out"><div class="axn">${esc(S.algo.outLabel || 'Answer')}</div><div class="chips">${f.out.length ? f.out.map(v => `<span class="chip">${esc(v)}</span>`).join('') : '<span class="empty">not yet</span>'}</div></div>`);
+  $('#aux').innerHTML = blocks.join('');
+}
+const CLEG = { cur: 'Cell being filled', dep: 'Cell it reads', in: 'Input it uses', best: 'Reused or best value', path: 'Path back to the answer', found: 'Answer', wall: 'Blocked', na: 'Not used', bad: 'No' };
+const ALEG = { dep: 'Reads from', best: 'Winning choice', dim: 'Unusable option' };
+const NLEG = { cur: 'Current call or state', stack: 'Waiting on the call stack', done: 'Returned', found: 'Answered from the memo', bad: 'Repeated work' };
+const ELEG = { mst: 'Transition taken', cur: 'Transition considered' };
+function renderLegend() {
+  const cs = new Set(), as = new Set(), ns = new Set(), es = new Set();
+  S.frames.forEach(f => { Object.values(f.cst).forEach(x => cs.add(x)); f.arrows.forEach(a => as.add(a.cls)); Object.values(f.st).forEach(x => ns.add(x)); Object.values(f.est).forEach(x => es.add(x)); });
+  const items = [];
+  Object.keys(NLEG).filter(k => ns.has(k)).forEach(k => items.push(`<span class="lg"><i class="sw sw-${k}"></i>${NLEG[k]}</span>`));
+  Object.keys(ELEG).filter(k => es.has(k)).forEach(k => items.push(`<span class="lg"><i class="le le-${k}"></i>${ELEG[k]}</span>`));
+  Object.keys(CLEG).filter(k => cs.has(k)).forEach(k => items.push(`<span class="lg"><i class="cq c-${k}"></i>${CLEG[k]}</span>`));
+  Object.keys(ALEG).filter(k => as.has(k)).forEach(k => items.push(`<span class="lg"><i class="aq aq-${k}"></i>${ALEG[k]}</span>`));
+  $('#legend').innerHTML = items.join('');
+}
+
+/* ---------- Frame display ---------- */
+function show(i, animate) {
+  S.i = Math.max(0, Math.min(S.frames.length - 1, i));
+  const f = S.frames[S.i];
+  renderGraph(f, animate); renderTables(f, animate); renderAux(f);
+  $('#narr').textContent = f.msg || '';
+  $('#counter').textContent = `Step ${S.i + 1} of ${S.frames.length}`;
+  $('#scrub').value = S.i;
+  const lines = $('#code').children;
+  for (let k = 0; k < lines.length; k++) lines[k].classList.toggle('hl', k === f.line);
+  if (f.line >= 0) {
+    const ln = lines[f.line], box = $('#code'); const top = ln.offsetTop - box.offsetTop, bottom = top + ln.offsetHeight;
+    if (top < box.scrollTop + 8 || bottom > box.scrollTop + box.clientHeight - 8) box.scrollTop = Math.max(0, top - box.clientHeight / 3);
+  }
+  $('#prev').disabled = S.i === 0; $('#first').disabled = S.i === 0;
+  $('#next').disabled = S.i === S.frames.length - 1; $('#last').disabled = S.i === S.frames.length - 1;
+}
+function setPlaying(on) {
+  S.playing = on; clearTimeout(S.timer);
+  const b = $('#play'); b.setAttribute('aria-label', on ? 'Pause' : 'Play'); b.dataset.state = on ? 'pause' : 'play'; $('#playText').textContent = on ? 'Pause' : 'Play';
+  if (on) schedule();
+}
+function schedule() {
+  clearTimeout(S.timer);
+  S.timer = setTimeout(() => { if (S.i >= S.frames.length - 1) { setPlaying(false); return; } show(S.i + 1, true); if (S.i >= S.frames.length - 1) setPlaying(false); else schedule(); }, 1150 / S.speed);
+}
+function togglePlay() { if (!S.playing && S.i >= S.frames.length - 1) show(0, false); setPlaying(!S.playing); }
+function stepBy(d) { setPlaying(false); show(S.i + d, true); }
+
+/* ---------- Custom input ---------- */
+function pText(q, v) { return q.type === 'int' || q.type === 'str' ? String(v) : v.join(', '); }
+function pParse(q, raw) {
+  const s = raw.trim(), toks = s.split(/[\s,]+/).filter(Boolean);
+  const name = q.label;
+  if (q.type === 'int') {
+    if (!/^-?\d+$/.test(s)) throw new Error(`${name}: enter a whole number.`);
+    const v = +s; if (v < q.min || v > q.max) throw new Error(`${name}: use a number from ${q.min} to ${q.max}.`); return v;
+  }
+  if (q.type === 'ints') {
+    if (!toks.length) throw new Error(`${name}: enter at least one number.`);
+    const v = toks.map(t => { if (!/^-?\d+$/.test(t)) throw new Error(`${name}: "${t}" isn't a whole number.`); return +t; });
+    if (v.length < q.minLen || v.length > q.maxLen) throw new Error(`${name}: use ${q.minLen === q.maxLen ? q.minLen : q.minLen + ' to ' + q.maxLen} numbers.`);
+    if (v.some(x => x < q.min || x > q.max)) throw new Error(`${name}: keep each value between ${q.min} and ${q.max}.`);
+    return v;
+  }
+  if (q.type === 'str') {
+    if (!/^[A-Za-z]+$/.test(s)) throw new Error(`${name}: letters only, no spaces.`);
+    if (s.length > q.maxLen) throw new Error(`${name}: keep it to ${q.maxLen} letters or fewer.`);
+    return q.lower ? s.toLowerCase() : s;
+  }
+  if (q.type === 'words') {
+    if (!toks.length) throw new Error(`${name}: enter at least one word.`);
+    if (toks.length > q.maxWords) throw new Error(`${name}: up to ${q.maxWords} words.`);
+    if (toks.some(t => !/^[A-Za-z]{1,12}$/.test(t))) throw new Error(`${name}: words must be letters only, up to 12 each.`);
+    return [...new Set(toks.map(t => t.toLowerCase()))];
+  }
+  if (q.type === 'grid') {
+    if (!toks.length) throw new Error(`${name}: enter at least one row.`);
+    if (toks.some(r => r.length !== toks[0].length)) throw new Error(`${name}: every row needs the same number of cells.`);
+    if (toks.some(r => [...r].some(ch => !q.chars.includes(ch)))) throw new Error(`${name}: rows may only use ${q.chars.length > 2 ? 'digits 0 to 9' : 'the digits 0 and 1'}.`);
+    if (toks.length > q.maxR || toks[0].length > q.maxC) throw new Error(`${name}: keep it within ${q.maxR} rows and ${q.maxC} columns.`);
+    return toks;
+  }
+}
+function buildParams(a, p) {
+  $('#params').innerHTML = (a.params || []).map(q => `<label class="pf${q.type === 'int' ? ' short' : ''}"><span>${esc(q.label)}</span><input data-key="${q.key}" value="${esc(pText(q, p[q.key]))}" autocomplete="off" spellcheck="false"></label>`).join('');
+}
+function sampleText(a, p) { return (a.params || []).map(q => `${q.label} = ${q.type === 'ints' ? '[' + pText(q, p[q.key]) + ']' : q.type === 'str' ? '"' + p[q.key] + '"' : pText(q, p[q.key])}`).join(';  '); }
+
+/* ---------- Algorithm selection ---------- */
+const MODE_NOTES = {
+  rec: (a) => ({ idea: 'Start by writing the recurrence as plain recursion. It is already correct, and the call tree shows you every subproblem it touches. Red nodes are subproblems being solved again from scratch. That repetition (overlapping subproblems) is the signal that caching will pay off.', trap: 'Before optimising, make sure the recursion is right: base cases first, then one clear choice per call. Every later step reuses exactly this recurrence.', time: a.rtime || 'Exponential', space: 'O(recursion depth)' }),
+  memo: (a) => ({ idea: 'Same recursion with one change: store each answer the first time it is computed, keyed by the function arguments, and check the store before recursing. Gold nodes are lookups, so each subproblem is solved once. The table fills in whatever order the recursion happens to reach it.', trap: 'Pick a "not computed yet" marker that can never be a real answer. −1 breaks when answers can be negative, so use a separate bool array or optional.', time: a.time, space: 'Memo table + O(recursion depth)' }),
+  tab: (a) => ({ idea: 'Same table, no recursion: fill the cells in an order where everything a cell reads is already done. ' + a.idea, trap: a.trap, time: a.time, space: a.space })
+};
+function load(id, custom, mode) {
+  const a = ALGOS.find(x => x.id === id) || ALGOS[0];
+  if (S.algo !== a) S.custom = null;
+  if (custom !== undefined) S.custom = custom;
+  if (mode) S.mode = mode;
+  S.algo = a; const p = S.custom || defaults(a);
+  S.frames = framesFor(a, p, S.mode);
+  S.hasOut = S.frames.some(f => f.out.length);
+  setPlaying(false); setupSvg(); TV.sig = null;
+  $('#cat').textContent = a.cat; $('#title').textContent = a.title; $('#blurb').textContent = a.blurb;
+  $('#sampleTree').textContent = sampleText(a, p);
+  $('#formula').textContent = a.rec.formula;
+  document.querySelectorAll('.modes button').forEach(b => b.setAttribute('aria-selected', b.dataset.mode === S.mode ? 'true' : 'false'));
+  const parsed = S.mode === 'rec' ? a.parsedRec : S.mode === 'memo' ? a.parsedMemo : a.parsed;
+  $('#code').innerHTML = parsed.lines.map((l, k) => `<div class="cl"><span class="no">${k + 1}</span><span class="tx">${hl(l)}</span></div>`).join('');
+  $('#code').scrollTop = 0;
+  const N = MODE_NOTES[S.mode](a);
+  $('#notes').innerHTML = `
+    <div class="note-main"><h3>How it works</h3><p>${esc(N.idea)}</p>${N.trap ? `<h3>Watch out for</h3><p>${esc(N.trap)}</p>` : ''}</div>
+    <div class="note-cost"><h3>Cost of this step</h3><dl><dt>Time</dt><dd>${esc(N.time)}</dd><dt>Space</dt><dd>${esc(N.space)}</dd></dl></div>
+    <div class="note-vars"><h3>Variations to practise</h3><ul>${a.vars.map(v => `<li>${esc(v)}</li>`).join('')}</ul></div>`;
+  buildParams(a, p); $('#treeErr').textContent = '';
+  $('#scrub').max = S.frames.length - 1;
+  renderLegend();
+  document.querySelectorAll('.item').forEach(b => b.setAttribute('aria-current', b.dataset.id === a.id ? 'true' : 'false'));
+  $('#algoSelect').value = a.id;
+  try { history.replaceState(null, '', '#' + a.id + '/' + S.mode); } catch (e) { }
+  show(0, false);
+}
+function buildNav() {
+  const cats = [...new Set(ALGOS.map(a => a.cat))];
+  $('#list').innerHTML = cats.map(c => `<div class="group"><h4>${esc(c)}</h4>${ALGOS.filter(a => a.cat === c).map(a => `<button class="item" data-id="${a.id}" data-q="${esc((a.title + ' ' + a.cat + ' ' + a.blurb).toLowerCase())}">${esc(a.title)}</button>`).join('')}</div>`).join('');
+  $('#algoSelect').innerHTML = cats.map(c => `<optgroup label="${esc(c)}">${ALGOS.filter(a => a.cat === c).map(a => `<option value="${a.id}">${esc(a.title)}</option>`).join('')}</optgroup>`).join('');
+  $('#list').addEventListener('click', e => { const b = e.target.closest('.item'); if (b) { load(b.dataset.id); $('#main').scrollIntoView({ block: 'start', behavior: RM ? 'auto' : 'smooth' }); } });
+  $('#algoSelect').addEventListener('change', e => load(e.target.value));
+  $('#filter').addEventListener('input', e => {
+    const q = e.target.value.trim().toLowerCase();
+    document.querySelectorAll('.group').forEach(g => { let any = false; g.querySelectorAll('.item').forEach(b => { const hit = !q || b.dataset.q.includes(q); b.hidden = !hit; any = any || hit; }); g.hidden = !any; });
+  });
+}
+function init() {
+  buildNav();
+  $('#play').addEventListener('click', togglePlay);
+  $('#prev').addEventListener('click', () => stepBy(-1));
+  $('#next').addEventListener('click', () => stepBy(1));
+  $('#first').addEventListener('click', () => { setPlaying(false); show(0, true); });
+  $('#last').addEventListener('click', () => { setPlaying(false); show(S.frames.length - 1, true); });
+  $('#scrub').addEventListener('input', e => { setPlaying(false); show(+e.target.value, true); });
+  $('#speed').addEventListener('input', e => { S.speed = +e.target.value; $('#speedVal').textContent = S.speed + '×'; if (S.playing) schedule(); });
+  $('#custom').addEventListener('submit', e => {
+    e.preventDefault();
+    try {
+      const p = {}; S.algo.params.forEach(q => { p[q.key] = pParse(q, $(`#params input[data-key="${q.key}"]`).value); });
+      const err = S.algo.check && S.algo.check(p); if (err) throw new Error(err);
+      $('#treeErr').textContent = ''; load(S.algo.id, p);
+    } catch (err) { $('#treeErr').textContent = err.message; }
+  });
+  $('#treeReset').addEventListener('click', () => load(S.algo.id, null));
+  $('#copy').addEventListener('click', async () => {
+    const txt = (S.mode === 'rec' ? S.algo.parsedRec : S.mode === 'memo' ? S.algo.parsedMemo : S.algo.parsed).lines.join('\n');
+    try { await navigator.clipboard.writeText(txt); $('#copy').textContent = 'Copied'; }
+    catch (e) { const r = document.createRange(); r.selectNodeContents($('#code')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $('#copy').textContent = 'Selected'; }
+    setTimeout(() => { $('#copy').textContent = 'Copy code'; }, 1400);
+  });
+  document.addEventListener('keydown', e => {
+    if (e.target.closest('input, select, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === ' ' && !e.target.closest('button')) { e.preventDefault(); togglePlay(); }
+    else if (e.key === '1' || e.key === '2' || e.key === '3') { load(S.algo.id, undefined, ['rec', 'memo', 'tab'][+e.key - 1]); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); stepBy(1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); stepBy(-1); }
+  });
+  document.querySelectorAll('.modes button').forEach(b => b.addEventListener('click', () => load(S.algo.id, undefined, b.dataset.mode)));
+  const parseHash = () => { const [id, m] = (location.hash || '').slice(1).split('/'); return { id: ALGOS.some(a => a.id === id) ? id : null, m: ['rec', 'memo', 'tab'].includes(m) ? m : null }; };
+  window.addEventListener('hashchange', () => { const h = parseHash(); if (h.id && (h.id !== S.algo.id || (h.m && h.m !== S.mode))) load(h.id, undefined, h.m || undefined); });
+  const h = parseHash();
+  load(h.id || 'fib', undefined, h.m || 'rec');
+}
+init();
+
+</script>
+</body>
+</html>
