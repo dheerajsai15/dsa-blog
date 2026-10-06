@@ -198,7 +198,7 @@
       const unit = H / max;
       r.state.cols.forEach((c, i) => {
         const v = b.vals[i], w = (b.water || [])[i] || 0, [bv, st, ix] = c.children, [wd, bar] = st.children;
-        bv.textContent = w ? `${v}+${w}` : v; ix.textContent = i;
+        bv.textContent = b.labels ? b.labels[i] : w ? `${v}+${w}` : v; ix.textContent = i;
         bar.style.height = (v * unit) + 'px'; bar.className = 'bb' + ((b.st || {})[i] ? ' c-' + b.st[i] : '');
         wd.style.bottom = (v * unit) + 'px'; wd.style.height = (w * unit) + 'px'; wd.hidden = !w;
       });

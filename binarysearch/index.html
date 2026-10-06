@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Binary search, step by step</title>
+<link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+<script src="../shared/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/stepper.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true"><g stroke="var(--edge)" stroke-width="1.4"><rect x="2" y="16" width="6.5" height="12" rx="2" fill="var(--panel)" opacity=".4"/><rect x="9.5" y="16" width="6.5" height="12" rx="2" fill="var(--panel)" opacity=".4"/><rect x="17" y="16" width="6.5" height="12" rx="2" fill="var(--panel)"/><rect x="24.5" y="16" width="6.5" height="12" rx="2" fill="var(--panel)"/><rect x="32" y="16" width="6.5" height="12" rx="2" fill="var(--panel)" opacity=".4"/><rect x="39.5" y="16" width="5" height="12" rx="2" fill="var(--panel)" opacity=".4"/></g><rect x="24.5" y="16" width="6.5" height="12" rx="2" fill="var(--cur)"/><path d="M27.75 8v5m-2.5-2.5 2.5 2.5 2.5-2.5" fill="none" stroke="var(--cur)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 33h21" stroke="var(--wait)" stroke-width="2" stroke-linecap="round"/></svg>
+      <div>
+        <h1>Binary search, step by step</h1>
+        <p>9 interview patterns, each animated next to its C++ code. Press <kbd>Space</kbd> to play or pause, and <kbd>←</kbd> <kbd>→</kbd> to step. Every problem runs on your own input too.</p>
+      </div>
+    </div>
+    <nav class="topnav">
+      <a href="../index.html">← All topics</a>
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="Toggle dark mode">
+        <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+    </nav>
+  </header>
+  <div class="mobile-pick"><label for="algoSelect" class="sr">Problem</label><select id="algoSelect"></select></div>
+
+  <div class="layout">
+    <nav class="side" aria-label="Problems">
+      <input id="filter" type="search" placeholder="Filter, e.g. rotated or Koko" aria-label="Filter problems">
+      <div id="list"></div>
+    </nav>
+
+    <main id="main">
+      <section class="head">
+        <div class="cat" id="cat"></div>
+        <h2 id="title"></h2>
+        <p class="blurb" id="blurb"></p>
+        <div class="sample" id="sample">Sample input: <code id="sampleTree"></code></div>
+      </section>
+
+      <section class="work">
+        <div>
+          <div class="stage" id="stage"><div id="scene" aria-live="off"></div></div>
+          <div class="legend" id="legend"></div>
+
+          <div class="controls">
+            <div class="btns">
+              <button class="ib" id="first" aria-label="Go to first step" title="First step"><svg viewBox="0 0 16 16"><path d="M3 2h2v12H3zM14 2v12L6 8z"/></svg></button>
+              <button class="ib" id="prev" aria-label="Previous step" title="Previous step (←)"><svg viewBox="0 0 16 16"><path d="M12 2v12L3 8z"/></svg></button>
+              <button class="ib" id="play" aria-label="Play" data-state="play" title="Play or pause (Space)"><svg class="i-play" viewBox="0 0 16 16"><path d="M4 2v12l10-6z"/></svg><svg class="i-pause" viewBox="0 0 16 16"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg><span id="playText">Play</span></button>
+              <button class="ib" id="next" aria-label="Next step" title="Next step (→)"><svg viewBox="0 0 16 16"><path d="M4 2v12l9-6z"/></svg></button>
+              <button class="ib" id="last" aria-label="Go to last step" title="Last step"><svg viewBox="0 0 16 16"><path d="M11 2h2v12h-2zM2 2v12l8-6z"/></svg></button>
+            </div>
+            <div class="scrubwrap"><input type="range" id="scrub" min="0" max="0" value="0" aria-label="Step"><span id="counter"></span></div>
+            <label class="speed">Speed <input type="range" id="speed" min="0.5" max="3" step="0.25" value="1"><span id="speedVal">1×</span></label>
+          </div>
+
+          <p class="narr" id="narr" aria-live="polite"></p>
+          <div class="aux" id="aux"></div>
+
+          <form class="custom" id="custom">
+            <label>Try your own input</label>
+            <div id="params"></div>
+            <div class="crow">
+              <button class="tb" type="submit">Run on this input</button>
+              <button class="tb ghost" type="button" id="treeReset">Use the sample</button>
+            </div>
+            <p id="treeErr" role="alert"></p>
+          </form>
+        </div>
+
+        <div class="codebox">
+          <div class="codehead"><span><strong>C++</strong></span><button id="copy" type="button">Copy code</button></div>
+          <pre id="code"></pre>
+          <div class="nodedef">Faded cells are out of the search range. <code>lo</code>, <code>mid</code> and <code>hi</code> follow the C++; the half-open lower-bound template allows <code>hi = n</code>.</div>
+        </div>
+      </section>
+
+      <section id="notes" aria-label="Interview notes"></section>
+    </main>
+  </div>
+</div>
+<script src="../shared/stepper.js"></script>
+<script>
+const { B } = Stepper, A = Stepper.add;
+const dimOut = (n, lo, hi, st = {}) => { for (let k = 0; k < n; k++) if (k < lo || k > hi) st[k] = 'dim'; return st; };
+const PC = { lo: 'wait', mid: 'cur', hi: 'path', k: 'cur' };
+
+/* ================= Classic ================= */
+A({
+  id: 'binary-search', cat: 'Classic', title: 'Binary search', lc: 'LeetCode 704',
+  blurb: 'Look at the middle of the range still in play. Its value tells you which half to throw away.',
+  params: [{ key: 'nums', label: 'nums (sorted)', type: 'ints', min: -99, max: 99, maxLen: 14, sorted: true, def: [-1, 0, 3, 5, 9, 12, 17, 21, 30, 44, 51] }, { key: 'target', label: 'target', type: 'int', min: -99, max: 99, def: 5 }],
+  code: `
+int search(vector<int>& nums, int target) {
+    int lo = 0, hi = nums.size() - 1;
+    while (lo <= hi) {
+        int mid = lo + (hi - lo) / 2;            // avoids overflow of lo + hi
+        if (nums[mid] == target) return mid;     //@hit
+        if (nums[mid] < target) lo = mid + 1;    //@right
+        else hi = mid - 1;                       //@left
+    }
+    return -1;                                   //@none
+}`,
+  run(T, p) {
+    const a = p.nums, t = p.target, n = a.length; let lo = 0, hi = n - 1;
+    const sc = (mid, st = {}) => [B.arr('nums', a, { st: { ...dimOut(n, lo, hi), ...st }, ptr: mid == null ? { lo, hi } : { lo, mid, hi }, pc: PC }), B.vars([['target', t], ['range size', Math.max(0, hi - lo + 1)]])];
+    T.step(null, `Search for ${t} in all ${n} positions: lo = 0, hi = ${n - 1}.`, sc(null));
+    while (lo <= hi) {
+      const mid = lo + ((hi - lo) >> 1);
+      if (a[mid] === t) { T.out.push(mid); T.step('hit', `nums[${mid}] = ${t}. Found at index ${mid}.`, sc(mid, { [mid]: 'done' })); return; }
+      if (a[mid] < t) { T.step('right', `nums[${mid}] = ${a[mid]} < ${t}, so the target can only be to the right. Discard lo..mid: lo = ${mid + 1}.`, sc(mid, { [mid]: 'cur' })); lo = mid + 1; }
+      else { T.step('left', `nums[${mid}] = ${a[mid]} > ${t}, so the target can only be to the left. Discard mid..hi: hi = ${mid - 1}.`, sc(mid, { [mid]: 'cur' })); hi = mid - 1; }
+    }
+    T.out.push(-1); T.step('none', `lo (${lo}) passed hi (${hi}): the range is empty, ${t} is not in the array.`, sc(null));
+  },
+  idea: 'Each comparison with the middle element rules out half of the remaining range because the array is sorted. After log₂ n halvings the range has one element or none.',
+  time: 'O(log n)', space: 'O(1)',
+  trap: 'Pick one convention and stick to it: here [lo, hi] is inclusive, so the loop runs while lo ≤ hi and both moves skip mid. Compute mid as lo + (hi − lo) / 2 to avoid integer overflow.',
+  vars: ['Search insert position (LC 35): return lo when not found', 'First and last position (next): the lower-bound template', 'Guess number higher or lower (LC 374)']
+});
+
+A({
+  id: 'first-last', cat: 'Classic', title: 'First and last position (lower bound)', lc: 'LeetCode 34',
+  blurb: 'Lower bound finds the first index with a value ≥ x. Run it for target and for target + 1 to get both ends.',
+  params: [{ key: 'nums', label: 'nums (sorted)', type: 'ints', min: -20, max: 20, minLen: 0, maxLen: 14, sorted: true, def: [1, 2, 4, 4, 4, 4, 6, 7, 8, 8, 9] }, { key: 'target', label: 'target', type: 'int', min: -20, max: 20, def: 4 }],
+  code: `
+int lowerBound(vector<int>& a, int x) {          // first index with a[i] >= x
+    int lo = 0, hi = a.size();                   // the answer is in [lo, hi]
+    while (lo < hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (a[mid] < x) lo = mid + 1;            //@right
+        else hi = mid;                           //@left   // mid could be the answer
+    }
+    return lo;                                   //@found
+}
+vector<int> searchRange(vector<int>& nums, int target) {
+    int first = lowerBound(nums, target);
+    if (first == nums.size() || nums[first] != target) return {-1, -1};   //@none
+    int last = lowerBound(nums, target + 1) - 1;                          //@ret
+    return {first, last};
+}`,
+  run(T, p) {
+    const a = p.nums, t = p.target, n = a.length;
+    const lb = (x, phase, keep) => {
+      let lo = 0, hi = n;
+      const sc = (mid, st = {}) => [B.arr('nums', a, { st: { ...dimOut(n, lo, hi - 1), ...keep, ...st }, ptr: mid == null ? { lo, hi } : { lo, mid, hi }, pc: PC }), B.vars([['searching', `first ≥ ${x}`], ['phase', phase]])];
+      while (lo < hi) {
+        const mid = lo + ((hi - lo) >> 1);
+        if (a[mid] < x) { T.step('right', `nums[${mid}] = ${a[mid]} < ${x}: the first value ≥ ${x} is to the right. lo = ${mid + 1}.`, sc(mid, { [mid]: 'cur' })); lo = mid + 1; }
+        else { T.step('left', `nums[${mid}] = ${a[mid]} ≥ ${x}: mid might be the answer, so keep it. hi = ${mid}.`, sc(mid, { [mid]: 'cur' })); hi = mid; }
+      }
+      T.step('found', `lo = hi = ${lo}: ${lo < n ? `nums[${lo}] = ${a[lo]} is the first value ≥ ${x}` : `every value is < ${x}, so the answer is n = ${n}`}.`, sc(null, lo < n ? { [lo]: 'found' } : {}));
+      return lo;
+    };
+    const first = lb(t, `find first ${t}`, {});
+    if (first === n || a[first] !== t) { T.out.push('[-1, -1]'); T.step('none', `${first === n ? 'Nothing' : `nums[${first}] = ${a[first]}`} is not ${t}, so ${t} does not occur.`, [B.arr('nums', a)]); return; }
+    const last = lb(t + 1, `first ${t + 1}, then step back`, { [first]: 'done' }) - 1;
+    const st = {}; for (let k = first; k <= last; k++) st[k] = 'done';
+    T.out.push(`[${first}, ${last}]`);
+    T.step('ret', `The first value ≥ ${t + 1} is at ${last + 1}, so the last ${t} is at ${last}. Answer [${first}, ${last}].`, [B.arr('nums', a, { st, win: [first, last, 'done'] })]);
+  },
+  idea: 'Lower bound keeps the invariant "the answer is in [lo, hi]" with hi = n meaning "not found". When nums[mid] ≥ x, mid itself may be the answer, so hi = mid (not mid − 1). Searching for target + 1 gives one past the last copy of target.',
+  time: 'O(log n)', space: 'O(1)',
+  trap: 'With the half-open template, the loop is lo < hi and the "keep" branch is hi = mid. Mixing it with the inclusive template (lo ≤ hi, hi = mid − 1) causes infinite loops or off-by-one answers.',
+  vars: ['std::lower_bound and std::upper_bound do exactly this', 'Count of target = upper − lower', 'Find K closest elements (below)', 'Search on the answer (Koko) uses the same template on a range of speeds']
+});
+
+A({
+  id: 'matrix', cat: 'Classic', title: 'Search a 2D matrix', lc: 'LeetCode 74',
+  blurb: 'Rows are sorted and each row starts after the previous ends, so the matrix is one sorted list. Map index k to row k / C, column k % C.',
+  params: [{ key: 'nums', label: 'values (sorted, row by row)', type: 'ints', min: -99, max: 99, maxLen: 16, sorted: true, def: [1, 3, 5, 7, 10, 11, 16, 20, 23, 30, 34, 60] }, { key: 'cols', label: 'columns', type: 'int', min: 1, max: 8, def: 4 }, { key: 'target', label: 'target', type: 'int', min: -99, max: 99, def: 16 }],
+  check: (p) => p.nums.length % p.cols ? `The number of values must be a multiple of ${p.cols}.` : null,
+  code: `
+bool searchMatrix(vector<vector<int>>& m, int target) {
+    int R = m.size(), C = m[0].size(), lo = 0, hi = R * C - 1;
+    while (lo <= hi) {
+        int mid = lo + (hi - lo) / 2;
+        int v = m[mid / C][mid % C];             //@mid   // read the matrix as one sorted list
+        if (v == target) return true;            //@hit
+        if (v < target) lo = mid + 1;            //@right
+        else hi = mid - 1;                       //@left
+    }
+    return false;                                //@none
+}`,
+  run(T, p) {
+    const C = p.cols, a = p.nums, R = a.length / C, t = p.target, g = Array.from({ length: R }, (_, r) => a.slice(r * C, r * C + C)); let lo = 0, hi = a.length - 1;
+    const st = (mid, cls) => { const s = {}; for (let k = 0; k < a.length; k++) { if (k < lo || k > hi) s[Math.floor(k / C) + ',' + k % C] = 'dim'; } if (mid != null) s[Math.floor(mid / C) + ',' + mid % C] = cls; return s; };
+    const sc = (mid, cls) => [B.grid('matrix', g, { st: st(mid, cls) }), B.vars([['lo', lo], ['hi', hi], ['mid', mid ?? '–'], ['cell', mid == null ? '–' : `(${Math.floor(mid / C)}, ${mid % C})`]])];
+    T.step(null, `${R} × ${C} matrix = ${a.length} sorted values. Index k lives at row k / ${C}, column k % ${C}.`, sc(null));
+    while (lo <= hi) {
+      const mid = lo + ((hi - lo) >> 1), v = a[mid];
+      if (v === t) { T.out.push('true'); T.step('hit', `Index ${mid} is row ${Math.floor(mid / C)}, column ${mid % C}: value ${v}. Found.`, sc(mid, 'done')); return; }
+      if (v < t) { T.step('right', `Index ${mid} → (${Math.floor(mid / C)}, ${mid % C}) = ${v} < ${t}. lo = ${mid + 1}.`, sc(mid, 'cur')); lo = mid + 1; }
+      else { T.step('left', `Index ${mid} → (${Math.floor(mid / C)}, ${mid % C}) = ${v} > ${t}. hi = ${mid - 1}.`, sc(mid, 'cur')); hi = mid - 1; }
+    }
+    T.out.push('false'); T.step('none', `The range is empty: ${t} is not in the matrix.`, sc(null));
+  },
+  idea: 'Reading the rows one after another gives a sorted list of R · C numbers, so plain binary search works on indices 0..R·C − 1. The only extra step is converting an index to (row, column).',
+  time: 'O(log(R · C))', space: 'O(1)',
+  trap: 'Search a 2D matrix II (LC 240) only sorts rows and columns separately; there the staircase walk from the top-right corner (O(R + C)) is the right tool.',
+  vars: ['Search a 2D matrix II (LC 240): staircase from a corner', 'Kth smallest element in a sorted matrix (LC 378): binary search on the value', 'Two binary searches: first the row, then the column']
+});
+
+/* ================= Rotated arrays ================= */
+const rotCheck = (a) => { if (new Set(a).size !== a.length) return 'Values must be distinct.'; let drops = 0; for (let i = 1; i < a.length; i++) if (a[i] < a[i - 1]) drops++; if (drops > 1 || (drops === 1 && a[a.length - 1] > a[0])) return 'Enter a sorted array rotated at one point, like 4, 5, 6, 0, 1, 2.'; return null; };
+A({
+  id: 'find-min-rotated', cat: 'Rotated arrays', title: 'Find minimum in rotated sorted array', lc: 'LeetCode 153',
+  blurb: 'Compare the middle with the right end. If mid is bigger, the drop (and the minimum) is to the right of mid.',
+  params: [{ key: 'nums', label: 'nums (rotated, distinct)', type: 'ints', min: -99, max: 99, maxLen: 14, def: [11, 13, 15, 17, 19, 2, 4, 6, 8] }],
+  check: (p) => rotCheck(p.nums),
+  code: `
+int findMin(vector<int>& nums) {
+    int lo = 0, hi = nums.size() - 1;
+    while (lo < hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (nums[mid] > nums[hi]) lo = mid + 1;   //@right  // the drop is right of mid
+        else hi = mid;                            //@left   // mid..hi is sorted: min is mid or left
+    }
+    return nums[lo];                              //@ret
+}`,
+  run(T, p) {
+    const a = p.nums, n = a.length; let lo = 0, hi = n - 1;
+    const sc = (mid, st = {}, win) => [B.bars('nums', a.map(v => v - Math.min(...a) + 1), { labels: a, st: { ...dimOut(n, lo, hi), ...st }, ptr: mid == null ? { lo, hi } : { lo, mid, hi }, pc: PC, rect: win }), B.arr('values', a, { st: { ...dimOut(n, lo, hi), ...st }, idx: false })];
+    T.step(null, 'Bar heights show the values. The minimum sits right after the one place where the values drop.', sc(null));
+    while (lo < hi) {
+      const mid = lo + ((hi - lo) >> 1);
+      if (a[mid] > a[hi]) { T.step('right', `nums[${mid}] = ${a[mid]} > nums[${hi}] = ${a[hi]}: the values drop somewhere after mid, and the minimum is right after the drop. lo = ${mid + 1}.`, sc(mid, { [mid]: 'cur', [hi]: 'wait' })); lo = mid + 1; }
+      else { T.step('left', `nums[${mid}] = ${a[mid]} ≤ nums[${hi}] = ${a[hi]}: mid..hi is sorted, so nothing right of mid beats it. hi = ${mid}.`, sc(mid, { [mid]: 'cur', [hi]: 'wait' })); hi = mid; }
+    }
+    T.out.push(a[lo]); T.step('ret', `lo = hi = ${lo}: the minimum is ${a[lo]}${lo ? `, and the array was rotated ${lo} places` : ' (not rotated)'}.`, sc(null, { [lo]: 'done' }));
+  },
+  leg: { wait: 'nums[hi], the comparison point' },
+  idea: 'A rotated sorted array is two sorted runs with one drop between them. Comparing nums[mid] with nums[hi] tells which side the drop is on: if nums[mid] > nums[hi], the drop is between them; otherwise mid..hi is one sorted run and the minimum is at mid or to its left.',
+  time: 'O(log n)', space: 'O(1)',
+  trap: 'Compare with nums[hi], not nums[lo]: an unrotated array has nums[lo] < nums[mid] too, which would wrongly send the search right. With duplicates (LC 154) use hi−− when they are equal.',
+  vars: ['Find minimum II (LC 154): duplicates, worst case O(n)', 'Search in rotated sorted array (next)', 'Find the rotation count: the index of the minimum']
+});
+
+A({
+  id: 'search-rotated', cat: 'Rotated arrays', title: 'Search in rotated sorted array', lc: 'LeetCode 33',
+  blurb: 'One half around mid is always sorted. Check whether the target lies in that sorted half; if not, it is in the other.',
+  params: [{ key: 'nums', label: 'nums (rotated, distinct)', type: 'ints', min: -99, max: 99, maxLen: 14, def: [15, 18, 22, 27, 31, 2, 5, 8, 11, 13] }, { key: 'target', label: 'target', type: 'int', min: -99, max: 99, def: 13 }],
+  check: (p) => rotCheck(p.nums),
+  code: `
+int search(vector<int>& nums, int target) {
+    int lo = 0, hi = nums.size() - 1;
+    while (lo <= hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (nums[mid] == target) return mid;                            //@hit
+        if (nums[lo] <= nums[mid]) {                                    // left half is sorted
+            if (nums[lo] <= target && target < nums[mid]) hi = mid - 1; //@inLeft
+            else lo = mid + 1;                                          //@notLeft
+        } else {                                                        // right half is sorted
+            if (nums[mid] < target && target <= nums[hi]) lo = mid + 1; //@inRight
+            else hi = mid - 1;                                          //@notRight
+        }
+    }
+    return -1;                                                          //@none
+}`,
+  run(T, p) {
+    const a = p.nums, t = p.target, n = a.length; let lo = 0, hi = n - 1;
+    const sc = (mid, st = {}, win) => [B.arr('nums', a, { st: { ...dimOut(n, lo, hi), ...st }, ptr: mid == null ? { lo, hi } : { lo, mid, hi }, pc: PC, win }), B.vars([['target', t]])];
+    T.step(null, `The array is sorted, then rotated: two increasing runs with one drop. Search for ${t}.`, sc(null));
+    while (lo <= hi) {
+      const mid = lo + ((hi - lo) >> 1);
+      if (a[mid] === t) { T.out.push(mid); T.step('hit', `nums[${mid}] = ${t}. Found.`, sc(mid, { [mid]: 'done' })); return; }
+      if (a[lo] <= a[mid]) {
+        const inside = a[lo] <= t && t < a[mid];
+        T.step(inside ? 'inLeft' : 'notLeft', `nums[${lo}] ≤ nums[${mid}], so ${lo}..${mid} (boxed) is sorted. ${t} is ${inside ? '' : 'not '}in [${a[lo]}, ${a[mid]}), so ${inside ? `search there: hi = ${mid - 1}` : `search the other half: lo = ${mid + 1}`}.`, sc(mid, { [mid]: 'cur' }, [lo, mid, inside ? 'done' : 'bad']));
+        if (inside) hi = mid - 1; else lo = mid + 1;
+      } else {
+        const inside = a[mid] < t && t <= a[hi];
+        T.step(inside ? 'inRight' : 'notRight', `nums[${lo}] > nums[${mid}], so the drop is on the left and ${mid}..${hi} (boxed) is sorted. ${t} is ${inside ? '' : 'not '}in (${a[mid]}, ${a[hi]}], so ${inside ? `lo = ${mid + 1}` : `hi = ${mid - 1}`}.`, sc(mid, { [mid]: 'cur' }, [mid, hi, inside ? 'done' : 'bad']));
+        if (inside) lo = mid + 1; else hi = mid - 1;
+      }
+    }
+    T.out.push(-1); T.step('none', `The range is empty: ${t} is not in the array.`, sc(null));
+  },
+  leg: { win: 'The sorted half' },
+  idea: 'Cutting a rotated sorted array at mid always leaves at least one half fully sorted. In a sorted half, a range check decides membership in O(1). If the target is there, keep that half; otherwise it can only be in the other half.',
+  time: 'O(log n)', space: 'O(1)',
+  trap: 'Use nums[lo] ≤ nums[mid] (with ≤) to detect a sorted left half; when lo == mid the left half is a single element and is sorted.',
+  vars: ['Search in rotated sorted array II (LC 81): duplicates, shrink lo/hi when ends are equal', 'Find minimum first, then binary search the right run', 'Find peak element (LC 162): compare mid with mid + 1']
+});
+
+/* ================= Search on the answer ================= */
+A({
+  id: 'koko', cat: 'Search on the answer', title: 'Koko eating bananas', lc: 'LeetCode 875',
+  blurb: 'Faster speeds always finish sooner, so "fast enough" is false then true along the speeds. Binary search for the first true.',
+  params: [{ key: 'piles', label: 'piles', type: 'ints', min: 1, max: 30, maxLen: 8, def: [3, 6, 7, 11] }, { key: 'h', label: 'hours h', type: 'int', min: 1, max: 60, def: 8 }],
+  check: (p) => p.h < p.piles.length ? `h must be at least the number of piles (${p.piles.length}): one pile per hour at most.` : null,
+  code: `
+int minEatingSpeed(vector<int>& piles, int h) {
+    int lo = 1, hi = *max_element(piles.begin(), piles.end());
+    while (lo < hi) {
+        int k = lo + (hi - lo) / 2;
+        long long hours = 0;
+        for (int p : piles) hours += (p + k - 1) / k;   //@hours  // ceil(p / k) hours per pile
+        if (hours <= h) hi = k;                         //@fast   // fast enough: try slower
+        else lo = k + 1;                                //@slow   // too slow
+    }
+    return lo;                                          //@ret
+}`,
+  run(T, p) {
+    const piles = p.piles, h = p.h, mx = Math.max(...piles), speeds = Array.from({ length: mx }, (_, i) => i + 1); let lo = 1, hi = mx;
+    const hrs = (k) => piles.map(x => Math.ceil(x / k));
+    const sc = (k, verdict) => [B.arr('speed k', speeds, { sm: true, idx: false, st: { ...Object.fromEntries(speeds.map((_, i) => [i, i + 1 < lo || i + 1 > hi ? 'dim' : ''])), ...(k ? { [k - 1]: verdict || 'cur' } : {}) }, ptr: k ? { lo: lo - 1, k: k - 1, hi: hi - 1 } : { lo: lo - 1, hi: hi - 1 }, pc: { lo: 'wait', k: 'cur', hi: 'path' } }), B.arr('piles', piles, { heads: k ? hrs(k).map(x => `${x}h`) : null, idx: !!k, hint: k ? `hours at speed ${k}` : '' }), B.vars([['hours', k ? hrs(k).reduce((x, y) => x + y, 0) : '–', verdict || ''], ['h', h]])];
+    T.step(null, `The answer is a speed between 1 and the biggest pile (${mx}); at ${mx} every pile takes one hour.`, sc(null));
+    while (lo < hi) {
+      const k = lo + ((hi - lo) >> 1), tot = hrs(k).reduce((x, y) => x + y, 0);
+      T.step('hours', `Try k = ${k}: hours = ${hrs(k).join(' + ')} = ${tot}.`, sc(k));
+      if (tot <= h) { T.step('fast', `${tot} ≤ ${h}: speed ${k} works. Maybe a slower one does too: hi = ${k}.`, sc(k, 'done')); hi = k; }
+      else { T.step('slow', `${tot} > ${h}: too slow, and so is every speed below ${k}. lo = ${k + 1}.`, sc(k, 'bad')); lo = k + 1; }
+    }
+    T.out.push(lo); T.step('ret', `lo = hi = ${lo}: the slowest speed that finishes in ${h} hours.`, sc(lo, 'found'));
+  },
+  leg: { done: 'Fast enough', bad: 'Too slow', found: 'Answer' },
+  idea: 'You can\'t binary search the piles, but you can binary search the answer. hours(k) only goes down as k goes up, so the speeds split into "too slow" then "fast enough". Lower bound finds the first fast-enough speed with O(n) work per guess.',
+  time: 'O(n log max)', space: 'O(1)',
+  trap: 'Use ceil division (p + k − 1) / k, and a 64-bit total: with big piles and small k the hour count overflows int.',
+  vars: ['Capacity to ship packages within D days (LC 1011)', 'Split array largest sum (LC 410)', 'Minimum days to make m bouquets (LC 1482)', 'Magnetic force between two balls (LC 1552): maximize the minimum']
+});
+
+/* ================= Beyond arrays ================= */
+A({
+  id: 'time-map', cat: 'Beyond arrays', title: 'Time based key-value store', lc: 'LeetCode 981',
+  blurb: 'Values for a key arrive with increasing timestamps. get(t) is "the last entry with time ≤ t": an upper bound minus one.',
+  params: [{ key: 'times', label: 'set timestamps (one key)', type: 'ints', min: 1, max: 99, maxLen: 8, sorted: true, distinct: true, def: [1, 4, 9, 15, 22, 30] }, { key: 'q', label: 'get(t) queries', type: 'ints', min: 0, max: 99, maxLen: 4, def: [16, 3, 0, 40] }],
+  code: `
+class TimeMap {
+    unordered_map<string, vector<pair<int, string>>> m;   // timestamps arrive increasing
+public:
+    void set(string key, string value, int t) { m[key].push_back({t, value}); }   //@set
+    string get(string key, int t) {
+        auto& v = m[key];
+        int lo = 0, hi = v.size();                  // find the first entry with time > t
+        while (lo < hi) {
+            int mid = (lo + hi) / 2;
+            if (v[mid].first <= t) lo = mid + 1;    //@right
+            else hi = mid;                          //@left
+        }
+        return lo == 0 ? "" : v[lo - 1].second;     //@ret
+    }
+};`,
+  run(T, p) {
+    const ts = p.times, vals = ts.map((_, i) => 'v' + (i + 1)), n = ts.length, cells = ts.map((t, i) => `${vals[i]}`);
+    T.step('set', `set("k", …) was called ${n} times. Entries stay sorted by timestamp because time only moves forward.`, [B.arr('entries', cells, { heads: ts.map(t => `t=${t}`) })]);
+    p.q.forEach(t => {
+      let lo = 0, hi = n;
+      const sc = (mid, st = {}) => [B.arr('entries', cells, { heads: ts.map(x => `t=${x}`), st: { ...dimOut(n, lo, hi - 1), ...st }, ptr: mid == null ? { lo, hi } : { lo, mid, hi }, pc: PC }), B.vars([['get t', t]])];
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (ts[mid] <= t) { T.step('right', `get(${t}): t=${ts[mid]} ≤ ${t}, so this entry and everything before it are valid. Look later: lo = ${mid + 1}.`, sc(mid, { [mid]: 'cur' })); lo = mid + 1; }
+        else { T.step('left', `get(${t}): t=${ts[mid]} > ${t} is in the future. hi = ${mid}.`, sc(mid, { [mid]: 'cur' })); hi = mid; }
+      }
+      const ans = lo ? vals[lo - 1] : '""'; T.out.push(`get(${t}) = ${ans}`);
+      T.step('ret', lo ? `First entry after ${t} is at ${lo}; the one before it, ${vals[lo - 1]} (t=${ts[lo - 1]}), is the latest value at time ${t}.` : `Every entry is after ${t}: return "".`, sc(null, lo ? { [lo - 1]: 'done' } : {}));
+    });
+  },
+  idea: 'Because set() is called with increasing timestamps, each key\'s list is already sorted. "Latest value at time t" is the last entry with time ≤ t, which is one before the first entry with time > t (an upper bound).',
+  time: 'O(1) set, O(log n) get', space: 'O(n)',
+  trap: 'Return "" when every entry is newer than t (lo == 0). Don\'t use a linear scan from the end: it is O(n) per get.',
+  vars: ['Snapshot array (LC 1146): per-index history, the same upper bound', 'std::map::upper_bound gives this for free', 'Online election (LC 911)']
+});
+
+A({
+  id: 'k-closest', cat: 'Beyond arrays', title: 'Find K closest elements', lc: 'LeetCode 658',
+  blurb: 'The answer is a window of k in the sorted array. Binary search its left edge by comparing the two elements just inside and just outside.',
+  params: [{ key: 'arr', label: 'arr (sorted)', type: 'ints', min: -50, max: 50, maxLen: 14, sorted: true, def: [1, 3, 5, 8, 9, 12, 14, 17, 20, 25] }, { key: 'k', label: 'k', type: 'int', min: 1, max: 14, def: 4 }, { key: 'x', label: 'x', type: 'int', min: -60, max: 60, def: 11 }],
+  check: (p) => p.k > p.arr.length ? `k can be at most ${p.arr.length}.` : null,
+  code: `
+vector<int> findClosestElements(vector<int>& arr, int k, int x) {
+    int lo = 0, hi = arr.size() - k;               // the window start is in [lo, hi]
+    while (lo < hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (x - arr[mid] > arr[mid + k] - x) lo = mid + 1;   //@right  // arr[mid+k] is closer
+        else hi = mid;                                       //@left
+    }
+    return vector<int>(arr.begin() + lo, arr.begin() + lo + k);   //@ret
+}`,
+  run(T, p) {
+    const a = p.arr, k = p.k, x = p.x, n = a.length; let lo = 0, hi = n - k;
+    const sc = (mid, st = {}, wc) => [B.arr('arr', a, { st, win: mid == null ? null : [mid, mid + k - 1, wc], ptrUp: mid == null ? { lo, hi } : { lo, mid, hi }, pc: PC }), B.vars([['x', x], ['k', k], ['start range', `${lo}..${hi}`]])];
+    while (lo < hi) {
+      const mid = lo + ((hi - lo) >> 1), dl = x - a[mid], dr = a[mid + k] - x;
+      if (dl > dr) { T.step('right', `Window starting at ${mid} is boxed. x − arr[${mid}] = ${dl} > arr[${mid + k}] − x = ${dr}: the element just past the window is closer, so the window should start later. lo = ${mid + 1}.`, sc(mid, { [mid]: 'bad', [mid + k]: 'done' }, '')); lo = mid + 1; }
+      else { T.step('left', `x − arr[${mid}] = ${dl} ≤ arr[${mid + k}] − x = ${dr}: arr[${mid}] is at least as close (ties go left), so the start is ${mid} or earlier. hi = ${mid}.`, sc(mid, { [mid]: 'done', [mid + k]: 'bad' }, '')); hi = mid; }
+    }
+    T.out.push(`[${a.slice(lo, lo + k).join(', ')}]`);
+    T.step('ret', `Start = ${lo}: [${a.slice(lo, lo + k).join(', ')}].`, sc(lo, {}, 'done'));
+  },
+  leg: { bad: 'Farther from x', done: 'Closer to x' },
+  idea: 'The k closest elements are contiguous in a sorted array, so only the start index matters. For a candidate start mid, compare arr[mid] (would be dropped by shifting right) with arr[mid + k] (would be gained). Whichever is farther from x tells the direction.',
+  time: 'O(log(n − k) + k)', space: 'O(1) besides the output',
+  trap: 'Compare x − arr[mid] with arr[mid + k] − x without abs(): the signs matter when x lies outside the window. Ties keep the smaller element, so use > and move lo only on strictly farther.',
+  vars: ['Heap version: a max-heap of size k by distance (Heap page)', 'Two pointers: shrink from whichever end is farther, O(n − k)', 'Find K-th smallest pair distance (LC 719): binary search on the answer']
+});
+
+A({
+  id: 'median', cat: 'Beyond arrays', title: 'Median of two sorted arrays', lc: 'LeetCode 4',
+  blurb: 'Cut both arrays so the left sides hold half the elements and everything on the left is ≤ everything on the right. Binary search the cut in the shorter array.',
+  params: [{ key: 'A', label: 'A (sorted)', type: 'ints', min: -50, max: 50, minLen: 0, maxLen: 8, sorted: true, def: [1, 3, 8, 9, 15] }, { key: 'B', label: 'B (sorted)', type: 'ints', min: -50, max: 50, minLen: 0, maxLen: 8, sorted: true, def: [7, 11, 18, 19, 21, 25] }],
+  check: (p) => !p.A.length && !p.B.length ? 'At least one array must be non-empty.' : null,
+  code: `
+double findMedianSortedArrays(vector<int>& A, vector<int>& B) {
+    if (A.size() > B.size()) swap(A, B);               // search the shorter array
+    int m = A.size(), n = B.size(), half = (m + n + 1) / 2;
+    int lo = 0, hi = m;
+    while (lo <= hi) {
+        int i = (lo + hi) / 2, j = half - i;           //@cut   // i from A and j from B go left
+        int aL = i ? A[i - 1] : INT_MIN, aR = i < m ? A[i] : INT_MAX;
+        int bL = j ? B[j - 1] : INT_MIN, bR = j < n ? B[j] : INT_MAX;
+        if (aL <= bR && bL <= aR)                      //@ok
+            return (m + n) % 2 ? max(aL, bL) : (max(aL, bL) + min(aR, bR)) / 2.0;
+        if (aL > bR) hi = i - 1;                       //@tooMany  // took too many from A
+        else lo = i + 1;                               //@tooFew
+    }
+    return 0;
+}`,
+  run(T, p) {
+    let X = p.A, Y = p.B, swapped = false; if (X.length > Y.length) { [X, Y] = [Y, X]; swapped = true; }
+    const m = X.length, n = Y.length, half = (m + n + 1) >> 1; let lo = 0, hi = m;
+    const f = (v) => v === -Infinity ? '−∞' : v === Infinity ? '+∞' : v;
+    const sc = (i, j, cls) => [
+      B.arr(swapped ? 'A (was B)' : 'A', X.length ? X : [''], { st: Object.fromEntries(X.map((_, k) => [k, k < i ? 'wait' : ''])), win: i > 0 ? [0, i - 1, cls] : null, ptr: X.length ? { i: Math.min(i, m) } : {}, pc: { i: 'cur' } }),
+      B.arr(swapped ? 'B (was A)' : 'B', Y.length ? Y : [''], { st: Object.fromEntries(Y.map((_, k) => [k, k < j ? 'wait' : ''])), win: j > 0 ? [0, j - 1, cls] : null, ptr: { j: Math.min(j, n) }, pc: { j: 'path' } }),
+      B.vars([['half', half], ['i + j', i + j], ['A range', `${lo}..${hi}`]])];
+    T.step(null, `${m + n} numbers in total, so the left side of the cut must hold half = ${half}. ${swapped ? 'A was the longer array, so they were swapped. ' : ''}Binary search how many come from A (i); the rest (j = half − i) come from B.`, sc(0, half, ''));
+    while (lo <= hi) {
+      const i = (lo + hi) >> 1, j = half - i;
+      const aL = i ? X[i - 1] : -Infinity, aR = i < m ? X[i] : Infinity, bL = j ? Y[j - 1] : -Infinity, bR = j < n ? Y[j] : Infinity;
+      const vars = B.vars([['aL', f(aL)], ['aR', f(aR)], ['bL', f(bL)], ['bR', f(bR)]], { name: 'edges' });
+      T.step('cut', `Try i = ${i} from A, j = ${j} from B. Left side (shaded): ${i + j} numbers.`, [...sc(i, j, ''), vars]);
+      if (aL <= bR && bL <= aR) {
+        const med = (m + n) % 2 ? Math.max(aL, bL) : (Math.max(aL, bL) + Math.min(aR, bR)) / 2; T.out.push(med);
+        T.step('ok', `aL ${f(aL)} ≤ bR ${f(bR)} and bL ${f(bL)} ≤ aR ${f(aR)}: every left number ≤ every right number. ${(m + n) % 2 ? `Odd total: the median is max(aL, bL) = ${med}.` : `Even total: (max(aL, bL) + min(aR, bR)) / 2 = (${Math.max(aL, bL)} + ${Math.min(aR, bR)}) / 2 = ${med}.`}`, [...sc(i, j, 'done'), vars]);
+        return;
+      }
+      if (aL > bR) { T.step('tooMany', `aL ${f(aL)} > bR ${f(bR)}: A gave too many big numbers to the left. hi = ${i - 1}.`, [...sc(i, j, 'bad'), vars]); hi = i - 1; }
+      else { T.step('tooFew', `bL ${f(bL)} > aR ${f(aR)}: B gave too many, so take more from A. lo = ${i + 1}.`, [...sc(i, j, 'bad'), vars]); lo = i + 1; }
+    }
+  },
+  leg: { wait: 'Left of the cut', win: 'Left side of the cut' },
+  idea: 'The median splits the merged list into a left and right half. Choosing i elements from A fixes j = half − i from B, and the cut is correct exactly when A[i−1] ≤ B[j] and B[j−1] ≤ A[i]. Those checks also say which way to move i, so binary search over i in the shorter array finds it.',
+  time: 'O(log min(m, n))', space: 'O(1)',
+  trap: 'Search the shorter array so j stays in range, and treat missing edges as −∞ / +∞. Using half = (m + n + 1) / 2 puts the extra element on the left for odd totals.',
+  vars: ['Merge and pick the middle: O(m + n), a fine first answer', 'Kth element of two sorted arrays: the same cut with half replaced by k', 'Find median from data stream (Heap page): the streaming version']
+});
+
+Stepper.start('binary-search');
+</script>
+</body>
+</html>
